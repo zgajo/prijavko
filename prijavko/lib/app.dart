@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'core/l10n/app_localizations.dart';
 import 'core/l10n/context_l10n.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/theme.dart';
 
 /// Resolves the app locale with a **Croatian-first** fallback (PRD / Story 1.4).
@@ -41,7 +44,9 @@ Locale _resolveAppLocale(Locale? locale, Iterable<Locale> supported) {
 }
 
 /// Root widget; does not perform platform initialization (see [main]).
-class PrijavkoApp extends StatelessWidget {
+///
+/// Uses [MaterialApp.router] with [appRouterProvider] (Story 1.5).
+class PrijavkoApp extends ConsumerWidget {
   const PrijavkoApp({super.key});
 
   static const List<LocalizationsDelegate<dynamic>> _localizationDelegates =
@@ -58,23 +63,17 @@ class PrijavkoApp extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      onGenerateTitle: (context) => context.l10n.appTitle,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final GoRouter router = ref.watch(appRouterProvider);
+    return MaterialApp.router(
+      onGenerateTitle: (BuildContext context) => context.l10n.appTitle,
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
       themeMode: ThemeMode.system,
       localizationsDelegates: _localizationDelegates,
       supportedLocales: _supportedLocales,
       localeResolutionCallback: _resolveAppLocale,
-      home: Builder(
-        builder: (context) {
-          return Scaffold(
-            appBar: AppBar(title: Text(context.l10n.appTitle)),
-            body: Center(child: Text(context.l10n.appTitle)),
-          );
-        },
-      ),
+      routerConfig: router,
     );
   }
 }

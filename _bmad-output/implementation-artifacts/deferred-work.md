@@ -1,5 +1,11 @@
 # Deferred work
 
+## Deferred from: code review of 1-5-go-router-shell-onboarding-guard-connectivity.md (2026-04-14)
+
+- **Duplicate onboarding tests:** `widget_test.dart` and `app_router_test.dart` both cover empty DB → onboarding; merge or specialize (e.g. widget_test locale-only, router test insert path only) when convenient.
+
+- **Stream subscription teardown:** `FacilitiesRouteRefreshNotifier.dispose` uses `unawaited` cancel; revisit only if teardown ordering causes flakes.
+
 ## Deferred from: code review of 1-3-material-3-theme-app-queue-theme.md (2026-04-14)
 
 - **Commit scope:** Story 1.4/1.5 markdown stubs and `epics.md` changes landed in the same change set as Story 1.3 theme implementation; defer stricter story-scoped commits to team preference.

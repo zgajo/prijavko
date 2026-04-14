@@ -163,6 +163,36 @@ abstract class AppLocalizations {
   /// In hr, this message translates to:
   /// **'Dogodila se greška. Pokušajte ponovno.'**
   String get errorGeneric;
+
+  /// Placeholder until Epic 2 facility onboarding.
+  ///
+  /// In hr, this message translates to:
+  /// **'Postavite smještaj'**
+  String get onboardingHeadline;
+
+  /// Connectivity banner when offline.
+  ///
+  /// In hr, this message translates to:
+  /// **'Nema mrežne veze'**
+  String get offlineNoConnection;
+
+  /// No description provided for @routeCapture.
+  ///
+  /// In hr, this message translates to:
+  /// **'Snimka'**
+  String get routeCapture;
+
+  /// No description provided for @routeReview.
+  ///
+  /// In hr, this message translates to:
+  /// **'Pregled'**
+  String get routeReview;
+
+  /// No description provided for @routeConfirm.
+  ///
+  /// In hr, this message translates to:
+  /// **'Potvrda'**
+  String get routeConfirm;
 }
 
 class _AppLocalizationsDelegate

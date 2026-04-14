@@ -13,5 +13,16 @@
   "actionRetry": "Pokušaj ponovno",
   "actionSend": "Pošalji",
   "actionDelete": "Obriši",
-  "errorGeneric": "Dogodila se greška. Pokušajte ponovno."
+  "errorGeneric": "Dogodila se greška. Pokušajte ponovno.",
+  "onboardingHeadline": "Postavite smještaj",
+  "@onboardingHeadline": {
+    "description": "Placeholder until Epic 2 facility onboarding."
+  },
+  "offlineNoConnection": "Nema mrežne veze",
+  "@offlineNoConnection": {
+    "description": "Connectivity banner when offline."
+  },
+  "routeCapture": "Snimka",
+  "routeReview": "Pregled",
+  "routeConfirm": "Potvrda"
 }

@@ -40,4 +40,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorGeneric => 'Something went wrong. Please try again.';
+
+  @override
+  String get onboardingHeadline => 'Set up your accommodation';
+
+  @override
+  String get offlineNoConnection => 'No network connection';
+
+  @override
+  String get routeCapture => 'Capture';
+
+  @override
+  String get routeReview => 'Review';
+
+  @override
+  String get routeConfirm => 'Confirm';
 }

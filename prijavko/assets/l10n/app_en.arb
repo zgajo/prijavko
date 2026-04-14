@@ -10,5 +10,10 @@
   "actionRetry": "Retry",
   "actionSend": "Send",
   "actionDelete": "Delete",
-  "errorGeneric": "Something went wrong. Please try again."
+  "errorGeneric": "Something went wrong. Please try again.",
+  "onboardingHeadline": "Set up your accommodation",
+  "offlineNoConnection": "No network connection",
+  "routeCapture": "Capture",
+  "routeReview": "Review",
+  "routeConfirm": "Confirm"
 }

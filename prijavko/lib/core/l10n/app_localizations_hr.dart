@@ -40,4 +40,19 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get errorGeneric => 'Dogodila se greška. Pokušajte ponovno.';
+
+  @override
+  String get onboardingHeadline => 'Postavite smještaj';
+
+  @override
+  String get offlineNoConnection => 'Nema mrežne veze';
+
+  @override
+  String get routeCapture => 'Snimka';
+
+  @override
+  String get routeReview => 'Pregled';
+
+  @override
+  String get routeConfirm => 'Potvrda';
 }
