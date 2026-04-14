@@ -1,6 +1,6 @@
 # Story 1.1: Flutter Project Initialization & Build Configuration
 
-Status: ready-for-dev
+Status: done
 
 <!-- Ultimate context engine analysis completed — comprehensive developer guide created. Optional: run validate-create-story before dev-story. -->
 
@@ -36,19 +36,19 @@ so that **I have a working, analyzable codebase ready for Story 1.2+ feature imp
 
 ## Tasks / Subtasks
 
-- [ ] Run `flutter create --org hr.prijavko --platforms android prijavko`; open in IDE; confirm `flutter run` on emulator. (AC: #1)
-- [ ] Set Android **`applicationId` / `namespace` to `hr.prijavko.app`** in `android/app/build.gradle(.kts)`. (AC: #7)
-- [ ] Add all **pubspec** dependencies and dev_dependencies; run `dart pub get`. (AC: #2)
-- [ ] Add **`analysis_options.yaml`**: include `package:flutter_lints` or stricter rules + **`custom_lint`** + **`riverpod_lint`**; fix all issues until `dart analyze` is clean. (AC: #2)
-- [ ] Add **`build.yaml`** if needed for Drift/riverpod_generator options per Drift docs. (AC: #2, #8)
-- [ ] Create **`config/dev.json`** and **`config/prod.json`** with exact URLs and flags from AC #3. (AC: #3)
-- [ ] Implement **`lib/core/config/app_config.dart`** reading compile-time defines; document run command in `README.md`. (AC: #4)
-- [ ] Create **feature folder tree** under `lib/` with `.gitkeep` as needed. (AC: #5)
-- [ ] Add minimal **`lib/main.dart`**: `runApp` + `ProviderScope` (can show placeholder `MaterialApp` home) so Riverpod is wired. (AC: #2, #5)
-- [ ] **AndroidManifest**: permissions; backup strategy per AC #6; add **`res/xml/backup_rules.xml`** if using scoped backup. (AC: #6)
-- [ ] **Firebase**: Create Firebase Android app with package `hr.prijavko.app`; add **`google-services.json`** under `android/app/`; apply Google Services + Firebase Crashlytics Gradle plugins per current FlutterFire docs. Initialize Crashlytics/Analytics in `main.dart` with **no PII** (stub handlers OK). (AC: #2)
-- [ ] **CI**: Add `.github/workflows/ci.yml` — analyze, test, build_runner verify, tag → `flutter build appbundle --dart-define-from-file=config/prod.json`. (AC: #8)
-- [ ] **`README.md`**: document dev run, prod build, and CI behavior. (AC: #8)
+- [x] Run `flutter create --org hr.prijavko --platforms android prijavko`; open in IDE; confirm `flutter run` on emulator. (AC: #1)
+- [x] Set Android **`applicationId` / `namespace` to `hr.prijavko.app`** in `android/app/build.gradle(.kts)`. (AC: #7)
+- [x] Add all **pubspec** dependencies and dev_dependencies; run `dart pub get`. (AC: #2)
+- [x] Add **`analysis_options.yaml`**: include `package:flutter_lints` or stricter rules + **`custom_lint`** + **`riverpod_lint`**; fix all issues until `dart analyze` is clean. (AC: #2)
+- [x] Add **`build.yaml`** if needed for Drift/riverpod_generator options per Drift docs. (AC: #2, #8)
+- [x] Create **`config/dev.json`** and **`config/prod.json`** with exact URLs and flags from AC #3. (AC: #3)
+- [x] Implement **`lib/core/config/app_config.dart`** reading compile-time defines; document run command in `README.md`. (AC: #4)
+- [x] Create **feature folder tree** under `lib/` with `.gitkeep` as needed. (AC: #5)
+- [x] Add minimal **`lib/main.dart`**: `runApp` + `ProviderScope` (can show placeholder `MaterialApp` home) so Riverpod is wired. (AC: #2, #5)
+- [x] **AndroidManifest**: permissions; backup strategy per AC #6; add **`res/xml/backup_rules.xml`** if using scoped backup. (AC: #6)
+- [x] **Firebase**: Create Firebase Android app with package `hr.prijavko.app`; add **`google-services.json`** under `android/app/`; apply Google Services + Firebase Crashlytics Gradle plugins per current FlutterFire docs. Initialize Crashlytics/Analytics in `main.dart` with **no PII** (stub handlers OK). (AC: #2)
+- [x] **CI**: Add `.github/workflows/ci.yml` — analyze, test, build_runner verify, tag → `flutter build appbundle --dart-define-from-file=config/prod.json`. (AC: #8)
+- [x] **`README.md`**: document dev run, prod build, and CI behavior. (AC: #8)
 
 ## Dev Notes
 
@@ -98,14 +98,93 @@ so that **I have a working, analyzable codebase ready for Story 1.2+ feature imp
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5.2 (Cursor agent)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Bootstrap: `prijavko/` created with `flutter create --org hr.prijavko --platforms android prijavko`; Android `applicationId` / `namespace` / Kotlin `MainActivity` → `hr.prijavko.app`.
+- Dependencies: all runtime packages from AC declared; dev: `build_runner`, `drift_dev`, `freezed`, `json_serializable`, `custom_lint`. **`riverpod_generator`** not added (pub solver: `riverpod_generator` 4.x + `flutter_test` pinned `test_api`). **`riverpod_lint`** not added (pub solver: `riverpod_lint` 3.x + `drift_dev` + `flutter_test`). Hand-written `Provider` for `AppConfig`; `json_annotation` pinned to `^4.9.0` so `json_serializable` + `drift_dev` resolve. **`custom_lint`**: in `dev_dependencies`; `analyzer.plugins` for `custom_lint` disabled locally (analyzer plugin AOT snapshot error on Dart 3.10); use `dart run custom_lint` when supported.
+- Config: `config/dev.json`, `config/prod.json`; `AppConfig` via `String.fromEnvironment`; `prijavko/README.md` documents run/build/CI.
+- Layout: feature + data + core + shared dirs with `.gitkeep` per AC.
+- Android: `INTERNET`, `CAMERA`; `android:allowBackup="false"`; `minSdk` ≥ 24; `google-services.json` placeholder (replace from Firebase); GMS + Crashlytics Gradle plugins; `main.dart` initializes Firebase + Crashlytics handlers + Analytics instance (no user/PII).
+- CI: `.github/workflows/ci.yml` — `dart analyze`, `flutter test`, `build_runner` + `git diff --exit-code` on `main`/PRs; tag pushes build release AAB with `config/prod.json` and upload artifact.
+- Tests: `test/widget_test.dart` overrides `appConfigProvider` and asserts dev-like API string.
+
+### Key implementation files (behavior map)
+
+- `prijavko/lib/main.dart` — Firebase init, Crashlytics hooks, `ProviderScope`, `runApp`
+- `prijavko/lib/app.dart` — root `MaterialApp` + reads `appConfigProvider`
+- `prijavko/lib/core/config/app_config.dart` — compile-time defines
+- `prijavko/lib/core/config/app_config_provider.dart` — Riverpod `Provider` for `AppConfig`
+- `prijavko/android/app/build.gradle.kts` — applicationId, namespace, minSdk, Firebase plugins
+- `prijavko/android/settings.gradle.kts` — Google Services + Crashlytics plugin IDs
+- `prijavko/android/app/src/main/AndroidManifest.xml` — permissions, `allowBackup`
+- `prijavko/pubspec.yaml` — dependencies and dev_dependencies
+- `prijavko/analysis_options.yaml` — strict analysis + flutter_lints
+- `.github/workflows/ci.yml` — analyze, test, codegen gate, tag AAB
+
 ### File List
+
+- `prijavko/pubspec.yaml`
+- `prijavko/pubspec.lock`
+- `prijavko/analysis_options.yaml`
+- `prijavko/build.yaml`
+- `prijavko/README.md`
+- `prijavko/config/dev.json`
+- `prijavko/config/prod.json`
+- `prijavko/lib/main.dart`
+- `prijavko/lib/app.dart`
+- `prijavko/lib/core/config/app_config.dart`
+- `prijavko/lib/core/config/app_config_provider.dart`
+- `prijavko/lib/core/theme/.gitkeep`
+- `prijavko/lib/core/l10n/.gitkeep`
+- `prijavko/lib/core/router/.gitkeep`
+- `prijavko/lib/core/result/.gitkeep`
+- `prijavko/lib/core/utils/.gitkeep`
+- `prijavko/lib/data/database/.gitkeep`
+- `prijavko/lib/data/database/tables/.gitkeep`
+- `prijavko/lib/data/database/daos/.gitkeep`
+- `prijavko/lib/data/database/migrations/.gitkeep`
+- `prijavko/lib/data/api/.gitkeep`
+- `prijavko/lib/data/repositories/.gitkeep`
+- `prijavko/lib/data/models/.gitkeep`
+- `prijavko/lib/features/capture/.gitkeep`
+- `prijavko/lib/features/queue/.gitkeep`
+- `prijavko/lib/features/facility/.gitkeep`
+- `prijavko/lib/features/send/.gitkeep`
+- `prijavko/lib/features/history/.gitkeep`
+- `prijavko/lib/features/onboarding/.gitkeep`
+- `prijavko/lib/features/settings/.gitkeep`
+- `prijavko/lib/shared/widgets/.gitkeep`
+- `prijavko/test/widget_test.dart`
+- `prijavko/android/app/build.gradle.kts`
+- `prijavko/android/settings.gradle.kts`
+- `prijavko/android/app/google-services.json`
+- `prijavko/android/app/src/main/AndroidManifest.xml`
+- `prijavko/android/app/src/main/kotlin/hr/prijavko/app/MainActivity.kt`
+- `.github/workflows/ci.yml`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+### Change Log
+
+- 2026-04-14: Story 1.1 implemented — Flutter app `prijavko/`, Android `hr.prijavko.app`, env JSON + `AppConfig`, Firebase/Crashlytics/Analytics wiring (placeholder `google-services.json`), strict analysis, CI + README. Pub solver notes for `riverpod_generator` / `riverpod_lint` documented in `prijavko/README.md`.
+
+### Review Findings
+
+- [x] [Review][Defer] Release tag AAB uses debug signing — deferred: formal release keystore / Play App Signing in CI left to a later story (user choice **1c**); current tag artifact remains debug-signed for smoke verification.
+
+- [x] [Review][Defer] AC #2 lint stack vs repo reality — deferred: follow-up story when resolver graph allows `riverpod_lint` and/or stable `custom_lint` analyzer plugin (user choice **2b**).
+
+- [x] [Review][Patch] `AD_ENABLED` parsing is loose — fixed: `AppConfig.fromEnvironment` now requires non-empty `AD_ENABLED` and only accepts `true`/`false` (case-insensitive); invalid values throw `StateError`.
+
+- [x] [Review][Patch] README vs CI analyze command — fixed: README uses `flutter analyze` and states CI uses the same.
+
+- [x] [Review][Patch] Firebase init failure path — fixed: `main.dart` catches `Firebase.initializeApp` failures and shows a minimal error-screen `MaterialApp` before Crashlytics wiring.
+
+- [x] [Review][Defer] CI codegen drift check scope — `git diff --exit-code` runs under `prijavko/` only; generated-file drift outside that subtree would not fail the job (monorepo edge case). [`.github/workflows/ci.yml` `defaults.run.working-directory: prijavko`] — deferred, pre-existing layout choice.
 
 ## Story Completion Status
 
-**ready-for-dev** — Ultimate context engine analysis completed; developer has guardrails for bootstrap, IDs, config, and CI.
+**done** — Code review decisions resolved (2026-04-14): release signing and full lint enforcement deferred per user; patch items applied in `prijavko/`. Replace Firebase `google-services.json` with a real project file before shipping; add release signing before Play upload.

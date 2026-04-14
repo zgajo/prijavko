@@ -1,0 +1,53 @@
+name: prijavko
+description: "eVisitor guest registration (Android)."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  camera: ^0.12.0+1
+  connectivity_plus: ^7.1.1
+  cookie_jar: ^4.0.9
+  dio: ^5.9.2
+  dio_cookie_manager: ^3.4.0
+  drift: ^2.31.0
+  firebase_analytics: ^12.3.0
+  firebase_core: ^4.7.0
+  firebase_crashlytics: ^5.2.0
+  flutter_riverpod: ^3.3.1
+  flutter_secure_storage: ^10.0.0
+  freezed_annotation: ^3.1.0
+  go_router: ^17.2.1
+  google_mlkit_text_recognition: ^0.15.1
+  google_mobile_ads: ^8.0.0
+  # Pinned for resolver: json_serializable + drift_dev + flutter_test agree on ^4.9.x; bump when upgrading drift/json_serializable.
+  json_annotation: ^4.9.0
+  mrz_parser: ^2.0.1
+  path_provider: ^2.1.5
+  riverpod_annotation: ^4.0.2
+  sqlite3_flutter_libs: ^0.6.0+eol
+  uuid: ^4.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  build_runner: ^2.5.4
+  drift_dev: ^2.31.0
+  flutter_lints: ^6.0.0
+  freezed: ^3.2.3
+  json_serializable: ^6.11.2
+  custom_lint: ^0.8.1
+  # riverpod_lint omitted: conflicts with drift_dev + flutter_test's pinned test_api on this graph.
+  # riverpod_generator omitted: current Flutter 3.38 pins test_api in a way that conflicts
+  # with riverpod_generator 4.x + flutter_test; use hand-written Provider until upstream aligns.
+
+flutter:
+  uses-material-design: true

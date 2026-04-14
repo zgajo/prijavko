@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  # custom_lint is in dev_dependencies; enabling the analyzer plugin failed AOT compile on
+  # Dart 3.10 / analysis_server in this environment ("dart compile does not support build hooks").
+  # Run: `dart run custom_lint` in CI when the toolchain supports the plugin snapshot.
+
+linter:
+  rules:
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    unawaited_futures: true
