@@ -30,6 +30,7 @@ dependencies:
   # Pinned for resolver: json_serializable + drift_dev + flutter_test agree on ^4.9.x; bump when upgrading drift/json_serializable.
   json_annotation: ^4.9.0
   mrz_parser: ^2.0.1
+  path: ^1.9.1
   path_provider: ^2.1.5
   riverpod_annotation: ^4.0.2
   sqlite3_flutter_libs: ^0.6.0+eol
