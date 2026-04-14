@@ -1,0 +1,17 @@
+{
+  "@@locale": "hr",
+  "appTitle": "Prijavko",
+  "@appTitle": {
+    "description": "Application name shown in title bar and launcher context."
+  },
+  "tabHome": "Početna",
+  "tabQueue": "Red",
+  "tabHistory": "Povijest",
+  "tabSettings": "Postavke",
+  "actionConfirm": "Potvrdi",
+  "actionCancel": "Odustani",
+  "actionRetry": "Pokušaj ponovno",
+  "actionSend": "Pošalji",
+  "actionDelete": "Obriši",
+  "errorGeneric": "Dogodila se greška. Pokušajte ponovno."
+}

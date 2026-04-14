@@ -1,0 +1,14 @@
+{
+  "@@locale": "en",
+  "appTitle": "Prijavko",
+  "tabHome": "Home",
+  "tabQueue": "Queue",
+  "tabHistory": "History",
+  "tabSettings": "Settings",
+  "actionConfirm": "Confirm",
+  "actionCancel": "Cancel",
+  "actionRetry": "Retry",
+  "actionSend": "Send",
+  "actionDelete": "Delete",
+  "errorGeneric": "Something went wrong. Please try again."
+}

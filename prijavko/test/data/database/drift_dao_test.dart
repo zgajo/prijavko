@@ -116,46 +116,50 @@ void main() {
     expect(rows.single.guestCount, 0);
   });
 
-  test('scanSessionsDao watchAllSessions and watchSessionsForFacility', () async {
-    final int facilityA = await db.facilitiesDao.insertFacility(
-      FacilitiesCompanion.insert(
-        name: 'A',
-        facilityCode: 'FAC4',
-        defaults: '{}',
-      ),
-    );
-    final int facilityB = await db.facilitiesDao.insertFacility(
-      FacilitiesCompanion.insert(
-        name: 'B',
-        facilityCode: 'FAC5',
-        defaults: '{}',
-      ),
-    );
+  test(
+    'scanSessionsDao watchAllSessions and watchSessionsForFacility',
+    () async {
+      final int facilityA = await db.facilitiesDao.insertFacility(
+        FacilitiesCompanion.insert(
+          name: 'A',
+          facilityCode: 'FAC4',
+          defaults: '{}',
+        ),
+      );
+      final int facilityB = await db.facilitiesDao.insertFacility(
+        FacilitiesCompanion.insert(
+          name: 'B',
+          facilityCode: 'FAC5',
+          defaults: '{}',
+        ),
+      );
 
-    await db.scanSessionsDao.insertSession(
-      ScanSessionsCompanion.insert(
-        facilityId: facilityA,
-        startedAt: DateTime.utc(2026, 5, 1, 9),
-        guestCount: 1,
-      ),
-    );
-    await db.scanSessionsDao.insertSession(
-      ScanSessionsCompanion.insert(
-        facilityId: facilityB,
-        startedAt: DateTime.utc(2026, 5, 2, 9),
-        guestCount: 2,
-      ),
-    );
+      await db.scanSessionsDao.insertSession(
+        ScanSessionsCompanion.insert(
+          facilityId: facilityA,
+          startedAt: DateTime.utc(2026, 5, 1, 9),
+          guestCount: 1,
+        ),
+      );
+      await db.scanSessionsDao.insertSession(
+        ScanSessionsCompanion.insert(
+          facilityId: facilityB,
+          startedAt: DateTime.utc(2026, 5, 2, 9),
+          guestCount: 2,
+        ),
+      );
 
-    final List<DbScanSession> allWatched =
-        await db.scanSessionsDao.watchAllSessions().first;
-    expect(allWatched, hasLength(2));
+      final List<DbScanSession> allWatched = await db.scanSessionsDao
+          .watchAllSessions()
+          .first;
+      expect(allWatched, hasLength(2));
 
-    final List<DbScanSession> forA = await db.scanSessionsDao
-        .watchSessionsForFacility(facilityA)
-        .first;
-    expect(forA, hasLength(1));
-    expect(forA.single.facilityId, facilityA);
-    expect(forA.single.guestCount, 1);
-  });
+      final List<DbScanSession> forA = await db.scanSessionsDao
+          .watchSessionsForFacility(facilityA)
+          .first;
+      expect(forA, hasLength(1));
+      expect(forA.single.facilityId, facilityA);
+      expect(forA.single.guestCount, 1);
+    },
+  );
 }
