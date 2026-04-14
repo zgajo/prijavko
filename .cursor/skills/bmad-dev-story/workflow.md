@@ -5,7 +5,7 @@
 **Your Role:** Developer implementing the story.
 - Communicate all responses in {communication_language} and language MUST be tailored to {user_skill_level}
 - Generate all documents in {document_output_language}
-- Only modify the story file in these areas: Tasks/Subtasks checkboxes, Dev Agent Record (Debug Log, Completion Notes), File List, Change Log, and Status
+- Only modify the story file in these areas: Tasks/Subtasks checkboxes, Dev Agent Record (Debug Log, Completion Notes, Key implementation files), File List, Change Log, and Status
 - Execute ALL steps in exact order; do NOT skip steps
 - Absolutely DO NOT stop because of "milestones", "significant progress", or "session boundaries". Continue in a single execution until the story is COMPLETE (all ACs satisfied and all tasks/subtasks checked) UNLESS a HALT condition is triggered or the USER gives other instruction.
 - Do NOT schedule a "next session" or request review pauses unless a HALT condition applies. Only Step 6 decides completion.
@@ -41,8 +41,8 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
 <workflow>
   <critical>Communicate all responses in {communication_language} and language MUST be tailored to {user_skill_level}</critical>
   <critical>Generate all documents in {document_output_language}</critical>
-  <critical>Only modify the story file in these areas: Tasks/Subtasks checkboxes, Dev Agent Record (Debug Log, Completion Notes), File List,
-    Change Log, and Status</critical>
+  <critical>Only modify the story file in these areas: Tasks/Subtasks checkboxes, Dev Agent Record (Debug Log, Completion Notes, Key
+    implementation files), File List, Change Log, and Status</critical>
   <critical>Execute ALL steps in exact order; do NOT skip steps</critical>
   <critical>Absolutely DO NOT stop because of "milestones", "significant progress", or "session boundaries". Continue in a single execution
     until the story is COMPLETE (all ACs satisfied and all tasks/subtasks checked) UNLESS a HALT condition is triggered or the USER gives
@@ -157,7 +157,8 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
 
     <anchor id="task_check" />
 
-    <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Notes, Dev Agent Record, File List, Change Log, Status</action>
+    <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Notes, Dev Agent Record (including Key implementation files),
+      File List, Change Log, Status</action>
 
     <action>Load comprehensive context from story file's Dev Notes section</action>
     <action>Extract developer guidance from Dev Notes: architecture requirements, previous learnings, technical specifications</action>
@@ -176,7 +177,8 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
     <critical>Load all available context to inform implementation</critical>
 
     <action>Load {project_context} for coding standards and project-wide patterns (if exists)</action>
-    <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Notes, Dev Agent Record, File List, Change Log, Status</action>
+    <action>Parse sections: Story, Acceptance Criteria, Tasks/Subtasks, Dev Notes, Dev Agent Record (including Key implementation files),
+      File List, Change Log, Status</action>
     <action>Load comprehensive context from story file's Dev Notes section</action>
     <action>Extract developer guidance from Dev Notes: architecture requirements, previous learnings, technical specifications</action>
     <action>Use enhanced story context to inform implementation decisions and approaches</action>
@@ -336,6 +338,9 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
     <check if="ALL validation gates pass AND tests ACTUALLY exist and pass">
       <action>ONLY THEN mark the task (and subtasks) checkbox with [x]</action>
       <action>Update File List section with ALL new, modified, or deleted files (paths relative to repo root)</action>
+      <action>Maintain Dev Agent Record → "Key implementation files (behavior map)": add or adjust curated repo-root paths where this
+        task's behavior lives (typically 3–12 files). This is not a duplicate of File List—it's the "start here" map. One line per path;
+        optional few-word hint in parentheses if helpful.</action>
       <action>Add completion notes to Dev Agent Record summarizing what was ACTUALLY implemented and tested</action>
     </check>
 
@@ -363,6 +368,8 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
     <action>Confirm File List includes every changed file</action>
+    <action>Confirm Dev Agent Record → "Key implementation files (behavior map)" is complete: curated entry-point paths for this story's
+      behavior (or explicitly "N/A — documentation/config only, no runtime behavior" if applicable)</action>
     <action>Execute enhanced definition-of-done validation</action>
     <action>Update the story Status to: "review"</action>
 
@@ -376,6 +383,7 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
       - All tests pass (no regressions, new tests successful)
       - Code quality checks pass (linting, static analysis if configured)
       - File List includes every new/modified/deleted file (relative paths)
+      - Dev Agent Record → Key implementation files (behavior map) lists curated entry-point paths (or N/A with reason)
       - Dev Agent Record contains implementation notes
       - Change Log includes summary of changes
       - Only permitted story sections were modified
@@ -407,6 +415,7 @@ Load config from `{project-root}/_bmad/bmm/config.yaml` and resolve:
     <action if="any task is incomplete">HALT - Complete remaining tasks before marking ready for review</action>
     <action if="regression failures exist">HALT - Fix regression issues before completing</action>
     <action if="File List is incomplete">HALT - Update File List with all changed files</action>
+    <action if="Key implementation files (behavior map) is missing or empty without N/A">HALT - Add behavior map or N/A with reason</action>
     <action if="definition-of-done validation fails">HALT - Address DoD failures before completing</action>
   </step>
 

@@ -50,6 +50,9 @@ validation-rules:
 ## 📝 Documentation & Tracking
 
 - [ ] **File List Complete:** File List includes EVERY new, modified, or deleted file (paths relative to repo root)
+- [ ] **Key Implementation Files (Behavior Map):** Dev Agent Record includes `### Key implementation files (behavior map)` with curated
+      repo-root paths where this story's behavior lives (3–12 typical), OR explicit `N/A` with reason (e.g. docs-only). Not a dump of File
+      List—entry points for maintainers.
 - [ ] **Dev Agent Record Updated:** Contains relevant Implementation Notes and/or Debug Log for this work
 - [ ] **Change Log Updated:** Change Log includes clear summary of what changed and why
 - [ ] **Review Follow-ups:** All review follow-up tasks (marked [AI-Review]) completed and corresponding review items marked resolved (if applicable)

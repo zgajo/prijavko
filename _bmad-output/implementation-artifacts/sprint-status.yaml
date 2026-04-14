@@ -1,0 +1,86 @@
+# generated: 2026-04-14T12:00:00Z
+# last_updated: 2026-04-14T18:30:00Z
+# project: prijavko
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: "2026-04-14T12:00:00Z"
+last_updated: "2026-04-14T18:30:00Z"
+project: prijavko
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  epic-1: in-progress
+  1-1-flutter-project-initialization-build-configuration: ready-for-dev
+  1-2-core-domain-models-database-schema-code-generation: backlog
+  1-3-app-shell-theme-navigation: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-facility-profile-crud-credential-storage: backlog
+  2-2-session-scoped-facility-selection: backlog
+  2-3-first-launch-onboarding-flow: backlog
+  2-4-facility-defaults-per-facility-configuration: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-camera-setup-document-capture: backlog
+  3-2-mrz-extraction-with-checksum-validation: backlog
+  3-3-ocr-fallback-extraction: backlog
+  3-4-guest-review-card-validation-queue-entry: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-queue-list-ui-with-state-chips-facility-tags: backlog
+  4-2-queue-management-delete-duplicate-warning: backlog
+  4-3-queue-durability-state-recovery-auto-purge: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-evisitor-authentication-cookie-session-management: backlog
+  5-2-guest-submission-xml-payload-construction: backlog
+  5-3-error-mapping-retry-failure-classification: backlog
+  5-4-batch-send-ui-auth-pause-handling: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-history-list-with-status-timestamps: backlog
+  6-2-history-auto-purge-30-days: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-ump-cmp-consent-flow: backlog
+  7-2-admob-integration-banner-placement: backlog
+  epic-7-retrospective: optional

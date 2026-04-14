@@ -46,4 +46,8 @@ so that {{benefit}}.
 
 ### Completion Notes List
 
+### Key implementation files (behavior map)
+
+<!-- Filled by dev-story on completion: curated paths (repo root) where this story's behavior lives—maintainer entry points, not a full File List duplicate. -->
+
 ### File List
