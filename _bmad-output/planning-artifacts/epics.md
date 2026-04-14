@@ -310,52 +310,88 @@ So that **all features have a shared data foundation to build on**.
 **Then** schema versioning with numbered migrations exists for future schema evolution
 **And** the initial schema is version 1
 
-### Story 1.3: App Shell, Theme & Navigation
+### Story 1.3: Material 3 Theme, AppQueueTheme & Component Themes
 
-As a **host**,
-I want **to launch the app and see a themed interface with navigation tabs**,
-So that **I can orient myself and access all sections of the app**.
+As a **developer**,
+I want **centralized Material 3 light/dark themes with queue state tokens and shared component themes**,
+So that **all future screens reuse one visual system and queue status styling is consistent**.
 
 **Acceptance Criteria:**
 
-**Given** the app is launched
-**When** the home screen appears
-**Then** a Material 3 themed UI is displayed with a teal-seeded `ColorScheme` (light mode)
-**And** a bottom `NavigationBar` with 4 destinations is visible: Home, Queue, History, Settings
-**And** tapping each tab navigates to the corresponding screen (placeholder content for now)
+**Given** the app builds
+**When** themes are applied in `PrijavkoApp`
+**Then** `ThemeData` uses Material 3 and a teal-seeded `ColorScheme` for both light and dark from the same seed
 
-**Given** system dark mode is enabled
-**When** the app is launched
-**Then** the dark theme variant (derived from the same teal seed) is applied
-
-**Given** `ThemeExtension` is configured
-**When** I inspect `AppQueueTheme`
+**Given** `AppQueueTheme` is registered
+**When** it is read from `Theme.of(context).extension<AppQueueTheme>()`
 **Then** semantic tokens exist for queue states: queued, sending, failed-retryable, failed-terminal, paused-auth, sent — each with color and icon mapping
-**And** failure severity rendering follows architecture: `failed + isTerminalFailure==false` → retryable token, `failed + isTerminalFailure==true` → terminal token
+**And** failure severity follows architecture: `failed + isTerminalFailure==false` → retryable token, `failed + isTerminalFailure==true` → terminal token
 
 **Given** component themes are configured
 **When** I inspect `ThemeData`
-**Then** shared `InputDecorationTheme`, `FilledButtonThemeData`, `NavigationBarThemeData`, `ChipThemeData` are defined once — no per-widget style overrides needed
+**Then** shared `InputDecorationTheme`, `FilledButtonThemeData`, `NavigationBarThemeData`, `ChipThemeData` are defined once per brightness
+
+**Given** Stories 1.4–1.5 are not yet implemented
+**When** the app runs
+**Then** the root remains a minimal placeholder (no `go_router` / full shell in this story) but uses the new theme — router and l10n land in 1.4–1.5
+
+---
+
+### Story 1.4: Localization (ARB) & Croatian Default
+
+As a **host**,
+I want **UI strings in Croatian with English available**,
+So that **copy matches the product language and stays maintainable**.
+
+**Acceptance Criteria:**
+
+**Given** `flutter gen-l10n` / codegen is configured
+**When** the app builds
+**Then** `AppLocalizations` (or generated equivalent) is produced from ARB without errors
+
+**Given** ARB files exist
+**When** I inspect `assets/l10n/`
+**Then** `app_hr.arb` (Croatian, primary) and `app_en.arb` (English, fallback) include tab labels, common actions (confirm, cancel, retry, send, delete), generic error placeholder, and app title — ready for Story 1.5 shell
+
+**Given** locale resolution
+**When** the app runs
+**Then** Croatian-first behavior is explicit in code (policy documented) per PRD
+
+**Given** placeholder UI from Story 1.3
+**When** visible strings are shown
+**Then** they use generated l10n — no hardcoded Croatian in new paths
+
+---
+
+### Story 1.5: go_router Shell, Onboarding Guard, Scaffold & Connectivity
+
+As a **host**,
+I want **bottom navigation, onboarding entry when no facility exists, and offline awareness**,
+So that **I can move around the app and later features plug into fixed routes**.
+
+**Acceptance Criteria:**
+
+**Given** at least one facility profile exists
+**When** the app launches
+**Then** a shell route shows a bottom `NavigationBar` with Home, Queue, History, Settings (placeholder bodies, strings from l10n)
 
 **Given** go_router is configured
 **When** I inspect `app_router.dart`
-**Then** a shell route wraps the bottom NavigationBar
-**And** stack navigation routes exist for future camera → review → confirm flow
-**And** a route guard redirects to onboarding if no facility profiles exist
-**And** predictive back gesture is supported (Android 14+)
-
-**Given** l10n is configured
-**When** I inspect ARB files
-**Then** `app_hr.arb` (Croatian, primary) and `app_en.arb` (English, fallback) exist with initial strings for tab labels, common actions (confirm, cancel, retry, send, delete), and placeholder error messages
-**And** the app renders Croatian strings by default
-
-**Given** responsive foundation
-**When** the app runs on various screen widths
-**Then** `SafeArea` is used, content uses `Flexible` + scroll views, horizontal padding increases on wide phones (>600dp), and no content is clipped
+**Then** stack routes exist as stubs for future camera → review → confirm (full-screen over tabs)
+**And** a route guard redirects to onboarding when no facility profiles exist; redirect refreshes when `facilities` changes
+**And** predictive back is enabled for Android 14+ (`enableOnBackInvokedCallback` + router behavior)
 
 **Given** shared widgets
 **When** I inspect `shared/widgets/`
-**Then** `PrijavkoScaffold` (app scaffold with bottom nav) and `ConnectivityBanner` (offline status banner using `connectivity_plus`) exist
+**Then** `PrijavkoScaffold` and `ConnectivityBanner` (`connectivity_plus`) exist
+
+**Given** responsive foundation
+**When** the app runs on various widths
+**Then** `SafeArea` is used, scroll/flex as needed, horizontal padding increases on wide phones (>600dp), no clipped titles at large text scale
+
+**Given** Stories 1.3–1.4 are complete
+**When** `MaterialApp` is replaced
+**Then** `MaterialApp.router` preserves theme + l10n + `routerConfig`
 
 ---
 
