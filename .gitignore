@@ -1,0 +1,5 @@
+# test-infra — TypeScript mock server
+test-infra/**/node_modules
+test-infra/**/dist
+test-infra/**/coverage
+test-infra/**/.yarn

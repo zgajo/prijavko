@@ -141,3 +141,16 @@ test-infra/**/.yarn
 ## Commit
 
 `test-infra(mock-evisitor): scaffold Fastify 5 + Node 22 strip-types project`
+
+### Review Findings
+
+- [x] [Review][Patch] PORT env var not validated — `Number(process.env['PORT'] ?? 8080)` produces `NaN`/`0` on invalid input with no guard or diagnostic [server.ts:32]
+- [x] [Review][Patch] Test glob relies on shell expansion — `test/**/*.test.ts` in `scripts.test` is shell-expanded; not portable across CI environments without globstar [package.json:11]
+- [x] [Review][Patch] `void main()` silently discards promise — unhandled rejection if `buildApp()` throws during plugin registration [server.ts:42]
+- [x] [Review][Patch] `import.meta.url` CLI guard breaks on Windows paths — backslash vs forward-slash mismatch; use `pathToFileURL` [server.ts:41]
+- [x] [Review][Patch] `fast-xml-parser` in `dependencies` instead of `devDependencies` — this is test-infra, no production consumer [package.json:18]
+- [x] [Review][Defer] Error handler swallows error details — mock debugging harder when actual error is not surfaced [server.ts:22] — deferred, pre-existing
+- [x] [Review][Defer] `.nvmrc` pins major only (`22`) — not fully reproducible across patch versions [.nvmrc:1] — deferred, pre-existing
+- [x] [Review][Defer] `@fastify/cookie` registered without `secret` — signing intent unclear; future signed-cookie routes will fail silently [server.ts:16] — deferred, pre-existing
+- [x] [Review][Defer] Plugin registration errors propagate unhandled from `buildApp()` — test isolation concern for task 7 tests [server.ts:9] — deferred, pre-existing
+- [x] [Review][Defer] `bodyLimit` 1 MB applies globally — latent 413 trap for future routes with larger payloads [server.ts:12] — deferred, pre-existing

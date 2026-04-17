@@ -1,5 +1,17 @@
 # Deferred work
 
+## Deferred from: code review of task-01-project-scaffold.md (2026-04-17)
+
+- **Error handler swallows error details:** `setErrorHandler` logs the error but returns a generic body; when debugging mock misbehaviour in integration tests the actual error is invisible in the response.
+
+- **`.nvmrc` pins major only (`22`):** Not fully reproducible across Node 22.x patch releases; low impact for a local test tool but worth pinning a specific version before CI is wired up (story 2-1).
+
+- **`@fastify/cookie` registered without `secret`:** If future tasks add signed cookies the server will silently produce unsigned ones; clarify signing intent when auth routes are added (task 3/6).
+
+- **Plugin registration errors unhandled from `buildApp()`:** If a plugin rejects, the error propagates as an unhandled rejection from `main()`. Test isolation patterns for task 7 should add per-test `app.close()` and catch plugin errors explicitly.
+
+- **`bodyLimit` 1 MB applies globally:** Any future route handling larger payloads (binary blobs, bulk exports) will get a misleading 500 from the custom error handler rather than a 413. Revisit per-route `bodyLimit` when adding routes in tasks 3–6.
+
 ## Deferred from: code review of 1-5-go-router-shell-onboarding-guard-connectivity.md (2026-04-14)
 
 - **Duplicate onboarding tests:** `widget_test.dart` and `app_router_test.dart` both cover empty DB → onboarding; merge or specialize (e.g. widget_test locale-only, router test insert path only) when convenient.
