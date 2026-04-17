@@ -13,6 +13,13 @@ stepsCompleted:
   - "step-09-functional"
   - "step-10-nonfunctional"
   - "step-11-polish"
+  - "step-e-01-discovery"
+  - "step-e-02-review"
+  - "step-e-03-edit"
+lastEdited: "2026-04-17"
+editHistory:
+  - date: "2026-04-17"
+    changes: "Added mock eVisitor backend (Fastify + TypeScript) to Technical Constraints and Integration Requirements; added Patrol to Integration Requirements; rewrote Testing Strategy to specify unit/widget/integration/E2E tiers with Patrol on headless Android emulator and mock eVisitor server as CI dependency."
 timeline: "6 weeks to Play Store (target: ~end of May 2026)"
 visionNotes:
   capturePipeline: "MRZ-first → OCR fallback → manual entry (changed from brainstorm S1 which eliminated OCR)"
@@ -239,7 +246,7 @@ Now she's home with coffee. The queue shows 7 guests across three facilities. Sh
 
 **eVisitor API surface (from official wiki + PDF):**
 - **Auth:** `POST Resources/AspNetFormsAuth/Authentication/Login` — `(UserName, Password, apikey)` → bool + cookies (`.ASPXAUTH`, affinity, language). All subsequent calls must include these cookies.
-- **Test environment:** `https://www.evisitor.hr/testApi` — separate credentials, snapshot data.
+- **Test environment:** `https://www.evisitor.hr/testApi` — separate credentials, snapshot data. Not used in CI or local dev — replaced by the project-owned mock server (`config/local.json` → `http://10.0.2.2:8080`; `config/test.json` → `http://mock-evisitor:8080` in compose).
 - **Guest registration:** Two paths available:
   - `CheckInTourist` (action) — per-guest, JSON body, newer API
   - `ImportTourists` (action) — XML body, batch, legacy but still supported
@@ -263,13 +270,20 @@ Now she's home with coffee. The queue shows 7 guests across three facilities. Sh
 - Credential blobs encrypted with Keystore-backed keys. Jetpack `security-crypto` is moving toward deprecation — use direct Keystore + cipher.
 - BiometricPrompt optional gate for credential access (post-MVP).
 
+**Mock eVisitor backend server:**
+- Project-owned mock server (Fastify + TypeScript) mirroring the eVisitor REST surface (`Login`, `CheckInTourist`, `ImportTourists`, session cookies, error envelope) with scripted responses: success, validation failure, duplicate detection, 401/session expiry, 503/unavailable.
+- Purpose: deterministic target for integration and E2E tests — decouples the test suite from the real eVisitor test environment, which is rate-limited and snapshot-scheduled.
+- Runs locally for development and as a CI test dependency. Not shipped in the app binary.
+
 ### Integration Requirements
 
 | System | Integration | Protocol |
 |--------|-------------|----------|
 | **eVisitor** | Guest check-in/out, facility lookup | REST + cookies, JSON wrapper, XML payloads |
+| **Mock eVisitor server** | E2E/integration test target mirroring eVisitor API contract | Fastify + TypeScript, local HTTP, scripted responses |
 | **ML Kit** | Text Recognition v2 (MRZ + OCR regions) | On-device, no network |
 | **MRZ parser** | ICAO TD1/TD2/TD3 checksum validation | Local library (mrz_parser or equivalent) |
+| **Patrol** | E2E test framework on headless Android emulator | Dart test runner + native driver (ADB, UiAutomator) |
 | **AdMob** | Ad display + revenue | Google Mobile Ads SDK |
 | **UMP** | EEA consent management | Google UMP SDK |
 | **Firebase Crashlytics** | Crash reporting (PII scrubbing required) | Firebase SDK |
@@ -325,11 +339,14 @@ No storage permission needed — app uses internal storage (Drift/sqflite). No l
 - App rotation: state preserved across configuration changes
 
 **Testing strategy:**
-- MRZ parser: unit tests with ICAO TD1/TD3 checksum vectors
-- Queue state machine: unit tests for all transitions + process death
-- eVisitor transport: integration tests with mock server returning real error shapes
-- Camera + ML Kit: instrumented tests on real device with sample documents
-- Multi-facility: scenario tests matching Journey 4 (Marina)
+
+- **Unit tests (Dart):** MRZ parser with ICAO TD1/TD2/TD3 checksum vectors; queue state machine transitions + process-death recovery; field validation against eVisitor length/format limits; Croatian error mapping.
+- **Widget tests (Flutter):** Review card read-only/editable states, facility picker flows, form validation rendering.
+- **Integration tests (Dart):** eVisitor transport layer (cookie auth, session expiry replay, retry/backoff) against the mock eVisitor server (Fastify + TypeScript), asserting against the full set of scripted response shapes (success, validation error, duplicate, 401, 503).
+- **E2E tests (Patrol):** Full user journeys (scan → review → queue → batch send → history) driven by Patrol on a **headless Android emulator**. Patrol's native-side capabilities cover what Flutter integration tests cannot: granting the camera permission via the system dialog, toggling airplane mode to simulate offline, dismissing the Keystore/biometric prompt, and asserting notification content. Test syntax uses Patrol's `patrolTest` + `$` finder (e.g. `await $(#startScanning).tap()`) and `$.native` for system UI. The mock eVisitor server is started as a test dependency before each E2E run so scan-to-submit flows have a deterministic backend.
+- **Scenario coverage:** All four user journeys — happy path (J1), OCR fallback + eVisitor error (J2), first-time onboarding (J3), multi-facility session switching (J4) — have a corresponding Patrol E2E test.
+- **CI pipeline:** Unit + widget tests run on every push. Patrol E2E suite (minimum 5 passing tests) runs via `docker-compose -f docker-compose.e2e.yml up` on GHA `ubuntu-latest` (KVM-accelerated) — three containers: mock-evisitor, android-emulator (budtmo/docker-android), test-runner (Flutter SDK + patrol_cli). No real eVisitor API calls in CI. Coverage gate enforces ≥70% meaningful on push to `main`.
+- **AI Integration Log:** Living document at `_bmad-output/ai-integration-log.md` updated per story. Covers agent usage, Postman MCP usage, test generation, debugging, and limitations. Required training deliverable.
 
 ## Project Scoping & Phased Development
 

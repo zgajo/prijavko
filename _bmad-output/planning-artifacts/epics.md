@@ -141,85 +141,91 @@ UX-DR20: Implement Croatian as primary UI language with English fallback via ARB
 
 | FR | Epic | Description |
 |----|------|-------------|
-| FR1 | Epic 3 | Camera document capture |
-| FR2 | Epic 3 | MRZ extraction + checksum |
-| FR3 | Epic 3 | OCR fallback |
-| FR4 | Epic 3 | Manual entry/correction |
-| FR5 | Epic 3 | Capture tier metadata |
-| FR6 | Epic 3 | Read-only review card |
-| FR7 | Epic 3 | Editable review mode |
-| FR8 | Epic 3 | Non-document fields (dates, facility) |
-| FR9 | Epic 3 | Client-side validation |
-| FR10 | Epic 4 | Delete from queue |
-| FR11 | Epic 2 | Add facility profile + defaults |
-| FR12 | Epic 2 | Multi-facility CRUD |
-| FR13 | Epic 2 | Session-scoped facility |
-| FR14 | Epic 2 | Change facility between sessions |
-| FR15 | Epic 2 | Encrypted credential storage |
-| FR16 | Epic 4 | Local queue with facility association |
-| FR17 | Epic 4 | View queue |
-| FR18 | Epic 5 | Batch submit |
-| FR19 | Epic 5 | Individual submit |
-| FR20 | Epic 4 | State lifecycle tracking |
-| FR21 | Epic 5 | Retry failed guests |
-| FR22 | Epic 4 | 7-day stale purge |
-| FR23 | Epic 5 | eVisitor authentication |
-| FR24 | Epic 5 | Guest check-in submission |
-| FR25 | Epic 5 | GUID generation + tracking |
-| FR26 | Epic 5 | Session expiry re-auth |
-| FR27 | Epic 5 | Croatian error mapping |
-| FR28 | Epic 5 | API unavailability resilience |
-| FR29 | Epic 5 | Non-EU conditional fields |
-| FR30 | Epic 6 | 30-day history view |
-| FR31 | Epic 6 | Status + timestamp per entry |
-| FR32 | Epic 6 | 30-day auto-purge |
-| FR33 | Epic 7 | AdMob display |
-| FR34 | Epic 7 | UMP/CMP consent |
-| FR35 | Epic 7 | Consent preference management |
-| FR36 | Epic 2 | First-launch onboarding |
-| FR37 | Epic 3 | Audio/haptic feedback |
-| FR38 | Epic 3 | Croatian field-level validation |
-| FR39 | Epic 4 | Duplicate scan warning (24h) |
+| FR1 | Epic 4 | Camera document capture |
+| FR2 | Epic 4 | MRZ extraction + checksum |
+| FR3 | Epic 4 | OCR fallback |
+| FR4 | Epic 4 | Manual entry/correction |
+| FR5 | Epic 4 | Capture tier metadata |
+| FR6 | Epic 4 | Read-only review card |
+| FR7 | Epic 4 | Editable review mode |
+| FR8 | Epic 4 | Non-document fields (dates, facility) |
+| FR9 | Epic 4 | Client-side validation |
+| FR10 | Epic 5 | Delete from queue |
+| FR11 | Epic 3 | Add facility profile + defaults |
+| FR12 | Epic 3 | Multi-facility CRUD |
+| FR13 | Epic 3 | Session-scoped facility |
+| FR14 | Epic 3 | Change facility between sessions |
+| FR15 | Epic 3 | Encrypted credential storage |
+| FR16 | Epic 5 | Local queue with facility association |
+| FR17 | Epic 5 | View queue |
+| FR18 | Epic 6 | Batch submit |
+| FR19 | Epic 6 | Individual submit |
+| FR20 | Epic 5 | State lifecycle tracking |
+| FR21 | Epic 6 | Retry failed guests |
+| FR22 | Epic 5 | 7-day stale purge |
+| FR23 | Epic 6 | eVisitor authentication |
+| FR24 | Epic 6 | Guest check-in submission |
+| FR25 | Epic 6 | GUID generation + tracking |
+| FR26 | Epic 6 | Session expiry re-auth |
+| FR27 | Epic 6 | Croatian error mapping |
+| FR28 | Epic 6 | API unavailability resilience |
+| FR29 | Epic 6 | Non-EU conditional fields |
+| FR30 | Epic 7 | 30-day history view |
+| FR31 | Epic 7 | Status + timestamp per entry |
+| FR32 | Epic 7 | 30-day auto-purge |
+| FR33 | Epic 8 | AdMob display |
+| FR34 | Epic 8 | UMP/CMP consent |
+| FR35 | Epic 8 | Consent preference management |
+| FR36 | Epic 3 | First-launch onboarding |
+| FR37 | Epic 4 | Audio/haptic feedback |
+| FR38 | Epic 4 | Croatian field-level validation |
+| FR39 | Epic 5 | Duplicate scan warning (24h) |
 
 ## Epic List
 
 ### Epic 1: Project Foundation & App Shell
-The app launches with themed Material 3 UI, bottom navigation between tabs, Croatian/English localization, and all foundational infrastructure (Drift schema, Riverpod, code gen pipeline, build flavors). No user-facing features yet, but the runnable skeleton that every feature plugs into.
+The app launches with themed Material 3 UI, bottom navigation between tabs, Croatian/English localization, and all foundational infrastructure (Drift schema, Riverpod, code gen pipeline, build flavors). No user-facing features yet, but the runnable skeleton that every feature plugs into. Story 1.6 builds the mock eVisitor server in parallel.
 **FRs covered:** None directly (infrastructure enabling all FRs)
 **NFRs addressed:** NFR4, NFR10, NFR11, NFR12
 **UX-DRs:** UX-DR1, UX-DR2, UX-DR9, UX-DR11, UX-DR14, UX-DR17, UX-DR20
 
-### Epic 2: Facility Management & Onboarding
+### Epic 2: Test Infrastructure & Deployment Quality
+Docker compose pipeline (Android emulator + test runner containers) provides a deterministic `docker-compose up` E2E entrypoint. Patrol E2E suite covers all four user journeys (minimum 5 passing tests). CI jobs enforce coverage ≥70%, automate E2E on every PR. QA reports and AI Integration Log complete the training deliverables. Mock eVisitor server (Story 1.6) is a prerequisite — built in Epic 1.
+**FRs covered:** None directly (enables quality assurance of all FRs)
+**NFRs addressed:** NFR test strategy, CI pipeline, coverage gate
+**UX-DRs:** N/A
+
+### Epic 3: Facility Management & Onboarding
 Host can add facility profiles with encrypted credentials, configure per-facility defaults (payment category, arrival organisation, service type, default stay), manage multiple facilities (edit, delete), and get guided through first-launch setup. The app knows who the host is and which facilities they manage.
 **FRs covered:** FR11, FR12, FR13, FR14, FR15, FR36
 **NFRs addressed:** NFR9, NFR15, NFR16
 **UX-DRs:** UX-DR3, UX-DR12, UX-DR16
 
-### Epic 3: Document Capture & Guest Review
+### Epic 4: Document Capture & Guest Review
 Host can start a scanning session (scoped to a facility), capture a passport or ID card photo, see extracted data via MRZ (with checksum validation), OCR fallback, or manual entry. The submission snapshot card shows "what will be sent" — read-only on clean MRZ, editable when extraction is degraded. Host confirms and the guest enters the queue. Audio/haptic feedback signals success.
 **FRs covered:** FR1, FR2, FR3, FR4, FR5, FR6, FR7, FR8, FR9, FR37, FR38
 **NFRs addressed:** NFR1a, NFR1b, NFR2, NFR5, NFR7, NFR13, NFR23
 **UX-DRs:** UX-DR4, UX-DR5, UX-DR18
 
-### Epic 4: Guest Queue & Local Workflow
+### Epic 5: Guest Queue & Local Workflow
 Host can view all queued guests with facility tags and status chips, delete guests before submission, and see the state machine in action (captured → confirmed → ready). Duplicate scan warning within 24h. Queue is offline-durable — survives app kill, process death, device reboot. Stale entries auto-purge after 7 days.
 **FRs covered:** FR10, FR16, FR17, FR20, FR22, FR39
 **NFRs addressed:** NFR3, NFR8, NFR20, NFR22, NFR26, NFR27, NFR28
 **UX-DRs:** UX-DR6, UX-DR13, UX-DR15
 
-### Epic 5: eVisitor Submission & Error Handling
+### Epic 6: eVisitor Submission & Error Handling
 Host can submit all ready guests in batch or individually. The app authenticates with eVisitor (deferred login at first send), handles cookie sessions, submits via CheckInTourist/ImportTourists, shows per-guest results with Croatian error messages, supports retry for failed guests, handles auth expiry (pausedAuth state + re-auth prompt), and enforces non-EU conditional fields. Partial batch success is first-class UI.
 **FRs covered:** FR18, FR19, FR21, FR23, FR24, FR25, FR26, FR27, FR28, FR29
 **NFRs addressed:** NFR6, NFR19, NFR21, NFR25, NFR29
 **UX-DRs:** UX-DR7, UX-DR8, UX-DR10
 
-### Epic 6: Submission History
+### Epic 7: Submission History
 Host can view a 30-day history of submitted guests with status, timestamp, and facility context. Auto-purge clears entries older than 30 days. Provides proof-of-submission for inspector questions.
 **FRs covered:** FR30, FR31, FR32
 **NFRs addressed:** NFR14
 **UX-DRs:** UX-DR13
 
-### Epic 7: Ads & Consent Management
+### Epic 8: Ads & Consent Management
 App displays non-intrusive banner ads on queue and history screens. UMP/CMP consent dialog presented before first ad load (EEA/UK compliance). Host can manage ad consent preferences in settings. Ads never interrupt capture, review, or submission flows.
 **FRs covered:** FR33, FR34, FR35
 **NFRs addressed:** NFR17, NFR24
@@ -395,11 +401,263 @@ So that **I can move around the app and later features plug into fixed routes**.
 
 ---
 
-## Epic 2: Facility Management & Onboarding
+### Story 1.6: Mock eVisitor Server
+
+As a **developer**,
+I want **a local Fastify + TypeScript mock of the eVisitor REST API running from day one**,
+So that **every subsequent epic can make real HTTP calls against a deterministic backend without depending on the real eVisitor test API**.
+
+**Acceptance Criteria:**
+
+**Given** the mock server is started (`pnpm dev` from `test-infra/mock-evisitor/`)
+**When** the Flutter app runs with `config/local.json` on an Android Studio AVD
+**Then** `http://10.0.2.2:8080` resolves to the mock and `Login`, `CheckInTourist`, `ImportTourists` requests succeed
+
+**Given** a `Login` POST with valid test credentials
+**When** the mock processes the request
+**Then** it responds 200 with `Set-Cookie: ASP.NET_SessionId=testsession123` matching the real eVisitor cookie name
+
+**Given** a `Login` POST with invalid credentials
+**When** the mock processes the request
+**Then** it responds 401
+
+**Given** a `CheckInTourist` or `ImportTourists` POST with a guest whose doc number matches `ERR_VALIDATION_*`
+**When** the mock processes the request
+**Then** it responds 400 with `{SystemMessage: "...", UserMessage: "Putovnica nije važeća."}`
+
+**Given** a guest doc number matching `ERR_DUPLICATE_*`
+**When** the mock processes the request
+**Then** it responds 409 with `{SystemMessage: "...", UserMessage: "Gost je već prijavljen."}`
+
+**Given** a request with `X-Mock-Scenario: expire-session` header or absent/expired cookie
+**When** the mock processes the request
+**Then** it responds with 401 or 302 → login HTML body (both paths exercised)
+
+**Given** a request with `X-Mock-Scenario: unavailable` header
+**When** the mock processes the request
+**Then** it responds 503 with `{SystemMessage: "Service unavailable", UserMessage: ""}`
+
+**Given** `GET /healthz`
+**When** the mock is running
+**Then** it responds 200 `{"status":"ok"}`
+
+**Given** contract tests in `test-infra/mock-evisitor/test/`
+**When** `vitest` runs
+**Then** all fixture response shapes, status codes, and cookie headers are verified
+
+**Technical notes:**
+- Stack: Fastify + TypeScript, `pnpm` workspaces under `test-infra/mock-evisitor/`
+- Fixtures in `test-infra/mock-evisitor/fixtures/` — JSON files, not hardcoded responses
+- Postman MCP used during development to validate endpoint contracts interactively
+- Cookie expiry configurable via env var `SESSION_TTL_SECONDS` (default 300) for re-auth E2E tests
+- Local dev start: `cd test-infra/mock-evisitor && pnpm dev` — documented in `test-infra/README.md`
+- Implement parallel with Story 1.1 (project init) — TypeScript project has no Flutter dependency
+
+---
+
+## Epic 2: Test Infrastructure & Deployment Quality
+
+Docker compose pipeline (Android emulator + test runner containers) provides a deterministic `docker-compose up` E2E entrypoint. Patrol E2E suite covers all four user journeys with minimum 5 passing tests. CI jobs enforce coverage ≥70%, automate E2E on every PR. QA reports and AI Integration Log complete the training deliverables.
+
+**Prerequisite:** Story 1.6 (Mock eVisitor Server) must be complete before any story in this epic starts.
+
+**Execution sequencing:**
+
+| Story | Start when | Blocks |
+|---|---|---|
+| 2.1 Docker compose pipeline | After Story 1.6 (mock server) | 2.2, 2.3 |
+| 2.2 GitHub Actions E2E CI | After 2.1 | Automated regression on all subsequent PRs |
+| 2.3 Patrol E2E test suite | After 2.1 + Epics 3–7 complete, **before Epic 8** | 2.4 coverage report |
+| 2.4–2.6 QA reports + AI log | After all feature epics (3–8) complete | Training submission |
+
+**Implementation order in practice:** Epic 1 (+ Story 1.6 in parallel) → 2.1 → 2.2 → Epics 3–7 → 2.3 → Epic 8 → 2.4 → 2.5 → 2.6
+
+---
+
+### Story 2.1: Docker Compose E2E Pipeline
+
+As a **developer/CI pipeline**,
+I want **`docker-compose -f docker-compose.e2e.yml up` to build the APK, boot an Android emulator, install the app, and run the Patrol E2E suite**,
+So that **E2E tests run deterministically in CI without requiring a physical device or developer setup**.
+
+**Acceptance Criteria:**
+
+**Given** a Linux machine with Docker and `/dev/kvm` available (GHA `ubuntu-latest`)
+**When** `docker-compose -f docker-compose.e2e.yml up --abort-on-container-exit` is run
+**Then** the three containers start in dependency order: `mock-evisitor` → `android-emulator` → `test-runner`
+
+**Given** all three containers are healthy
+**When** `test-runner` executes
+**Then** it builds the APK with `config/test.json`, connects to `android-emulator:5555` via ADB, installs the APK, and runs `patrol test`
+
+**Given** the Patrol suite completes
+**When** the compose command exits
+**Then** JUnit XML and coverage artifacts are written to `./test-infra/output/`
+**And** compose exits with the test runner's exit code (non-zero on failure)
+
+**Given** any container fails its healthcheck
+**When** `depends_on: condition: service_healthy` is evaluated
+**Then** compose aborts rather than running tests against a broken dependency
+
+**Given** Apple Silicon dev machine
+**When** a developer attempts to run the compose pipeline locally
+**Then** documentation in `test-infra/README.md` clearly states this is CI-only on Apple Silicon and directs to the local fast-loop instructions
+
+**Technical notes:**
+- `docker-compose.e2e.yml` — separate from any future app-services compose file
+- `test-runner` Dockerfile: multi-stage — Flutter SDK base (heavy, cached) + patrol_cli + ADB tooling
+- `budtmo/docker-android:emulator_14.0` (API 34, x86_64); `privileged: true` + `/dev/kvm` mount required
+- `config/test.json`: `API_BASE=http://mock-evisitor:8080` (Docker service DNS) — never used outside compose
+
+---
+
+### Story 2.2: GitHub Actions E2E CI Job
+
+As a **developer**,
+I want **the E2E Patrol suite to run automatically on every PR and push to `main` via GitHub Actions**,
+So that **regressions are caught before merge without manual intervention**.
+
+**Acceptance Criteria:**
+
+**Given** a push or PR to any branch
+**When** the `base-checks` CI job passes (analyze + unit/widget tests)
+**Then** the `e2e` job starts and runs `docker-compose -f docker-compose.e2e.yml up --abort-on-container-exit`
+
+**Given** the KVM enablement step in the GHA workflow
+**When** the `ubuntu-latest` runner starts
+**Then** `/dev/kvm` is accessible inside the `android-emulator` container
+
+**Given** Docker layer caching via `actions/cache`
+**When** Dockerfiles have not changed since last run
+**Then** warm pipeline completes in under 15 minutes total
+
+**Given** the E2E job completes (pass or fail)
+**When** the workflow finishes
+**Then** JUnit XML and coverage artifacts are uploaded via `actions/upload-artifact` and visible in the GHA run summary
+
+**Given** a `coverage-gate` job on push to `main`
+**When** combined Dart + mock-server coverage is below 70% meaningful
+**Then** the job fails with a clear report indicating which files are below threshold
+
+**Technical notes:**
+- Workflow file: `.github/workflows/e2e.yml`
+- KVM enablement: `udevadm` rule for `/dev/kvm` group permissions
+- `budtmo/docker-android` image pinned by digest in CI to prevent silent image changes
+
+---
+
+### Story 2.3: Patrol E2E Test Suite — Core User Journeys
+
+As a **QA engineer**,
+I want **Patrol E2E tests covering all four user journeys defined in the PRD**,
+So that **complete scan-to-submit flows are verified end-to-end on a real Android emulator with a minimum of 5 passing tests**.
+
+**Acceptance Criteria:**
+
+**Given** the Patrol suite runs against the compose pipeline
+**When** Journey 1 (happy path: scan → review → queue → batch send → history) executes
+**Then** the test passes: guest captured, confirmed, sent, visible in history
+
+**Given** Journey 2 (OCR fallback + eVisitor validation error)
+**When** the test runs with a guest doc number `ERR_VALIDATION_*`
+**Then** the app shows the Croatian `UserMessage` error on the queue row and the guest transitions to `failed(isTerminal: true)`
+
+**Given** Journey 3 (first-time onboarding)
+**When** the test runs on a fresh app install with no facility profiles
+**Then** the onboarding guard redirects correctly and facility setup completes before queue access
+
+**Given** Journey 4 (multi-facility session switching — Marina)
+**When** the test runs with two facility profiles configured
+**Then** the facility chip is visible on queue rows and switching facilities updates the active context
+
+**Given** the camera permission system dialog
+**When** the test reaches the camera screen for the first time
+**Then** `$.native` grants the permission via Patrol's native automator — no manual grant required
+
+**Given** the a11y journey (1 dedicated test)
+**When** the queue screen renders with a guest in `failed` state
+**Then** TalkBack-compatible `semanticsLabel` on the queue row is a single coherent string verified via `find.bySemanticsLabel`
+
+**Minimum test count:** ≥5 passing Patrol E2E tests (training brief requirement). Journeys 1–4 + a11y journey = 5 minimum.
+
+**Technical notes:**
+- Test files in `integration_test/` using Patrol's `patrolTest` + `$` finder syntax
+- Mock eVisitor server (Story 1.6) provides deterministic backend for all journey assertions
+
+---
+
+### Story 2.4: Test Coverage Report & Gap Analysis
+
+As a **developer**,
+I want **a coverage report identifying gaps against the 70% meaningful threshold**,
+So that **I can close the most impactful gaps before release**.
+
+**Acceptance Criteria:**
+
+**Given** `flutter test --coverage` runs on the full test suite
+**When** `lcov` generates the report (excluding `*.g.dart`, `*.freezed.dart`, `main.dart`)
+**Then** total meaningful coverage is ≥70%
+
+**Given** the mock server test suite runs (`vitest --coverage`)
+**When** the report is generated (excluding fixture JSON files)
+**Then** mock server meaningful coverage is ≥70%
+
+**Given** coverage falls below 70% in any area
+**When** the gap analysis runs
+**Then** a written report in `_bmad-output/coverage-report.md` lists uncovered paths by priority (state machine > error mapping > validation > transport > UI)
+
+---
+
+### Story 2.5: Accessibility & Security QA Reports
+
+As a **developer/QA engineer**,
+I want **documented accessibility and security review reports**,
+So that **the app meets WCAG AA intent and common mobile security requirements before release**.
+
+**Acceptance Criteria:**
+
+**Given** the accessibility review
+**When** TalkBack is enabled on AVD and all primary screens are navigated
+**Then** a report in `_bmad-output/accessibility-report.md` documents: zero critical WCAG violations, any warnings, and remediations applied
+
+**Given** the security review
+**When** AI-assisted review runs against OWASP Mobile Top 10 + project PII rules
+**Then** a report in `_bmad-output/security-review.md` documents: findings, severity, and remediations
+**And** all critical/high findings are resolved before the report is finalized
+
+**Given** `dart pub audit`
+**When** run against current `pubspec.lock`
+**Then** no high-severity vulnerabilities in dependencies (or documented exceptions with justification)
+
+---
+
+### Story 2.6: AI Integration Log
+
+As a **developer**,
+I want **a completed AI Integration Log documenting AI and MCP usage throughout development**,
+So that **the training deliverable is met and the log serves as an honest retrospective on AI-assisted development**.
+
+**Acceptance Criteria:**
+
+**Given** the log file at `_bmad-output/ai-integration-log.md`
+**When** reviewed at project completion
+**Then** it contains entries for: Agent Usage, MCP Server Usage (Postman MCP), Test Generation, Debugging with AI, and Limitations Encountered
+
+**Given** each story completion
+**When** the developer wraps up a story
+**Then** a brief log entry is appended — not saved for a single retrospective dump at the end
+
+**Given** the Limitations section
+**When** written
+**Then** it honestly identifies at least 3 cases where AI output required significant human correction or judgment
+
+---
+
+## Epic 3: Facility Management & Onboarding
 
 Host can add facility profiles with encrypted credentials, configure per-facility defaults, manage multiple facilities (edit, delete), and get guided through first-launch setup. The app knows who the host is and which facilities they manage.
 
-### Story 2.1: Facility Profile CRUD & Credential Storage
+### Story 3.1: Facility Profile CRUD & Credential Storage
 
 As a **host**,
 I want **to add, edit, and delete facility profiles with my eVisitor credentials stored securely**,
@@ -438,7 +696,7 @@ So that **I can manage my properties and have my login details ready for submiss
 **Then** inline Croatian validation errors appear on the invalid fields per UX-DR12
 **And** the form uses single-column layout with validation on blur + submit
 
-### Story 2.2: Session-Scoped Facility Selection
+### Story 3.2: Session-Scoped Facility Selection
 
 As a **host**,
 I want **to select which facility I'm registering guests for when I start scanning**,
@@ -470,7 +728,7 @@ So that **every captured guest is tagged to the correct property and I never sub
 **When** the host taps "Start Scanning"
 **Then** they are redirected to the facility setup flow (onboarding or facility add screen)
 
-### Story 2.3: First-Launch Onboarding Flow
+### Story 3.3: First-Launch Onboarding Flow
 
 As a **new host**,
 I want **to be guided through adding my first facility when I install the app**,
@@ -496,7 +754,7 @@ So that **I can start scanning guests without confusion about what to set up fir
 **When** they return to the app
 **Then** onboarding appears again — the app cannot proceed to scanning without at least one facility
 
-### Story 2.4: Facility Defaults & Per-Facility Configuration
+### Story 3.4: Facility Defaults & Per-Facility Configuration
 
 As a **host with multiple facilities**,
 I want **each facility to have its own default values for payment category, arrival organisation, service type, and stay duration**,
@@ -521,11 +779,11 @@ So that **I don't have to re-enter these common fields for every guest at each p
 
 ---
 
-## Epic 3: Document Capture & Guest Review
+## Epic 4: Document Capture & Guest Review
 
 Host can start a scanning session, capture a passport or ID card photo, see extracted data via MRZ (with checksum validation), OCR fallback, or manual entry. The submission snapshot card shows "what will be sent." Host confirms and the guest enters the queue.
 
-### Story 3.1: Camera Setup & Document Capture
+### Story 4.1: Camera Setup & Document Capture
 
 As a **host**,
 I want **to open the camera, see a document alignment guide, and capture a still photo of a guest's passport or ID card**,
@@ -561,7 +819,7 @@ So that **the app can extract guest data from the document image**.
 **Then** a success audio cue and/or haptic feedback fires per FR37
 **And** when MRZ fails, an error-tone or distinct haptic signals the degraded path
 
-### Story 3.2: MRZ Extraction with Checksum Validation
+### Story 4.2: MRZ Extraction with Checksum Validation
 
 As a **host**,
 I want **the app to automatically read the MRZ zone of the captured document and validate it**,
@@ -596,7 +854,7 @@ So that **guest data is extracted accurately without manual typing**.
 **When** MRZ extraction completes on a mid-range device (Snapdragon 600-series, 2022+, release build)
 **Then** capture-to-parsed-data display completes within 3 seconds per NFR1a
 
-### Story 3.3: OCR Fallback Extraction
+### Story 4.3: OCR Fallback Extraction
 
 As a **host**,
 I want **the app to attempt OCR text extraction when MRZ fails or is absent**,
@@ -627,7 +885,7 @@ So that **I still get partially pre-filled fields instead of typing everything m
 **When** OCR fallback completes on a mid-range device
 **Then** capture-to-parsed-data display completes within 5 seconds per NFR1b
 
-### Story 3.4: Guest Review Card, Validation & Queue Entry
+### Story 4.4: Guest Review Card, Validation & Queue Entry
 
 As a **host**,
 I want **to review extracted guest data on a submission snapshot card, correct any errors, fill in remaining fields, and confirm the guest into the queue**,
@@ -679,11 +937,11 @@ So that **I know exactly what will be sent to eVisitor and can fix problems befo
 
 ---
 
-## Epic 4: Guest Queue & Local Workflow
+## Epic 5: Guest Queue & Local Workflow
 
 Host can view all queued guests with facility tags and status chips, delete guests before submission, see the state machine in action. Queue is offline-durable. Stale entries auto-purge after 7 days.
 
-### Story 4.1: Queue List UI with State Chips & Facility Tags
+### Story 5.1: Queue List UI with State Chips & Facility Tags
 
 As a **host**,
 I want **to view all my queued guests with their status, facility assignment, and document info at a glance**,
@@ -713,7 +971,7 @@ So that **I know exactly what's ready to send and can manage my pending registra
 **When** the detail view opens
 **Then** the host sees full guest details including all eVisitor fields, capture tier, facility, and current state
 
-### Story 4.2: Queue Management — Delete & Duplicate Warning
+### Story 5.2: Queue Management — Delete & Duplicate Warning
 
 As a **host**,
 I want **to remove guests from the queue before submission and be warned about duplicate scans**,
@@ -740,7 +998,7 @@ So that **I can correct mistakes and avoid accidentally registering the same gue
 **Then** a soft warning is displayed: "A guest with the same document was scanned recently"
 **And** the warning does not block the capture — the host can still confirm (soft warning, not hard block)
 
-### Story 4.3: Queue Durability, State Recovery & Auto-Purge
+### Story 5.3: Queue Durability, State Recovery & Auto-Purge
 
 As a **host**,
 I want **my guest queue to survive app crashes, process death, and device reboots without losing any data**,
@@ -780,11 +1038,11 @@ So that **I never lose captured guests and can always resume where I left off**.
 
 ---
 
-## Epic 5: eVisitor Submission & Error Handling
+## Epic 6: eVisitor Submission & Error Handling
 
 Host can submit guests to eVisitor in batch or individually, handle Croatian errors, retry failed submissions, and see per-guest results. Deferred auth at first send. Partial batch success is first-class UI.
 
-### Story 5.1: eVisitor Authentication & Cookie Session Management
+### Story 6.1: eVisitor Authentication & Cookie Session Management
 
 As a **host**,
 I want **the app to log in to eVisitor with my stored credentials and maintain the session across submissions**,
@@ -825,7 +1083,7 @@ So that **I don't have to type my login every time and the app handles session e
 **Then** the app authenticates per-facility using each facility's stored credentials
 **And** cookie jars are scoped or managed to prevent credential mixing
 
-### Story 5.2: Guest Submission & XML Payload Construction
+### Story 6.2: Guest Submission & XML Payload Construction
 
 As a **host**,
 I want **to submit my queued guests to eVisitor individually or all at once**,
@@ -873,7 +1131,7 @@ So that **guests are registered in the government system and I've met my legal o
 **When** that guest is marked `failed`
 **Then** the batch continues for remaining guests — failure on one does not abort the rest
 
-### Story 5.3: Error Mapping, Retry & Failure Classification
+### Story 6.3: Error Mapping, Retry & Failure Classification
 
 As a **host**,
 I want **to see eVisitor errors in Croatian, understand what to fix, and retry failed guests**,
@@ -913,7 +1171,7 @@ So that **I can resolve submission problems without guessing what went wrong**.
 **When** detected before submission
 **Then** Croatian error strings from l10n ARB files are used (matching eVisitor terminology where known)
 
-### Story 5.4: Batch Send UI & Auth Pause Handling
+### Story 6.4: Batch Send UI & Auth Pause Handling
 
 As a **host**,
 I want **to see per-guest results during batch send, understand partial success, and handle auth interruptions clearly**,
@@ -952,11 +1210,11 @@ So that **I always know which guests were registered and which need attention**.
 
 ---
 
-## Epic 6: Submission History
+## Epic 7: Submission History
 
 Host can view a 30-day history of submitted guests with status, timestamp, and facility context. Provides proof-of-submission for inspector questions.
 
-### Story 6.1: History List with Status & Timestamps
+### Story 7.1: History List with Status & Timestamps
 
 As a **host**,
 I want **to view a history of all guests I've submitted in the past 30 days**,
@@ -981,7 +1239,7 @@ So that **I have proof of registration if an inspector asks and can verify what 
 **When** the history screen displays guest PII
 **Then** FLAG_SECURE is applied per NFR16
 
-### Story 6.2: History Auto-Purge (30 Days)
+### Story 7.2: History Auto-Purge (30 Days)
 
 As a **host**,
 I want **old submission records to be automatically deleted after 30 days**,
@@ -1005,11 +1263,11 @@ So that **guest personal data isn't retained longer than necessary for my record
 
 ---
 
-## Epic 7: Ads & Consent Management
+## Epic 8: Ads & Consent Management
 
 App displays non-intrusive banner ads on queue and history screens. UMP/CMP consent dialog presented before first ad load. Ads never interrupt capture, review, or submission flows.
 
-### Story 7.1: UMP/CMP Consent Flow
+### Story 8.1: UMP/CMP Consent Flow
 
 As a **host in the EEA/UK**,
 I want **to be asked for ad personalization consent before any ads load**,
@@ -1041,7 +1299,7 @@ So that **my privacy is respected and the app complies with EEA regulations**.
 **When** the app declares data collection
 **Then** ad network data collection is disclosed per consent level
 
-### Story 7.2: AdMob Integration & Banner Placement
+### Story 8.2: AdMob Integration & Banner Placement
 
 As a **host**,
 I want **ads displayed unobtrusively while I manage my queue and history**,

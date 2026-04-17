@@ -320,6 +320,45 @@ EVisitorClient (Dio wrapper)
 - Client-side validation errors use Croatian string constants from l10n ARB files
 - `Failure.apiFailure(userMessage: "...")` carries the Croatian text to the UI layer unchanged
 
+#### Mock eVisitor Server Contract
+
+**Purpose:** Project-owned Fastify + TypeScript server mirroring the eVisitor REST surface. Used by both the local dev loop (`local.json` via `10.0.2.2:8080`) and the CI compose pipeline (`test.json` via Docker DNS `mock-evisitor:8080`). Never shipped in the app binary.
+
+**Endpoints mirrored:**
+
+| Endpoint | Method | Notes |
+|---|---|---|
+| `/Login` | POST | Form-encoded `username` + `password`. Sets `ASP.NET_SessionId` cookie on success. Returns 200 OK with session cookie or 401 on bad credentials. |
+| `/CheckInTourist` | POST | XML body. Requires valid session cookie. Returns `{SystemMessage, UserMessage}` JSON envelope. |
+| `/ImportTourists` | POST | XML body (batch). Requires valid session cookie. Returns array of per-guest `{ID, SystemMessage, UserMessage}`. |
+| `/healthz` | GET | Returns 200 `{"status":"ok"}`. Used by compose healthcheck. |
+
+**Scripted response set (fixtures under `test-infra/mock-evisitor/fixtures/`):**
+
+| Fixture | Trigger | Response |
+|---|---|---|
+| `submit_success.json` | Default happy path | `{SystemMessage: "", UserMessage: ""}` 200 |
+| `submit_error_validation.json` | Guest with doc number matching pattern `ERR_VALIDATION_*` | `{SystemMessage: "...", UserMessage: "Putovnica nije važeća."}` 400 |
+| `submit_error_duplicate.json` | Guest with pattern `ERR_DUPLICATE_*` | `{SystemMessage: "...", UserMessage: "Gost je već prijavljen."}` 409 |
+| `submit_error_session.json` | Request with expired/absent cookie | 401 (or 302 → login HTML body — both must be handled) |
+| `submit_error_unavailable.json` | Triggered via `X-Mock-Scenario: unavailable` header | 503 |
+| `login_success` | Valid test credentials | 200 + `Set-Cookie: ASP.NET_SessionId=testsession123` |
+| `login_failure` | Invalid credentials | 401 |
+
+**Session semantics:**
+- Server issues a short-lived cookie (`maxAge: 300s`) — Patrol E2E tests must exercise the re-auth flow naturally by waiting for expiry or sending an `X-Mock-Scenario: expire-session` header.
+- Cookie jar must be `PersistCookieJar` backed — mock validates cookie presence, matching real eVisitor behavior.
+
+**API contract validation:**
+- Postman MCP used to validate the mock server's response shapes during mock development.
+- Contract tests (`test-infra/mock-evisitor/test/`) assert that each fixture returns the correct status code, headers, and `{SystemMessage, UserMessage}` envelope shape.
+- These tests run in CI as a pre-check before the E2E job (if mock contract is broken, no point running Patrol).
+
+**What the mock deliberately does NOT implement:**
+- Facility lookup / facility list endpoints (Phase 2, not in v1 scope)
+- HTML error bodies for all error cases — only `submit_error_session` 302 redirect needs HTML body (testing the `AuthFailure` non-JSON body path)
+- Rate limiting (the real eVisitor test API has this; mock removes the constraint for CI determinism)
+
 ### Frontend Architecture
 
 **State Management: Riverpod 3.0**
@@ -355,21 +394,32 @@ Already decided in Step 3. Additional architecture:
 
 ### Infrastructure & Deployment
 
-**CI/CD: GitHub Actions (lightweight)**
+**CI/CD: GitHub Actions**
 
-- On push to `main`: `flutter analyze` + `flutter test` + `build_runner` verify
-- On tag: build release APK/AAB with `--dart-define-from-file=config/prod.json`
-- Manual Play Store upload for v1 (automated internal track later if needed)
+| Trigger | Job | Steps |
+|---|---|---|
+| Every push + PR | `base-checks` | `flutter analyze` (zero warnings) + `flutter test` with coverage + `dart run build_runner build --delete-conflicting-outputs` verify |
+| Every push + PR | `e2e` (depends on `base-checks`) | Containerized Patrol suite via `docker-compose -f docker-compose.e2e.yml up --abort-on-container-exit`. See `### Test Infrastructure & CI Pipeline`. |
+| Push to `main` | `coverage-gate` | Fails if combined Dart + mock-server coverage < 70% meaningful (excluding generated files, fixtures) |
+| Tag `v*` | `release-build` | `flutter build appbundle --dart-define-from-file=config/prod.json`; uploads AAB artifact |
+| Manual | `play-store-upload` | v1: manual Play Console upload. Automated internal track deferred to v1.1. |
 
 **Environment Configuration:**
 
 ```
 config/
-├── dev.json    # { "API_BASE": "https://www.evisitor.hr/testApi", "AD_ENABLED": false }
-└── prod.json   # { "API_BASE": "https://www.evisitor.hr", "AD_ENABLED": true }
+├── local.json  # { "API_BASE": "http://10.0.2.2:8080", "AD_ENABLED": false }
+│               # Android Studio AVD → host-side mock server (pnpm dev on host)
+├── test.json   # { "API_BASE": "http://mock-evisitor:8080", "AD_ENABLED": false }
+│               # compose test-runner → mock-evisitor container (Docker DNS). Never used outside compose.
+└── prod.json   # { "API_BASE": "https://www.evisitor.hr",   "AD_ENABLED": true }
 ```
 
-Run: `flutter run --dart-define-from-file=config/dev.json`
+- `local.json` — daily local development. Flutter app on Android Studio AVD connects via `10.0.2.2` (AVD loopback to host) to the mock server running on the host (`cd test-infra/mock-evisitor && pnpm dev`). No real eVisitor API access required.
+- `test.json` — APK built inside `test-runner` container; resolves `mock-evisitor` via Docker service-name DNS. **Never used outside compose.**
+- `prod.json` — Play Store release build only.
+
+Run locally: `flutter run --dart-define-from-file=config/local.json`
 
 **Logging / Observability:**
 
@@ -380,6 +430,206 @@ Run: `flutter run --dart-define-from-file=config/dev.json`
 | **Debug logging** | `dart:developer` `log()` | Level-tagged. Stripped in release builds via `kReleaseMode` guard. |
 
 **North-star metric instrumentation:** `first_time_success` event fires when a guest goes `captured → confirmed → sent` without field edits between confirm and send. Tracked per guest, aggregated in analytics.
+
+#### Quality Gates
+
+**Test Coverage (≥70% meaningful):**
+
+| Scope | Tool | Excludes |
+|---|---|---|
+| Dart (app) | `flutter test --coverage` + `lcov` | `*.g.dart`, `*.freezed.dart`, fixture files, `main.dart` |
+| TypeScript (mock server) | `vitest --coverage` | fixture JSON files |
+| Combined gate | `coverage-gate` CI job on push to `main` | Fails build if either falls below 70% |
+
+"Meaningful" = business logic, state machine transitions, error mapping, validation, transport layer. Generated code and fixtures are noise in coverage metrics and must be excluded.
+
+**Accessibility (Flutter Semantics):**
+
+| Activity | Tool | Cadence |
+|---|---|---|
+| Semantics tree assertions | `flutter_test` + `find.bySemanticsLabel` | Every widget test — inline, not a separate audit pass |
+| TalkBack audit | Manual: TalkBack enabled on Android Studio AVD | Per-epic, pre-release |
+| Screen reader announcement | Assert `$.native.tap(Finder)` triggers correct TalkBack output for queue rows, error surfaces, dynamic non-EU fields | Patrol E2E — 1 dedicated a11y journey |
+
+No Lighthouse / axe-core — those are web tools. Flutter a11y is Semantics-tree-first. Every queue row widget test asserts a single coherent `semanticsLabel` (e.g. "Ana Horvat, Apartment Blue, failed, can retry") not fragmented button/icon/text labels.
+
+**Security Review:**
+
+| Activity | Tool | Cadence |
+|---|---|---|
+| Static analysis | `dart analyze` (zero warnings), `flutter_lints` custom rules | Every commit (CI gate) |
+| Dependency audit | `dart pub audit` | On every `pubspec.lock` change |
+| AI-assisted code review | Claude via Claude Code — review against OWASP Mobile Top 10 + project-specific PII rules | Per-epic, documented in AI Integration Log |
+| Manual checklist | PII logging, `allowBackup`, FLAG_SECURE, HTTPS-only, Keystore credential storage | Pre-release sign-off |
+
+Security review findings documented as issues; remediations logged in the AI Integration Log artifact.
+
+**AI Integration Log:**
+
+A living markdown document at `_bmad-output/ai-integration-log.md` maintained throughout development. Required training deliverable. Sections:
+
+| Section | What to capture |
+|---|---|
+| Agent Usage | Which tasks used AI assistance; which prompts produced good output vs required heavy editing |
+| MCP Server Usage | Postman MCP for mock server contract validation; Flutter DevTools for performance (not Chrome DevTools — N/A for native Android) |
+| Test Generation | How AI assisted in writing test vectors, fixture shapes, Patrol test scaffolding; what it missed |
+| Debugging with AI | Cases where AI helped diagnose issues (state machine edge cases, ADB connectivity, cookie replay) |
+| Limitations | What AI could not do well; where human judgment was critical |
+
+This log is updated at the end of each story, not in a single retrospective dump.
+
+### Test Infrastructure & CI Pipeline
+
+**Goal:** Deterministic, reproducible E2E pipeline satisfying `docker-compose up` as the canonical path to "build APK → boot emulator → install → run Patrol → assert against mock eVisitor." Decouples test suite from the real eVisitor test API (rate-limited, snapshot-scheduled).
+
+#### Containerized E2E Topology
+
+Three containers on a shared Docker bridge network:
+
+```
+┌─────────────────── docker-compose network: prijavko-e2e ────────────────────┐
+│                                                                             │
+│  ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐     │
+│  │  mock-evisitor   │◄────│   test-runner    │────►│  android-emulator│     │
+│  │                  │     │                  │     │                  │     │
+│  │  Fastify + TS    │     │  Flutter SDK +   │     │ budtmo/          │     │
+│  │  :8080 HTTP      │     │  patrol_cli +    │     │ docker-android   │     │
+│  │  /healthz        │     │  ADB client      │     │ :5555 ADB        │     │
+│  │                  │     │                  │     │ :6080 noVNC      │     │
+│  │  scripted resp.  │     │                  │     │ API 34, x86_64   │     │
+│  │  - success       │     │ 1. flutter build │     │ KVM-accelerated  │     │
+│  │  - 400 validation│     │ 2. adb connect   │     │                  │     │
+│  │  - 409 duplicate │     │ 3. adb install   │     │                  │     │
+│  │  - 401 session   │     │ 4. patrol test   │     │                  │     │
+│  │  - 503 unavail.  │     │                  │     │                  │     │
+│  └──────────────────┘     └──────────────────┘     └──────────────────┘     │
+│         ▲                          │                        ▲               │
+│         │                          │ HTTP (test asserts)    │               │
+│         └──────────────────────────┘                        │               │
+│                                    └────────────────────────┘               │
+│                          ADB over TCP + Patrol native server                │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Container Responsibilities
+
+| Container | Image base | Owns |
+|---|---|---|
+| `mock-evisitor` | `node:20-alpine` | Fastify mock of eVisitor REST surface (`Login`, `CheckInTourist`, `ImportTourists`), cookie-based session, scripted error envelope (`{SystemMessage, UserMessage}`), `/healthz`. Fixtures under `test-infra/mock-evisitor/fixtures/`. |
+| `test-runner` | Multi-stage: `ghcr.io/cirruslabs/flutter:stable` → adds `patrol_cli`, `android-platform-tools` | Builds APK (`flutter build apk --dart-define-from-file=config/test.json`), waits for `android-emulator:5555` readiness, `adb connect`, `adb install`, `patrol test` against the `integration_test/` suite. Emits JUnit + coverage to mounted volume. |
+| `android-emulator` | `budtmo/docker-android:emulator_14.0` (API 34, x86_64) | Headless Android emulator booted with KVM (`/dev/kvm` device mount), ADB exposed on `:5555`. Patrol native automation server installed per-test-run by Patrol CLI. |
+
+#### Docker Compose Sketch
+
+File: `docker-compose.e2e.yml` (split from app compose to isolate test concerns)
+
+```yaml
+services:
+  mock-evisitor:
+    build: ./test-infra/mock-evisitor
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 5s
+      retries: 10
+
+  android-emulator:
+    image: budtmo/docker-android:emulator_14.0
+    privileged: true              # required for KVM
+    devices:
+      - /dev/kvm:/dev/kvm         # nested virt acceleration
+    environment:
+      EMULATOR_DEVICE: "Samsung Galaxy S10"
+      WEB_VNC: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "adb shell getprop sys.boot_completed | grep -q 1"]
+      interval: 10s
+      retries: 30
+
+  test-runner:
+    build: ./test-infra/test-runner
+    depends_on:
+      mock-evisitor: { condition: service_healthy }
+      android-emulator: { condition: service_healthy }
+    volumes:
+      - ./:/workspace
+      - ./test-infra/output:/output   # JUnit + coverage artifacts
+    environment:
+      EVISITOR_BASE_URL: "http://mock-evisitor:8080"
+      ADB_SERVER: "android-emulator:5555"
+```
+
+Config file `config/test.json` points `API_BASE` at `http://mock-evisitor:8080` so the APK under test talks to the mock, not the real eVisitor. Ads disabled.
+
+#### Execution Sequence (`docker-compose -f docker-compose.e2e.yml up --abort-on-container-exit`)
+
+1. `mock-evisitor` boots, `/healthz` passes.
+2. `android-emulator` boots with KVM, reports `sys.boot_completed=1`.
+3. `test-runner` starts: `flutter build apk --flavor test`, then `adb connect android-emulator:5555`, `adb install build/app/outputs/flutter-apk/app-test.apk`, then `patrol test -t integration_test/` with the native automation server handling camera permission, airplane-mode toggle, notification assertions.
+4. Test runner emits JUnit XML + coverage to `./test-infra/output/`.
+5. Compose exits with test runner's exit code.
+
+#### Local Dev Loop vs CI Loop
+
+| Loop | Emulator | Mock server | Patrol invocation | When to use |
+|---|---|---|---|---|
+| **Local fast loop (Apple Silicon)** | Native Android Studio AVD (ARM system image, HVF-accelerated) | `cd test-infra/mock-evisitor && pnpm dev` on host | `patrol test` from host shell | Daily dev: watch-compile-test on real hardware speed. ~10s cold, <5s warm. |
+| **Local full E2E (optional)** | ❌ Not recommended on Apple Silicon — Docker Desktop doesn't expose KVM/HVF to containers; emulator boots in software emu, 5–10 min and flaky | Inside compose | Inside compose | Rare local verification of the compose pipeline itself. Prefer CI. |
+| **CI** | `android-emulator` container on GHA `ubuntu-latest` (KVM-accelerated via `/dev/kvm`) | Inside compose | Inside compose | Every PR + every push to `main`. |
+
+**Explicit decision:** the compose E2E pipeline is **CI-canonical, local-optional**. Dev machines run the fast loop. CI runs the full compose. This honors the training brief's `docker-compose up` contract without sacrificing dev ergonomics on Apple Silicon.
+
+#### APK Build Strategy
+
+- **Inside the `test-runner` container** via multi-stage Dockerfile:
+  - Stage 1 (base): `ghcr.io/cirruslabs/flutter:stable` — Flutter SDK + Android SDK + build tools. Heavy layer, cached aggressively.
+  - Stage 2 (runner): adds `patrol_cli`, ADB, test entrypoint script.
+- Rationale: single self-contained image; `docker-compose up` genuinely does everything; multi-stage caching keeps CI fast after first run.
+- **Not chosen:** separate "builder" container producing APK as shared volume. Adds orchestration complexity for no material gain at v1 scale.
+
+#### GitHub Actions Integration
+
+```yaml
+# .github/workflows/e2e.yml
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: docker/setup-buildx-action@v3
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('test-infra/**/Dockerfile') }}
+      - run: docker compose -f docker-compose.e2e.yml up --abort-on-container-exit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-results
+          path: test-infra/output/
+```
+
+Existing CI workflow (analyze/test/build_runner verify) remains untouched; E2E is an additional job gated on the base checks passing.
+
+#### KVM / Apple Silicon Gotchas (Do-Not-Forget)
+
+- **Apple Silicon cannot run this compose locally with acceptable performance.** Documented as CI-only. Do not spend sprint time debugging `/dev/kvm` absence on M-series.
+- **GHA hosted `ubuntu-latest` exposes `/dev/kvm` only since 2023.** Pin the runner image; do not allow GHA to silently drop to a runner without KVM.
+- **budtmo/docker-android image is ~4 GB.** Docker layer cache on CI is mandatory; cold pipeline is ~8–10 min, warm is ~3–4 min.
+- **Emulator boot race:** the `healthcheck` on `sys.boot_completed` is load-bearing. `test-runner`'s `depends_on: condition: service_healthy` is the only reliable gate; do not `sleep 60` in the entrypoint.
+- **ADB over TCP between containers:** `adb connect android-emulator:5555` — Docker DNS resolves the service name. Do not hardcode IPs.
+- **Patrol native server version pinning:** `patrol_cli` and `patrol` Dart dep must match; drift causes opaque "native automator not responding" errors. Pin both in `pubspec.yaml` and in the test-runner Dockerfile.
+
+#### What This Section Defers to Other Sections
+
+- Mock eVisitor API contract (fixtures, response shapes, session cookie semantics) — covered in a new `### Mock eVisitor Server Contract` subsection under `### API & Communication Patterns` (separate edit).
+- Epic/story breakdown for building the mock, the Dockerfiles, and the CI wiring — covered in the new "Test Infrastructure & Deployment Quality" epic in `epics.md` (separate edit).
+- Coverage targets, a11y audit workflow, security review cadence — covered in a new `### Quality Gates` subsection (separate edit).
 
 ### Decision Impact Analysis
 

@@ -39,8 +39,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
 | Credential Storage | flutter_secure_storage | Android Keystore-backed |
 | Ads | Google Mobile Ads SDK + UMP/CMP | EEA consent required |
 | Crash Reporting | Firebase Crashlytics | PII scrubbing mandatory |
-| Build Flavors | dev / prod | `--dart-define-from-file` with `config/dev.json` and `config/prod.json` |
+| Build Flavors | local / test / prod | `--dart-define-from-file` with `config/local.json`, `config/test.json`, `config/prod.json` |
 | Package ID | hr.prijavko.app | |
+| Mock server (test-infra only) | Fastify + TypeScript | `node:20-alpine`; **never shipped in app binary**; serves `http://10.0.2.2:8080` locally, `http://mock-evisitor:8080` in compose |
+| E2E test framework | Patrol + patrol_cli | Dart test runner + native Android automator (ADB/UiAutomator); `patrolTest` + `$` finder syntax |
+| CI containerization | Docker Compose | `docker-compose.e2e.yml` — mock-evisitor + budtmo/docker-android emulator + Flutter/Patrol test-runner; CI-only on Apple Silicon |
 
 **Critical version notes:**
 - Riverpod 3.0 specifically — not Bloc, not Provider, not ChangeNotifier
@@ -48,6 +51,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Dio 5.x (not http package) — required for cookie jar integration
 - `flutter_secure_storage` (not deprecated `security-crypto`) for Keystore access
 - ML Kit is on-device bundled model — never cloud API
+- `patrol_cli` and `patrol` Dart dep must be version-pinned together — mismatch causes "native automator not responding" errors
+- `config/test.json` (`API_BASE=http://mock-evisitor:8080`) is compose-internal only — never use outside Docker compose
+- `config/local.json` (`API_BASE=http://10.0.2.2:8080`) is the daily dev flavor — replaces the old `dev.json` pointing at the real eVisitor test API
 
 ## Critical Implementation Rules
 
