@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import formbody from '@fastify/formbody';
 import { pathToFileURL } from 'node:url';
+import { loadFixtures, type Fixtures } from './fixtures.js';
 
 export interface BuildAppOptions {
   logger?: boolean;
@@ -17,6 +18,10 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   await app.register(cookie);
   await app.register(formbody);
 
+  // Fail-fast at boot if fixtures malformed
+  const fixtures = loadFixtures();
+  app.decorate('fixtures', fixtures);
+
   // Routes are registered in later tasks (2-6).
 
   app.setErrorHandler((err, _req, reply) => {
@@ -25,6 +30,13 @@ export async function buildApp(opts: BuildAppOptions = {}): Promise<FastifyInsta
   });
 
   return app;
+}
+
+// Augment Fastify instance with fixtures
+declare module 'fastify' {
+  interface FastifyInstance {
+    fixtures: Fixtures;
+  }
 }
 
 function resolvePort(): number {
