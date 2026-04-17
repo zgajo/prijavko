@@ -12,7 +12,7 @@ so that **every subsequent epic (Auth, Submit, Queue, History) can make real HTT
 
 ## Acceptance Criteria
 
-1. **Mock reachable from AVD** — Given the mock server is started with `pnpm dev` from `test-infra/mock-evisitor/`, when the Flutter app runs with `--dart-define-from-file=config/local.json` on an Android Studio AVD, then `http://10.0.2.2:8080` resolves to the mock and `POST /Login`, `POST /CheckInTourist`, `POST /ImportTourists` requests succeed end-to-end. Server MUST bind to `0.0.0.0` (not `127.0.0.1`) so AVD loopback `10.0.2.2` can reach it.
+1. **Mock reachable from AVD** — Given the mock server is started with `yarn dev` from `test-infra/mock-evisitor/`, when the Flutter app runs with `--dart-define-from-file=config/local.json` on an Android Studio AVD, then `http://10.0.2.2:8080` resolves to the mock and `POST /Login`, `POST /CheckInTourist`, `POST /ImportTourists` requests succeed end-to-end. Server MUST bind to `0.0.0.0` (not `127.0.0.1`) so AVD loopback `10.0.2.2` can reach it.
 
 2. **Login success path** — Given a `POST /Login` with form-encoded `username=testuser&password=testpass` (valid test credentials defined in fixtures), when the mock processes the request, then it responds `200 OK` with header `Set-Cookie: ASP.NET_SessionId=testsession123; HttpOnly; Path=/; Max-Age=<SESSION_TTL_SECONDS>`. Cookie name **MUST be** `ASP.NET_SessionId` (exact casing — matches real eVisitor).
 
@@ -36,73 +36,43 @@ so that **every subsequent epic (Auth, Submit, Queue, History) can make real HTT
 
 11. **Configurable session TTL** — Given env var `SESSION_TTL_SECONDS` (default `300`), when the mock starts, then the `Set-Cookie` `Max-Age` and server-side session expiry both honor this value. Patrol E2E tests (Epic 2.3) rely on short TTLs to exercise natural re-auth without `X-Mock-Scenario` headers.
 
-12. **Contract tests (vitest) green** — Given contract tests in `test-infra/mock-evisitor/test/`, when `pnpm test` runs (invokes `vitest`), then every fixture/scenario listed in AC 2–9 is covered by at least one test asserting: exact HTTP status, exact `Content-Type`, presence/shape of `Set-Cookie` (login), and exact JSON envelope shape (`{SystemMessage, UserMessage}` or array thereof). Tests run headlessly (no external HTTP calls) — exercise Fastify via `app.inject()`.
+12. **Contract tests (node:test) green** — Given contract tests in `test-infra/mock-evisitor/test/`, when `yarn test` runs (invokes `node --test --experimental-strip-types`), then every fixture/scenario listed in AC 2–9 is covered by at least one test asserting: exact HTTP status, exact `Content-Type`, presence/shape of `Set-Cookie` (login), and exact JSON envelope shape (`{SystemMessage, UserMessage}` or array thereof). Tests run headlessly (no external HTTP calls) — exercise Fastify via `app.inject()`. [Test framework choice follows the installed `fastify` skill's `rules/testing.md` guidance — node's built-in test runner over third-party runners.]
 
-13. **Run scripts documented** — Given `test-infra/README.md`, when a new developer reads it, then they find: (a) `cd test-infra/mock-evisitor && pnpm install && pnpm dev` starts the server on `:8080`, (b) `pnpm test` runs contract tests, (c) `pnpm build` produces a `dist/` suitable for the Docker image built in Story 2.1, (d) the relationship between `config/local.json` (AVD dev) and `config/test.json` (compose CI — future Story 2.1).
+13. **Run scripts documented** — Given `test-infra/README.md`, when a new developer reads it, then they find: (a) `cd test-infra/mock-evisitor && yarn install && yarn dev` starts the server on `:8080`, (b) `yarn test` runs contract tests, (c) `yarn build` produces a `dist/` suitable for the Docker image built in Story 2.1, (d) the relationship between `config/local.json` (AVD dev) and `config/test.json` (compose CI — future Story 2.1).
 
 14. **Flutter local config wired** — Given `prijavko/config/`, when inspecting the folder, then `local.json` exists with exact contents `{"API_BASE":"http://10.0.2.2:8080","AD_ENABLED":"false"}` (string `"false"` matches existing `dev.json`/`prod.json` convention — `String.fromEnvironment` consumes strings). **This replaces `dev.json` for daily development going forward** — `dev.json` MAY remain for pointing at the real eVisitor test API when needed, but `local.json` is the new default.
 
 15. **No Flutter coupling** — Given the mock is a separate TypeScript project, when inspecting `test-infra/mock-evisitor/package.json`, then it has zero dependencies on Flutter/Dart tooling. The TypeScript project can be cloned, installed, and run on a machine without Flutter SDK. (Parallel-implementable with Story 1.1 — validated: 1.1 is done, this story is unblocked.)
 
+16. **Fastify skill consulted** — During implementation the dev MUST load and follow the `fastify` skill installed at `.claude/skills/fastify/` (source: mcollina/skills). Rules files under `.claude/skills/fastify/rules/` are authoritative for plugin structure, routes, schemas, serialization, error-handling, hooks, logging, configuration, testing, typescript, cors-security, and deployment. Where this story's AC conflicts with the skill, the AC wins; everywhere else, follow the skill.
+
 ## Tasks / Subtasks
 
-- [ ] **Create `test-infra/mock-evisitor/` Fastify + TypeScript project** (AC: #1, #15)
-  - [ ] `pnpm init`; `pnpm add fastify @fastify/formbody @fastify/cookie`; `pnpm add -D typescript tsx vitest @types/node @vitest/coverage-v8`
-  - [ ] `tsconfig.json`: `"target":"ES2022","module":"NodeNext","strict":true,"outDir":"dist"`
-  - [ ] `package.json` scripts: `"dev":"tsx watch src/server.ts"`, `"build":"tsc -p ."`, `"start":"node dist/server.js"`, `"test":"vitest run"`, `"test:coverage":"vitest run --coverage"`
-  - [ ] Entry: `src/server.ts` — `buildApp()` factory (for `app.inject()` tests) + `listen({ host: '0.0.0.0', port: 8080 })` in `main`
+This story is big — it's split into nine sequential task files under [1-6-tasks/](1-6-tasks/). Each task is independently reviewable. Complete and commit them in order; later tasks assume earlier ones landed.
 
-- [ ] **Fixture loader** (AC: #10)
-  - [ ] `test-infra/mock-evisitor/fixtures/`: `login_success.json`, `login_failure.json`, `submit_success.json`, `submit_error_validation.json`, `submit_error_duplicate.json`, `submit_error_session.json`, `submit_error_unavailable.json`
-  - [ ] `src/fixtures.ts`: read JSON files at boot, type via `FixtureEnvelope = { SystemMessage: string; UserMessage: string }`, export `loadFixtures()` → typed record
+| # | Task | File | Covers AC |
+|---|---|---|---|
+| 1 | Project scaffold (Fastify 5 + TS strip-types + Node 22) | [1-6-tasks/task-01-project-scaffold.md](1-6-tasks/task-01-project-scaffold.md) | #1, #15, #16 |
+| 2 | Fixtures loader + types | [1-6-tasks/task-02-fixtures-loader.md](1-6-tasks/task-02-fixtures-loader.md) | #10 |
+| 3 | `/Login` route + cookie issuance | [1-6-tasks/task-03-login-route.md](1-6-tasks/task-03-login-route.md) | #2, #3 |
+| 4 | Session store + validation preHandler | [1-6-tasks/task-04-session-store.md](1-6-tasks/task-04-session-store.md) | #6, #11 |
+| 5 | `/CheckInTourist` + `/ImportTourists` routes | [1-6-tasks/task-05-submit-routes.md](1-6-tasks/task-05-submit-routes.md) | #4, #5, #6, #7, #9 |
+| 6 | `/healthz` endpoint | [1-6-tasks/task-06-healthcheck.md](1-6-tasks/task-06-healthcheck.md) | #8 |
+| 7 | Contract tests (`node --test` via inject) | [1-6-tasks/task-07-contract-tests.md](1-6-tasks/task-07-contract-tests.md) | #12 |
+| 8 | Flutter `config/local.json` wiring | [1-6-tasks/task-08-flutter-local-config.md](1-6-tasks/task-08-flutter-local-config.md) | #14 |
+| 9 | README + repo-root wiring + manual smoke | [1-6-tasks/task-09-readme-smoke.md](1-6-tasks/task-09-readme-smoke.md) | #13, #15 |
 
-- [ ] **Login route** (AC: #2, #3)
-  - [ ] `src/routes/login.ts`: `POST /Login` with `@fastify/formbody` parsing
-  - [ ] Valid credentials (hardcoded in a fixture `login_success.json`): `username=testuser`, `password=testpass` → `reply.setCookie('ASP.NET_SessionId', 'testsession123', { httpOnly: true, path: '/', maxAge: SESSION_TTL_SECONDS }).code(200).send({ status: 'ok' })`
-  - [ ] Invalid → `reply.code(401).send()` (no body needed — matches AC #3)
-  - [ ] **Guardrail:** cookie name MUST be exactly `ASP.NET_SessionId` — real eVisitor is case-sensitive
+**Recommended rhythm:** one commit per task, one PR for the whole story (or per task if review bandwidth allows). Do NOT skip ahead — `submit.ts` (task 5) depends on the session store (task 4) and fixtures (task 2).
 
-- [ ] **Session validation hook** (AC: #6, #11)
-  - [ ] `src/session.ts`: `validateSession(request)` reads `ASP.NET_SessionId` cookie, checks in-memory session store (map of `token → expiresAt`), returns `{ valid: boolean, expired: boolean }`
-  - [ ] `SESSION_TTL_SECONDS` from `process.env.SESSION_TTL_SECONDS ?? '300'` — parsed once at boot
-  - [ ] On valid login, insert `'testsession123' → Date.now() + ttl*1000` into store
-
-- [ ] **Submit routes** (AC: #4, #5, #6, #9)
-  - [ ] `src/routes/submit.ts`: `POST /CheckInTourist` and `POST /ImportTourists`
-  - [ ] Body parsing: accept `application/xml` and `text/xml`; use a minimal XML parser (`fast-xml-parser` — add dep) to extract `DocumentNumber` and `ID` per guest
-  - [ ] Scenario precedence (ordered — first match wins):
-    1. Header `X-Mock-Scenario: unavailable` → 503 + fixture `submit_error_unavailable.json`
-    2. Header `X-Mock-Scenario: expire-session` OR no/expired cookie → if also `X-Mock-Scenario: redirect-login` → 302 + HTML body; else 401 + fixture `submit_error_session.json`
-    3. For each guest: `DocumentNumber` matches `/^ERR_VALIDATION_/` → error envelope; `/^ERR_DUPLICATE_/` → error envelope
-    4. Default → success envelope
-  - [ ] `CheckInTourist` returns a single object; `ImportTourists` returns an array preserving per-guest `ID`
-
-- [ ] **Healthcheck** (AC: #8)
-  - [ ] `src/routes/health.ts`: `GET /healthz` → `{ status: 'ok' }`. No imports of session/fixture modules — standalone
-
-- [ ] **Contract tests (vitest)** (AC: #12)
-  - [ ] `test-infra/mock-evisitor/test/login.test.ts` — both credentials paths, cookie name + HttpOnly + Max-Age assertions
-  - [ ] `test/submit.test.ts` — CheckInTourist: success, ERR_VALIDATION, ERR_DUPLICATE; ImportTourists: batch with mixed outcomes (asserts per-guest `ID` preserved, status remains 200)
-  - [ ] `test/session.test.ts` — missing cookie → 401; `X-Mock-Scenario: redirect-login` → 302 + `Content-Type: text/html`; expired session via `SESSION_TTL_SECONDS=1` + `setTimeout`
-  - [ ] `test/health.test.ts` — 200, body shape, responds without side effects
-  - [ ] Use `app.inject({ method, url, headers, payload })` — no real network
-
-- [ ] **Flutter `config/local.json`** (AC: #14)
-  - [ ] Create `prijavko/config/local.json` with `{"API_BASE":"http://10.0.2.2:8080","AD_ENABLED":"false"}`
-  - [ ] Sanity check: `cd prijavko && flutter build apk --debug --dart-define-from-file=config/local.json` succeeds (does NOT require the mock to be running — compile-time dart defines)
-
-- [ ] **`test-infra/README.md`** (AC: #13)
-  - [ ] Sections: Overview, Quick start (`pnpm install && pnpm dev`), Running contract tests, How fixtures work, Scenario headers (`X-Mock-Scenario: unavailable | expire-session | redirect-login`), Relationship to Flutter configs (`local.json` now, `test.json` coming in Story 2.1), env vars (`SESSION_TTL_SECONDS`, `PORT` default 8080)
-
-- [ ] **Project-root wiring** (AC: #15)
-  - [ ] If adopting pnpm workspaces at repo root: add root `pnpm-workspace.yaml` with `packages: ['test-infra/*']`. If NOT adopting workspaces yet, the mock-evisitor folder is a standalone pnpm project — document choice in `test-infra/README.md`
-  - [ ] `.gitignore`: ensure `test-infra/**/node_modules`, `test-infra/**/dist`, `test-infra/**/coverage` are ignored
-
-- [ ] **Quality gates**
-  - [ ] `pnpm test` green (all contract tests pass)
-  - [ ] `pnpm build` succeeds with zero TS errors (`strict: true`)
-  - [ ] Manual smoke: `pnpm dev` → `curl http://localhost:8080/healthz` → `{"status":"ok"}`
-  - [ ] Manual smoke: AVD + Flutter app built with `config/local.json` → login to mock succeeds (cookie set, subsequent submit accepted)
+- [ ] Task 1 — Project scaffold
+- [ ] Task 2 — Fixtures loader
+- [ ] Task 3 — Login route
+- [ ] Task 4 — Session store
+- [ ] Task 5 — Submit routes
+- [ ] Task 6 — Healthcheck
+- [ ] Task 7 — Contract tests
+- [ ] Task 8 — Flutter local config
+- [ ] Task 9 — README + smoke
 
 ## Dev Notes
 
@@ -126,10 +96,10 @@ so that **every subsequent epic (Auth, Submit, Queue, History) can make real HTT
 
 | Topic | Requirement |
 |-------|-------------|
-| **Runtime** | `node:20` (LTS). Dockerfile in 2.1 uses `node:20-alpine`. Use `"engines": { "node": ">=20 <21" }` in `package.json` to prevent version drift. [Source: architecture.md:518] |
-| **Language** | TypeScript with `strict: true`, `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`. Zero `any` — use `unknown` and narrow. [Poka-yoke — project craftsmanship rules] |
-| **Package manager** | **pnpm** (chosen by epics.md — "pnpm workspaces"). Commit `pnpm-lock.yaml`. Do NOT use npm/yarn inside `test-infra/`. [Source: epics.md:449] |
-| **HTTP framework** | **Fastify** v4.x or v5.x (both stable in 2026) — prefer v5 for native ESM + undici. Justify version pin in a comment in `package.json`. [Source: architecture.md:325] |
+| **Runtime** | **`node:22`** (current LTS line, codename "Jod"). Dockerfile in Story 2.1 must use `node:22-alpine`. Set `"engines": { "node": ">=22 <23" }` in `package.json` and add `.nvmrc` with `22` to prevent version drift. **Native TypeScript support:** Node 22 supports `--experimental-strip-types` — we use this (no `tsx`/`ts-node` needed) per the `fastify` skill's TS guidance. [Supersedes earlier architecture.md:518 `node:20` mention — decision 2026-04-17.] |
+| **Language** | TypeScript with `strict: true`, `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`. Zero `any` — use `unknown` and narrow. Source files use `.ts` extension; run directly via `node --experimental-strip-types src/server.ts`. [Poka-yoke — project craftsmanship rules + fastify skill `rules/typescript.md`] |
+| **Package manager** | **yarn** (classic v1.x or modern berry — use whichever the user already has; default **Yarn 1.x** for simplicity). Commit `yarn.lock`. Do NOT use npm or pnpm inside `test-infra/`. **Supersedes earlier "pnpm workspaces" mention in epics.md:449** — decision 2026-04-17. |
+| **HTTP framework** | **Fastify v5.x locked** — `"fastify": "^5.0.0"`. v5 is required (native ESM, undici, improved TS types). Do not fall back to v4. [Source: architecture.md:325 + decision 2026-04-17] |
 | **Bind address** | `0.0.0.0` — binding `localhost`/`127.0.0.1` blocks AVD loopback. Emulator `10.0.2.2` → host loopback; if server is on loopback-only, connection fails silently with `ECONNREFUSED`. [Poka-yoke — stated AC #1] |
 | **Port** | `8080` default. Honor `process.env.PORT` for flexibility, but all docs/configs assume `8080`. |
 | **XML parsing** | `fast-xml-parser` (`^4.x`). Fastify doesn't ship XML parsing — register a custom content-type parser OR read raw body and parse in handler. Keep parsing in `src/xml.ts` isolated (easy swap, unit-testable). |
@@ -155,16 +125,20 @@ This ordering exists because Patrol tests stack scenarios (e.g., "during an impo
 
 | Package | Version constraint | Rationale |
 |---------|-------------------|-----------|
-| `fastify` | `^5.0.0` (or `^4.28.0` if v5 native-ESM friction) | Fastify 5 stable since late 2024; better TS types, native ESM. v4 is LTS'd. Pick one and pin. |
-| `@fastify/cookie` | matching major of fastify | Plugin major aligns with Fastify major |
-| `@fastify/formbody` | matching major of fastify | Same |
-| `fast-xml-parser` | `^4.5.0` | Actively maintained, no known CVEs in the 4.5+ line as of 2026-04 |
-| `vitest` | `^2.0.0` (or `^3.0.0` if stable on your node 20) | `vitest` 3.x GA'd early 2026 — either is fine; align with lockfile once installed |
-| `@vitest/coverage-v8` | matching vitest major | v8 coverage is the default going forward |
-| `tsx` | `^4.19.0` | Watch-mode dev runner; replaces ts-node-dev |
-| `typescript` | `^5.6.0` | Stable LTS line for node 20 |
+| `fastify` | `^5.0.0` **(locked to v5 — decision 2026-04-17)** | Native ESM, undici transport, improved TS types. v4 is not an option in this story. |
+| `@fastify/cookie` | `^11.0.0` (matches Fastify 5) | `reply.setCookie()` with `maxAge` in seconds — matches AC #2, #11 |
+| `@fastify/formbody` | `^8.0.0` (matches Fastify 5) | `/Login` form-encoded body parsing |
+| `fast-xml-parser` | `^4.5.0` | XML body parsing for CheckInTourist/ImportTourists; no known CVEs in 4.5+ as of 2026-04 |
+| `typescript` | `^5.6.0` | Source type-checking only — runtime uses Node 22 strip-types, no transpile needed for dev |
+| `@types/node` | `^22.0.0` | Matches Node 22 runtime |
 
-**Do NOT add:** `express`, `koa`, `hapi` (pick one framework — Fastify), `nodemon` (`tsx watch` replaces it), `body-parser` (Fastify ships its own), `jest` (vitest is the choice).
+**Dev/run commands (no bundler, no tsx):**
+- Dev: `node --experimental-strip-types --watch src/server.ts`
+- Tests: `node --experimental-strip-types --test test/**/*.test.ts`
+- Type-check only: `tsc --noEmit`
+- Build (for Docker in 2.1): `tsc -p .` → `dist/` → run with `node dist/server.js`
+
+**Do NOT add:** `express`, `koa`, `hapi` (Fastify is chosen), `nodemon`/`tsx`/`ts-node` (Node 22 `--watch --experimental-strip-types` replaces them), `body-parser` (Fastify ships its own), `vitest`/`jest`/`mocha` (Node's built-in `node:test` is the choice — lighter, zero config, matches `fastify` skill `rules/testing.md` preference for `app.inject()` + `node:test`).
 
 ### File structure (expected touch list)
 
