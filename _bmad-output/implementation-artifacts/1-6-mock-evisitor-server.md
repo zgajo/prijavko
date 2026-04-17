@@ -64,8 +64,8 @@ This story is big — it's split into nine sequential task files under [1-6-task
 
 **Recommended rhythm:** one commit per task, one PR for the whole story (or per task if review bandwidth allows). Do NOT skip ahead — `submit.ts` (task 5) depends on the session store (task 4) and fixtures (task 2).
 
-- [ ] Task 1 — Project scaffold
-- [ ] Task 2 — Fixtures loader
+- [x] Task 1 — Project scaffold
+- [x] Task 2 — Fixtures loader
 - [ ] Task 3 — Login route
 - [ ] Task 4 — Session store
 - [ ] Task 5 — Submit routes
@@ -244,10 +244,31 @@ This ordering exists because Patrol tests stack scenarios (e.g., "during an impo
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Haiku 4.5
 
 ### Debug Log References
 
 ### Completion Notes List
 
+**Task 2 (Fixtures Loader):**
+- Created 7 fixture JSON files (login_success.json, 6 submit error/success fixtures)
+- Implemented fixtures.ts with type-safe validation using discriminated union validators
+- Fixtures load at boot with fail-fast behavior — malformed fixtures cause process.exit(1)
+- Added tsconfig.check.json to support typecheck with .js imports (Node 22 strip-types)
+- Server boots successfully, fixtures accessible via app.fixtures decorator with full TypeScript support
+- Fixture validation tested: mutating fixture causes expected error message
+
 ### File List
+
+**Task 2 — Fixtures loader:**
+- test-infra/mock-evisitor/src/fixtures.ts (new)
+- test-infra/mock-evisitor/fixtures/login_success.json (new)
+- test-infra/mock-evisitor/fixtures/submit_success.json (new)
+- test-infra/mock-evisitor/fixtures/submit_error_validation.json (new)
+- test-infra/mock-evisitor/fixtures/submit_error_duplicate.json (new)
+- test-infra/mock-evisitor/fixtures/submit_error_session.json (new)
+- test-infra/mock-evisitor/fixtures/submit_error_unavailable.json (new)
+- test-infra/mock-evisitor/fixtures/submit_redirect_login.html (new)
+- test-infra/mock-evisitor/src/server.ts (modified — added fixture loading + module augmentation)
+- test-infra/mock-evisitor/package.json (modified — updated test script glob)
+- test-infra/mock-evisitor/tsconfig.check.json (new)
