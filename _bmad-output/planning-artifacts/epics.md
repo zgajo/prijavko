@@ -844,7 +844,7 @@ So that **guest data is extracted accurately without manual typing**.
 
 **Given** MRZ checksum fails
 **When** the parsed data has invalid check digits
-**Then** the system proceeds to OCR fallback (Story 3.3) — not a dead end
+**Then** the system proceeds to OCR fallback (Story 4.3) — not a dead end
 
 **Given** no MRZ zone is detected in the image
 **When** text recognition completes
