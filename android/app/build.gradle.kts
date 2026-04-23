@@ -35,6 +35,18 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+
+            // WHY: R8 code shrinking + resource shrinking on release only.
+            // Dart obfuscation is separate (flutter build --obfuscate); this
+            // block hardens the Kotlin/Java side. Keep rules in proguard-rules.pro
+            // protect reflection-bound classes from Drift/Dio native plugins
+            // that land in Story 1.3+.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
