@@ -1,6 +1,6 @@
 # Story 1.1: Project Bootstrap & CI Foundation
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -105,11 +105,11 @@ so that every subsequent story lands on a build-blocking foundation that catches
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Scaffold the Flutter project (AC: #1)
-  - [ ] Subtask 1.1 — Back up (or verify git-tracked) `_bmad/`, `_bmad-output/`, `docs/`, `tools/`, `.claude/`, `AGENTS.md` before running `flutter create`.
-  - [ ] Subtask 1.2 — Run the exact `flutter create` command from AC1.1 in the repo root.
-  - [ ] Subtask 1.3 — Confirm no `ios/web/macos/windows/linux` directories appeared; delete if any did.
-  - [ ] Subtask 1.4 — Pin Flutter/Dart SDK constraint in `pubspec.yaml`; commit `pubspec.lock`.
+- [x] Task 1 — Scaffold the Flutter project (AC: #1)
+  - [x] Subtask 1.1 — Back up (or verify git-tracked) `_bmad/`, `_bmad-output/`, `docs/`, `tools/`, `.claude/`, `AGENTS.md` before running `flutter create`.
+  - [x] Subtask 1.2 — Run the exact `flutter create` command from AC1.1 in the repo root.
+  - [x] Subtask 1.3 — Confirm no `ios/web/macos/windows/linux` directories appeared; delete if any did.
+  - [x] Subtask 1.4 — Pin Flutter/Dart SDK constraint in `pubspec.yaml`; commit `pubspec.lock`.
 - [ ] Task 2 — Tighten the analyzer (AC: #2)
   - [ ] Subtask 2.1 — Edit `analysis_options.yaml` to extend `flutter_lints` and enable the five named rules.
   - [ ] Subtask 2.2 — Run `dart analyze --fatal-warnings --fatal-infos` locally until clean.
@@ -213,10 +213,31 @@ This story does NOT create:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.7 (1M context)
 
 ### Debug Log References
 
+- `flutter --version` → Flutter 3.38.7 stable / Dart 3.10.7 (the Dart version that pins `pubspec.yaml`).
+- `flutter create --org hr.prijavko --project-name prijavko --platforms=android --empty -a kotlin .` — ran at repo root; preserved `_bmad/`, `_bmad-output/`, `docs/`, `tools/`, `.claude/`, `AGENTS.md`; no `ios/web/macos/windows/linux` directories produced.
+
 ### Completion Notes List
 
+- Task 1 (AC1) — Scaffold complete. `pubspec.yaml` pinned to `sdk: '>=3.10.0 <4.0.0'` (tighter than AC1.2 floor, aligned to Flutter stable channel's Dart 3.10.7) and `flutter: '>=3.38.0'`. `pubspec.lock` committed (not gitignored — honours architecture §4).
+
+### Change Log
+
+| Date | Task | Notes |
+|---|---|---|
+| 2026-04-23 | Task 1 (AC1) | Flutter project scaffolded via canonical command; pubspec pinned; lock committed; platform constraint verified. |
+
 ### File List
+
+- `pubspec.yaml` (created, then edited to pin SDK + flutter + project description)
+- `pubspec.lock` (created, committed per architecture §4)
+- `analysis_options.yaml` (created by scaffold; Task 2 will tighten it)
+- `.gitignore` (created by scaffold; Task 10 will audit it)
+- `.metadata` (created by scaffold)
+- `README.md` (created by scaffold)
+- `lib/main.dart` (empty-scaffold body emitted by `--empty`; unchanged by this story)
+- `android/**/*` (full Android module emitted by scaffold; Tasks 4–7 will harden specific files)
+

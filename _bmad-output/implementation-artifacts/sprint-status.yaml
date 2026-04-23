@@ -37,6 +37,7 @@
 generated: 2026-04-23
 last_updated: 2026-04-23
 project: prijavko
+
 project_key: NOKEY
 tracking_system: file-system
 story_location: "{project-root}/_bmad-output/implementation-artifacts"
@@ -44,7 +45,7 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 development_status:
   # Epic 1: First-Run Onboarding & Credential Trust
   epic-1: in-progress
-  1-1-project-bootstrap-and-ci-foundation: ready-for-dev
+  1-1-project-bootstrap-and-ci-foundation: in-progress
   1-2-design-system-foundation: backlog
   1-3-security-primitives-dio-and-cert-pinning: backlog
   1-4-ump-cmp-eu-consent-surface: backlog

@@ -1,0 +1,22 @@
+name: prijavko
+description: "Croatian eVisitor guest registration for small hosts — fast, offline-tolerant, privacy-first."
+publish_to: 'none'
+version: 0.1.0
+
+# Dart SDK pinned to the Flutter-stable-aligned Dart version as of project bootstrap.
+# AC1.2 floor is >=3.4.0 <4.0.0; we tighten to the installed Flutter stable channel's Dart.
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+  flutter: '>=3.38.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
