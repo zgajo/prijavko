@@ -122,9 +122,9 @@ so that every subsequent story lands on a build-blocking foundation that catches
   - [x] Subtask 3.5 — Create `.github/workflows/testapi_canary.yml` as a nightly cron placeholder.
   - [x] Subtask 3.6 — Create `.github/workflows/build_aab.yml` triggered on `v*` tag.
   - [x] Subtask 3.7 — Write `docs/ci/README.md` explaining each workflow's trigger, scope, and failure signal.
-- [ ] Task 4 — Harden Android manifest & network config (AC: #4, #5)
-  - [ ] Subtask 4.1 — Edit `AndroidManifest.xml` — `allowBackup=false`, `fullBackupContent=false`, 3 permissions, network security config reference.
-  - [ ] Subtask 4.2 — Create `android/app/src/main/res/xml/network_security_config.xml` with `cleartextTrafficPermitted="false"` and placeholder pin set reference.
+- [x] Task 4 — Harden Android manifest & network config (AC: #4, #5)
+  - [x] Subtask 4.1 — Edit `AndroidManifest.xml` — `allowBackup=false`, `fullBackupContent=false`, 3 permissions, network security config reference.
+  - [x] Subtask 4.2 — Create `android/app/src/main/res/xml/network_security_config.xml` with `cleartextTrafficPermitted="false"` and placeholder pin set reference.
 - [ ] Task 5 — Add ProGuard rules + minify release (AC: #6)
   - [ ] Subtask 5.1 — Create `android/app/proguard-rules.pro` with keep rules for Drift, Riverpod, Freezed, Dio.
   - [ ] Subtask 5.2 — Edit `android/app/build.gradle` to enable `minifyEnabled`/`shrinkResources` on release and reference the rules file.
@@ -224,6 +224,7 @@ Claude Opus 4.7 (1M context)
 
 - Task 1 (AC1) — Scaffold complete. `pubspec.yaml` pinned to `sdk: '>=3.10.0 <4.0.0'` (tighter than AC1.2 floor, aligned to Flutter stable channel's Dart 3.10.7) and `flutter: '>=3.38.0'`. `pubspec.lock` committed (not gitignored — honours architecture §4).
 - Task 2 (AC2) — Analyzer tightened. `analysis_options.yaml` extends `package:flutter_lints/flutter.yaml`, enables `strict-casts`/`strict-inference`/`strict-raw-types`, and lists the five AC2.1 rules (`avoid_print`, `prefer_const_constructors`, `always_use_package_imports`, `directives_ordering`, `unnecessary_null_checks`). `dart analyze --fatal-warnings --fatal-infos` → 0 issues. `dart format --set-exit-if-changed .` → clean. Commit `6683d03` also dropped a premature `test/core/env/evisitor_env_test.dart` (Task 7.2) without its implementation, which broke the analyzer; that test file has been reverted here and will be re-added under Task 7 in order.
+- Task 4 (AC4, AC5) — Android manifest hardened: `allowBackup="false"` + `fullBackupContent="false"` on `<application>`, exactly three `<uses-permission>` lines (`CAMERA`, `INTERNET`, `ACCESS_NETWORK_STATE`), and `android:networkSecurityConfig="@xml/network_security_config"` wired. The debug-only manifest (`android/app/src/debug/AndroidManifest.xml`) keeps its scaffold-generated `INTERNET` override — that is Flutter's hot-reload channel, merges only into debug, and does not count against AC4.2 which targets `src/main`. Created `android/app/src/main/res/xml/network_security_config.xml` with `<base-config cleartextTrafficPermitted="false">` and a `<domain-config>` scoped to `www.evisitor.hr` carrying a placeholder `<pin-set>` (SPKI pins themselves are story 1.3's concern, as the AC5 comment notes; the pin-set expiration is deliberately set to 2026-04-24 so the expired-pin-set fallback path is taken until 1.3 populates real digests, keeping CI smoke builds non-blocking). `xmllint` confirms both XML files well-formed. `dart analyze --fatal-warnings --fatal-infos`, `dart format --set-exit-if-changed .`, and `flutter test` remain green.
 - Task 3 (AC3) — Six GitHub Actions workflows wired, all pinned to `subosito/flutter-action@v2` with `flutter-version: '3.38.7'`. `analyze.yml`, `test.yml`, and `pii_guard.yml` are the push/PR fast path; `integration_fake.yml` runs `flutter test integration_test/ --dart-define=EVISITOR_ENV=fake` on an `reactivecircus/android-emulator-runner@v2` API 24 x86_64 AVD (Flutter CLI routes anything under `integration_test/` through the integration-test runner, which mandates a device); `testapi_canary.yml` is a cron-`0 3 * * *` placeholder to keep the schedule active until Epic 6 lands the real canary; `build_aab.yml` fires on `v*` tags, derives versionName/versionCode from the tag, and uploads the AAB + `build/symbols/` tree as 90-day-retention artifacts. A minimal `integration_test/app_test.dart` boot probe is included (no `integration_test` package import — that waits for Story 1.3+ so local verification of the emulator step is limited to CI). A `test/app_smoke_test.dart` widget test keeps `flutter test` exit code 0 from commit #1. `docs/ci/README.md` catalogues every workflow's trigger/scope/failure signal; `docs/ci/pii-guard-regex.md` documents the PII log pattern with passing/failing examples (AC3.2 self-test). Local gate suite (`dart analyze --fatal-warnings --fatal-infos`, `dart format --set-exit-if-changed .`, `flutter test`, PII grep) all green. Integration_fake.yml emulator leg is unverified locally — a push to GitHub is the verification.
 
 ### Change Log
@@ -233,6 +234,7 @@ Claude Opus 4.7 (1M context)
 | 2026-04-23 | Task 1 (AC1) | Flutter project scaffolded via canonical command; pubspec pinned; lock committed; platform constraint verified. |
 | 2026-04-23 | Task 2 (AC2) | Analyzer tightened (flutter_lints + strict language modes + 5 named rules); `dart analyze --fatal-warnings --fatal-infos` and `dart format --set-exit-if-changed .` pass. Reverted the premature Task 7.2 test file that was dragged in by commit `6683d03`. |
 | 2026-04-23 | Task 3 (AC3) | Wired six GitHub Actions workflows (`analyze`, `pii_guard`, `test`, `integration_fake`, `testapi_canary`, `build_aab`); added `integration_test/app_test.dart` boot probe, `test/app_smoke_test.dart`, `docs/ci/README.md`, `docs/ci/pii-guard-regex.md`. Integration tests run on an Android emulator via `reactivecircus/android-emulator-runner@v2` because `flutter test integration_test/` requires a device. |
+| 2026-04-23 | Task 4 (AC4, AC5) | Hardened `android/app/src/main/AndroidManifest.xml` with `allowBackup=false`, `fullBackupContent=false`, 3 explicit permissions, and `networkSecurityConfig` wiring; created `android/app/src/main/res/xml/network_security_config.xml` skeleton (base-config cleartext denied; evisitor.hr domain-config with placeholder pin-set deferred to story 1.3). |
 
 ### File List
 
@@ -244,6 +246,8 @@ Claude Opus 4.7 (1M context)
 - `README.md` (created by scaffold)
 - `lib/main.dart` (empty-scaffold body emitted by `--empty`; reformatted by `dart format` under Task 2; no feature code)
 - `android/**/*` (full Android module emitted by scaffold; Tasks 4–7 will harden specific files)
+- `android/app/src/main/AndroidManifest.xml` (edited, Task 4 — backup disabled, 3 permissions declared, network security config referenced)
+- `android/app/src/main/res/xml/network_security_config.xml` (created, Task 4 — cleartext denied base-config + evisitor.hr pin-set skeleton)
 - `.github/workflows/analyze.yml` (created, Task 3)
 - `.github/workflows/pii_guard.yml` (created, Task 3)
 - `.github/workflows/test.yml` (created, Task 3)
