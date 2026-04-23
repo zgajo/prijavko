@@ -479,6 +479,10 @@ The Croatian eVisitor client market has five incumbents (eVisitor web, mVisitor,
 
 Prijavko is an **Android-only Flutter 3.x app**, min API 24+ (Android 7.0 Nougat), targeting phone-first Croatian private-accommodation hosts. Single-activity, edge-to-edge, dark-theme-aware, Croatian-language primary with English secondary. Play Store distribution only (no APK sideload support, no F-Droid, no alternative stores). Offline-first for capture; online-only for Send All submission. Built with zero-backend posture — eVisitor is the only external dependency besides Firebase Crashlytics and Google AdMob.
 
+### Visual Contract
+
+The visual source-of-truth lives in the [Figma file](https://www.figma.com/design/7rV9d2uNYbZe03IvIUxGwL/prijavko?m=auto&t=wg8eg0IpKtrUZUB5-1); the canonical Figma-node → Flutter-widget/token mapping is [`_bmad-output/planning-artifacts/figma-code-contract.md`](./figma-code-contract.md), and the re-build pipeline (regenerates the Figma file from tokens/components in code) lives in [`tools/figma-scripts/`](../../tools/figma-scripts/). PRD does not duplicate the contract — treat those three artifacts as authoritative for any UI-fidelity question.
+
 ### Technical Architecture Considerations
 
 **Framework choice — Flutter (cross-platform, Android-only v1.0).**
