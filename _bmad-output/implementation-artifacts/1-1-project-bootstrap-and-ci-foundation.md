@@ -110,10 +110,10 @@ so that every subsequent story lands on a build-blocking foundation that catches
   - [x] Subtask 1.2 — Run the exact `flutter create` command from AC1.1 in the repo root.
   - [x] Subtask 1.3 — Confirm no `ios/web/macos/windows/linux` directories appeared; delete if any did.
   - [x] Subtask 1.4 — Pin Flutter/Dart SDK constraint in `pubspec.yaml`; commit `pubspec.lock`.
-- [ ] Task 2 — Tighten the analyzer (AC: #2)
-  - [ ] Subtask 2.1 — Edit `analysis_options.yaml` to extend `flutter_lints` and enable the five named rules.
-  - [ ] Subtask 2.2 — Run `dart analyze --fatal-warnings --fatal-infos` locally until clean.
-  - [ ] Subtask 2.3 — Run `dart format --set-exit-if-changed .` locally until clean.
+- [x] Task 2 — Tighten the analyzer (AC: #2)
+  - [x] Subtask 2.1 — Edit `analysis_options.yaml` to extend `flutter_lints` and enable the five named rules.
+  - [x] Subtask 2.2 — Run `dart analyze --fatal-warnings --fatal-infos` locally until clean.
+  - [x] Subtask 2.3 — Run `dart format --set-exit-if-changed .` locally until clean.
 - [ ] Task 3 — Wire the six GitHub Actions workflows (AC: #3)
   - [ ] Subtask 3.1 — Create `.github/workflows/analyze.yml`.
   - [ ] Subtask 3.2 — Create `.github/workflows/pii_guard.yml` with the grep regex and a documented self-test.
@@ -223,21 +223,23 @@ Claude Opus 4.7 (1M context)
 ### Completion Notes List
 
 - Task 1 (AC1) — Scaffold complete. `pubspec.yaml` pinned to `sdk: '>=3.10.0 <4.0.0'` (tighter than AC1.2 floor, aligned to Flutter stable channel's Dart 3.10.7) and `flutter: '>=3.38.0'`. `pubspec.lock` committed (not gitignored — honours architecture §4).
+- Task 2 (AC2) — Analyzer tightened. `analysis_options.yaml` extends `package:flutter_lints/flutter.yaml`, enables `strict-casts`/`strict-inference`/`strict-raw-types`, and lists the five AC2.1 rules (`avoid_print`, `prefer_const_constructors`, `always_use_package_imports`, `directives_ordering`, `unnecessary_null_checks`). `dart analyze --fatal-warnings --fatal-infos` → 0 issues. `dart format --set-exit-if-changed .` → clean. Commit `6683d03` also dropped a premature `test/core/env/evisitor_env_test.dart` (Task 7.2) without its implementation, which broke the analyzer; that test file has been reverted here and will be re-added under Task 7 in order.
 
 ### Change Log
 
 | Date | Task | Notes |
 |---|---|---|
 | 2026-04-23 | Task 1 (AC1) | Flutter project scaffolded via canonical command; pubspec pinned; lock committed; platform constraint verified. |
+| 2026-04-23 | Task 2 (AC2) | Analyzer tightened (flutter_lints + strict language modes + 5 named rules); `dart analyze --fatal-warnings --fatal-infos` and `dart format --set-exit-if-changed .` pass. Reverted the premature Task 7.2 test file that was dragged in by commit `6683d03`. |
 
 ### File List
 
 - `pubspec.yaml` (created, then edited to pin SDK + flutter + project description)
 - `pubspec.lock` (created, committed per architecture §4)
-- `analysis_options.yaml` (created by scaffold; Task 2 will tighten it)
+- `analysis_options.yaml` (created by scaffold; Task 2 tightened it with flutter_lints + strict language modes + 5 named rules)
 - `.gitignore` (created by scaffold; Task 10 will audit it)
 - `.metadata` (created by scaffold)
 - `README.md` (created by scaffold)
-- `lib/main.dart` (empty-scaffold body emitted by `--empty`; unchanged by this story)
+- `lib/main.dart` (empty-scaffold body emitted by `--empty`; reformatted by `dart format` under Task 2; no feature code)
 - `android/**/*` (full Android module emitted by scaffold; Tasks 4–7 will harden specific files)
 
