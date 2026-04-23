@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>prijavko — Design Direction Exploration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #7FCDCF;
+      --on-primary: #003738;
+      --primary-container: #004F52;
+      --on-primary-container: #B4ECEE;
+      --surface: #0E1515;
+      --surface-container: #1A2323;
+      --surface-container-high: #242D2D;
+      --on-surface: #E1E3E2;
+      --on-surface-variant: #BFC9C8;
+      --outline: #899392;
+      --outline-variant: #3F4948;
+      --success: #81C784;
+      --warning: #FFB74D;
+      --error: #F2B8B5;
+      --closure-accent: #D4B858;
+      --page-bg: #060A0A;
+    }
+    [data-theme="light"] {
+      --primary: #0D4F52;
+      --on-primary: #FFFFFF;
+      --primary-container: #B4ECEE;
+      --on-primary-container: #002021;
+      --surface: #F7FBFB;
+      --surface-container: #E7EEEE;
+      --surface-container-high: #DAE4E4;
+      --on-surface: #0E1515;
+      --on-surface-variant: #3F4948;
+      --outline: #6F7978;
+      --outline-variant: #BFC9C8;
+      --success: #2E7D32;
+      --warning: #ED6C02;
+      --error: #B3261E;
+      --closure-accent: #C9A43A;
+      --page-bg: #EDF2F2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { font-family: 'Manrope', sans-serif; background: var(--page-bg); color: var(--on-surface); min-height: 100vh; }
+
+    .page-header { padding: 40px 32px 24px; max-width: 1600px; margin: 0 auto; }
+    .page-header h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .page-header p { font-size: 15px; line-height: 1.6; color: var(--on-surface-variant); max-width: 760px; }
+    .theme-toggle { display: inline-flex; gap: 6px; margin-top: 16px; background: var(--surface-container); padding: 4px; border-radius: 999px; }
+    .theme-toggle button { background: transparent; border: none; color: var(--on-surface-variant); font-family: inherit; font-weight: 600; font-size: 13px; padding: 8px 16px; border-radius: 999px; cursor: pointer; }
+    .theme-toggle button.active { background: var(--primary); color: var(--on-primary); }
+
+    /* Pre-auth shared section */
+    .shared-flow {
+      max-width: 1600px; margin: 0 auto; padding: 24px 32px;
+    }
+    .shared-flow h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .shared-flow p.lede { font-size: 14px; line-height: 1.6; color: var(--on-surface-variant); margin-bottom: 24px; max-width: 700px; }
+    .shared-flow .row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px; margin-bottom: 16px;
+    }
+
+    .section-title {
+      max-width: 1600px; margin: 32px auto 16px; padding: 0 32px;
+      font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+    }
+
+    .directions-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; padding: 0 32px 32px; max-width: 1600px; margin: 0 auto;
+    }
+    @media (max-width: 1200px) { .directions-grid { grid-template-columns: 1fr; } }
+
+    .direction-col {
+      background: var(--surface-container);
+      border-radius: 16px; padding: 24px;
+    }
+    .direction-col .bet {
+      font-size: 12px; font-weight: 700; color: var(--primary);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+    }
+    .direction-col h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .direction-col .desc { font-size: 13px; line-height: 1.6; color: var(--on-surface-variant); margin-bottom: 20px; }
+
+    .phone-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    @media (max-width: 1200px) { .phone-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 900px)  { .phone-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .phone-wrap { display: flex; flex-direction: column; align-items: center; }
+    .phone-label { font-size: 11px; font-weight: 600; color: var(--on-surface-variant); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; text-align: center; }
+    .phone-num { color: var(--primary); margin-right: 6px; }
+
+    /* Phone frame */
+    .phone {
+      width: 260px; height: 520px; background: var(--surface);
+      border-radius: 24px; overflow: hidden; position: relative;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      border: 1px solid var(--outline-variant);
+      flex-shrink: 0;
+    }
+
+    /* Status bar */
+    .statusbar {
+      height: 22px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; font-size: 10px; font-weight: 600; color: var(--on-surface);
+    }
+
+    /* App bar */
+    .appbar {
+      padding: 10px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--outline-variant);
+    }
+    .appbar .facility { font-size: 13px; font-weight: 700; line-height: 1.2; }
+    .appbar .facility-sub { font-size: 10px; font-weight: 500; color: var(--on-surface-variant); margin-top: 2px; }
+    .appbar .gear { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--on-surface-variant); font-size: 14px; }
+
+    .screen { padding: 14px; height: calc(100% - 22px - 53px); overflow: hidden; position: relative; }
+    .screen-noappbar { padding: 14px; height: calc(100% - 22px); overflow: hidden; position: relative; }
+
+    /* Queue hero */
+    .queue-hero {
+      background: var(--primary-container); color: var(--on-primary-container);
+      border-radius: 14px; padding: 18px 14px; margin-bottom: 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .queue-hero .count { font-size: 32px; font-weight: 800; line-height: 1; }
+    .queue-hero .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-top: 3px; }
+    .queue-hero .meta { font-size: 10px; opacity: 0.85; text-align: right; line-height: 1.4; }
+
+    /* CTA */
+    .cta {
+      background: var(--primary); color: var(--on-primary);
+      border-radius: 10px; padding: 12px 14px;
+      font-weight: 600; font-size: 13px;
+      text-align: center; width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      min-height: 48px; border: none; font-family: inherit;
+    }
+    .cta.secondary { background: transparent; color: var(--primary); border: 1.5px solid var(--outline); }
+    .cta.small { min-height: 40px; padding: 8px; font-size: 12px; }
+    .cta-wrap { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px; background: linear-gradient(to top, var(--surface) 60%, transparent); display: grid; gap: 8px; }
+
+    /* Queue row */
+    .queue-row {
+      background: var(--surface-container-high); border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .queue-row .glyph {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .queue-row .glyph.queued { border: 1.5px solid var(--outline); color: var(--outline); background: transparent; }
+    .queue-row .glyph.sent { background: var(--success); color: #003812; }
+    .queue-row .glyph.fail { background: var(--error); color: #601410; }
+    .queue-row .glyph.sending { background: var(--primary-container); color: var(--on-primary-container); }
+    .queue-row .name { font-size: 12px; font-weight: 600; color: var(--on-surface); line-height: 1.2; }
+    .queue-row .meta { font-size: 10px; color: var(--on-surface-variant); margin-top: 2px; }
+    .queue-row .right { margin-left: auto; font-size: 10px; color: var(--on-surface-variant); }
+
+    /* Form field */
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 11px; font-weight: 600; color: var(--on-surface-variant); margin-bottom: 4px; }
+    .field .input {
+      background: var(--surface-container); border: 1px solid var(--outline-variant);
+      border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--on-surface); font-weight: 500;
+    }
+    .field .input.focus { border-color: var(--primary); }
+    .field .hint { font-size: 10px; color: var(--on-surface-variant); margin-top: 4px; }
+
+    /* Banner */
+    .banner {
+      background: var(--warning); color: #3a1d00;
+      padding: 10px 12px; border-radius: 12px;
+      font-size: 12px; font-weight: 600; line-height: 1.3;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .banner .icon { font-size: 14px; }
+    .banner .action { margin-left: auto; font-weight: 700; text-decoration: underline; font-size: 11px; }
+
+    /* AdMob banner placeholder */
+    .ad-banner {
+      background: repeating-linear-gradient(-45deg, var(--surface-container-high), var(--surface-container-high) 8px, var(--surface-container) 8px, var(--surface-container) 16px);
+      border: 1px dashed var(--outline-variant);
+      border-radius: 8px;
+      padding: 14px 10px;
+      margin-top: 10px;
+      font-size: 9px; font-weight: 700;
+      color: var(--on-surface-variant);
+      text-align: center;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .ad-banner .dismiss { font-size: 10px; color: var(--outline); }
+
+    /* Scan */
+    .scan-viewport { background: #000; height: 100%; width: 100%; position: relative; display: grid; place-items: center; }
+    .scan-frame { width: 200px; height: 130px; border: 2px solid var(--primary); border-radius: 10px; box-shadow: 0 0 0 100vw rgba(0,0,0,0.55); position: relative; }
+    .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 16px; height: 16px; border: 3px solid var(--primary); }
+    .scan-frame::before { top: -3px; left: -3px; border-right: none; border-bottom: none; border-top-left-radius: 6px; }
+    .scan-frame::after { top: -3px; right: -3px; border-left: none; border-bottom: none; border-top-right-radius: 6px; }
+    .scan-hint { position: absolute; bottom: 72px; left: 0; right: 0; text-align: center; color: #fff; font-size: 11px; font-weight: 500; opacity: 0.9; }
+    .scan-counter { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.6); color: #fff; padding: 5px 10px; border-radius: 999px; font-size: 10px; font-weight: 600; backdrop-filter: blur(8px); }
+    .scan-top { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .scan-close { width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.6); display: grid; place-items: center; color: #fff; font-size: 16px; }
+
+    /* Capture confirmation overlay */
+    .capture-confirm-bg { position: absolute; inset: 0; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .capture-confirm-bg .check { width: 72px; height: 72px; border-radius: 50%; background: var(--success); color: #003812; display: grid; place-items: center; margin-bottom: 14px; font-size: 32px; font-weight: 800; }
+    .capture-confirm-bg .title { font-size: 16px; font-weight: 700; color: var(--on-surface); margin-bottom: 2px; }
+    .capture-confirm-bg .sub { font-size: 11px; color: var(--on-surface-variant); }
+
+    /* Closure summary */
+    .closure { height: 100%; padding: 24px 18px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(180deg, var(--primary-container) 0%, var(--surface) 55%); }
+    .closure .hero { text-align: center; margin-top: 20px; }
+    .closure .big { font-size: 48px; font-weight: 800; line-height: 1; color: var(--closure-accent); letter-spacing: -0.03em; margin-bottom: 8px; }
+    .closure .label { font-size: 13px; font-weight: 600; color: var(--on-surface); }
+    .closure .sub { font-size: 11px; font-weight: 500; color: var(--on-surface-variant); margin-top: 3px; }
+    .closure .check { width: 56px; height: 56px; border-radius: 50%; background: var(--success); color: #003812; display: grid; place-items: center; margin: 0 auto 18px; font-size: 26px; font-weight: 800; }
+    .closure .actions { display: grid; gap: 8px; }
+
+    /* Bottom sheet */
+    .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface-container); border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 18px 14px; max-height: 75%; }
+    .sheet-handle { width: 36px; height: 4px; background: var(--outline-variant); border-radius: 999px; margin: 0 auto 14px; }
+    .sheet h4 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .sheet .row {
+      background: var(--surface-container-high);
+      border-radius: 12px; padding: 12px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sheet .row.last-used { border: 1.5px solid var(--primary); }
+    .sheet .row .icon { width: 28px; height: 28px; border-radius: 8px; background: var(--primary-container); color: var(--on-primary-container); display: grid; place-items: center; font-size: 14px; }
+    .sheet .row .title { font-size: 13px; font-weight: 600; }
+    .sheet .row .sub { font-size: 10px; color: var(--on-surface-variant); margin-top: 2px; }
+    .sheet .row .pill { margin-left: auto; font-size: 10px; background: var(--primary); color: var(--on-primary); padding: 3px 8px; border-radius: 999px; font-weight: 700; }
+
+    /* Welcome / consent */
+    .welcome { padding: 28px 18px 14px; height: 100%; display: flex; flex-direction: column; }
+    .welcome h3 { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+    .welcome p { font-size: 12px; line-height: 1.5; color: var(--on-surface-variant); margin-bottom: 14px; }
+    .welcome .bullet { display: flex; gap: 10px; margin-bottom: 10px; font-size: 12px; line-height: 1.4; }
+    .welcome .bullet .dot { width: 20px; height: 20px; border-radius: 50%; background: var(--primary-container); color: var(--on-primary-container); display: grid; place-items: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+
+    /* Camera forward */
+    .camera-preview { height: 160px; background: #000; border-radius: 12px; margin-bottom: 12px; position: relative; overflow: hidden; display: grid; place-items: center; }
+    .camera-preview::before { content: ''; position: absolute; inset: 28px; border: 2px solid var(--primary); border-radius: 8px; opacity: 0.7; }
+    .camera-preview .cam-hint { color: #fff; font-size: 11px; font-weight: 600; opacity: 0.85; z-index: 1; }
+
+    /* Dense variant */
+    .dense .queue-row { padding: 7px 10px; margin-bottom: 4px; border-radius: 9px; }
+    .dense .queue-hero { padding: 12px; margin-bottom: 10px; }
+    .dense .queue-hero .count { font-size: 24px; }
+
+    /* Verdict */
+    .matrix { max-width: 1600px; margin: 0 auto 40px; padding: 0 32px; }
+    .matrix h2 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+    .matrix table { width: 100%; border-collapse: collapse; background: var(--surface-container); border-radius: 16px; overflow: hidden; }
+    .matrix th, .matrix td { text-align: left; padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--outline-variant); }
+    .matrix th { background: var(--surface-container-high); font-weight: 700; }
+    .matrix tr:last-child td { border-bottom: none; }
+    .matrix .col-head { color: var(--primary); font-weight: 700; }
+
+    .verdict { max-width: 1600px; margin: 0 auto 48px; padding: 28px; background: var(--primary-container); color: var(--on-primary-container); border-radius: 16px; margin-left: 32px; margin-right: 32px; }
+    .verdict h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    .verdict p { font-size: 14px; line-height: 1.7; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>prijavko — Design Direction Exploration</h1>
+  <p>Three focused design directions for prijavko v1.0, each with 8 full-flow screens. Login is <strong>username + password only</strong> — the eVisitor API key is embedded at build time. The authentication + facility-picker flow is shared across all directions; the 6 post-login screens express each direction's bet on layout density, primary-action posture, and queue visibility. All mockups render with the locked Adriatic Teal + Manrope + Material 3 tokens.</p>
+  <div class="theme-toggle">
+    <button class="active" data-theme="dark">Dark</button>
+    <button data-theme="light">Light</button>
+  </div>
+</div>
+
+<div class="section-title">Direction A — Calm & Spacious <span style="font-size: 14px; color: var(--primary); font-weight: 600; margin-left: 12px;">(recommended baseline)</span></div>
+<div class="directions-grid" style="grid-template-columns: 1fr;">
+  <div class="direction-col">
+    <p class="desc"><strong>Bet:</strong> single big CTA, generous whitespace, one thing to do per screen. Empty-state home is minimal; when queue has guests, their rows appear inline. Multi-guest batch + explicit Send All preserved unchanged.</p>
+    <div class="phone-grid" style="grid-template-columns: repeat(4, 1fr);">
+
+      <!-- 1. Welcome / consent -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">1</span>Welcome & consent</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:15</span><span>●●● ⌃</span></div>
+          <div class="screen-noappbar welcome">
+            <h3>Dobrodošli u prijavko</h3>
+            <p>Brza prijava gostiju u eVisitor — s vrata, bez tišine i bez grešaka.</p>
+            <div class="bullet"><div class="dot">📷</div><div>Skeniraš putovnicu, čuva se šifrirano.</div></div>
+            <div class="bullet"><div class="dot">🔒</div><div>Podaci gosta nestaju 3 dana nakon prijave.</div></div>
+            <div class="bullet"><div class="dot">⚡</div><div>Ne gubi prijavu. Ne šuti pri grešci.</div></div>
+            <div style="flex: 1;"></div>
+            <button class="cta">Nastavi</button>
+            <div style="font-size: 10px; color: var(--on-surface-variant); text-align: center; margin-top: 10px;">Nastavkom prihvaćaš <u>Uvjete</u> i <u>Privatnost</u>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. eVisitor Login -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">2</span>eVisitor login</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:15</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Prijava na eVisitor</div><div class="gear">?</div></div>
+          <div class="screen">
+            <div class="field"><label>Korisničko ime</label><div class="input">ana.trogir</div></div>
+            <div class="field"><label>Lozinka</label><div class="input focus">•••••••••••</div></div>
+            <div style="font-size: 10px; color: var(--on-surface-variant); margin-top: 18px; line-height: 1.5;">🔒 Podaci se čuvaju šifrirano u Android Keystore-u.</div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Prijavi se</button></div>
+        </div>
+      </div>
+
+      <!-- 3. Facility picker -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">3</span>Facility picker</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:16</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Odaberi objekt</div><div class="gear">✕</div></div>
+          <div class="screen" style="background: rgba(0,0,0,0.3);">
+            <div class="sheet" style="position: absolute;">
+              <div class="sheet-handle"></div>
+              <h4>Za ovu sesiju</h4>
+              <div class="row last-used">
+                <div class="icon">🏠</div>
+                <div><div class="title">Apartman Luna</div><div class="sub">Trogir · zadnji put</div></div>
+                <div class="pill">Zadnji</div>
+              </div>
+              <div class="row">
+                <div class="icon">🏠</div>
+                <div><div class="title">Studio Maris</div><div class="sub">Trogir</div></div>
+              </div>
+              <div class="row">
+                <div class="icon">🏠</div>
+                <div><div class="title">Villa Petra</div><div class="sub">Okrug Gornji</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Home empty -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">4</span>Home (empty)</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:17</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir · promijeni</div></div><div class="gear">⚙</div></div>
+          <div class="screen">
+            <div class="queue-hero">
+              <div><div class="label">U redu</div><div class="count">0</div></div>
+              <div class="meta">Zadnja prijava:<br/>prije 15 min</div>
+            </div>
+            <div style="text-align: center; padding: 20px 10px; color: var(--on-surface-variant); font-size: 12px; line-height: 1.6;">Nema neposlanih gostiju.<br/>Dodirni Skeniraj gosta.</div>
+            <div class="ad-banner">AdMob banner · 50–100dp<br/><span class="dismiss">× prijeđi prstom</span></div>
+          </div>
+          <div class="cta-wrap">
+            <button class="cta">📷  Skeniraj gosta</button>
+            <button class="cta secondary small">⌨  Ručni unos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Home with queue -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">5</span>Home (3 unsent)</div>
+        <div class="phone">
+          <div class="statusbar"><span>21:44</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir</div></div><div class="gear">⚙</div></div>
+          <div class="screen">
+            <div class="queue-hero">
+              <div><div class="label">Neposlano</div><div class="count">3</div></div>
+              <div class="meta">Dodirni<br/>Pošalji sve</div>
+            </div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">21:42</div></div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">21:44</div></div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">OI · IT5521…</div><div class="meta">21:45 · ručno</div></div></div>
+            <div class="ad-banner">AdMob banner · 50–100dp</div>
+          </div>
+          <div class="cta-wrap">
+            <button class="cta">↑  Pošalji sve (3)</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <button class="cta secondary small">📷  Skeniraj</button>
+              <button class="cta secondary small">⌨  Ručno</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Scan live -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">6</span>Scan (live)</div>
+        <div class="phone">
+          <div class="scan-viewport">
+            <div class="scan-top"><div class="scan-close">✕</div><div class="scan-counter">2 u redu</div></div>
+            <div class="scan-frame"></div>
+            <div class="scan-hint">Drži putovnicu u okviru · auto-okidač</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Capture confirmation -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">7</span>Capture confirmation</div>
+        <div class="phone">
+          <div class="scan-viewport">
+            <div class="capture-confirm-bg">
+              <div class="check">✓</div>
+              <div class="title">Gost 3 dodan</div>
+              <div class="sub">Skeniram sljedećeg…</div>
+            </div>
+            <div class="scan-top"><div class="scan-close">✕</div><div class="scan-counter" style="background: var(--success); color: #003812;">✓ 3 u redu</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Send All with failure -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">8</span>Send All · results</div>
+        <div class="phone">
+          <div class="statusbar"><span>21:47</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility" style="color: var(--success);">Gotovo — 3 od 4</div><div class="gear">✕</div></div>
+          <div class="screen">
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row" style="border: 1px solid var(--error);"><div class="glyph fail">✗</div><div><div class="name" style="color: var(--error);">OI · IT5521…</div><div class="meta">Nedostaje reg. broj</div></div><div class="right" style="color: var(--error); font-weight: 700;">Uredi</div></div>
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · FR1122…</div><div class="meta">Prihvaćeno</div></div></div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Pokušaj neuspjele (1)</button></div>
+        </div>
+      </div>
+
+      <!-- 9. Closure (bonus 9th to show full happy path) -->
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Direction B — Dense Utility</div>
+<div class="directions-grid" style="grid-template-columns: 1fr;">
+  <div class="direction-col">
+    <p class="desc"><strong>Bet:</strong> Airbnb-host-dashboard density. Queue rows always visible on home (even with one guest), dual CTAs (Send All + Scan), more info per screen. Better for Tomislav (multi-facility) and hosts who think in lists.</p>
+    <div class="phone-grid" style="grid-template-columns: repeat(4, 1fr);">
+
+      <!-- 1-3 same shared flow -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">1</span>Welcome & consent</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:15</span><span>●●● ⌃</span></div>
+          <div class="screen-noappbar welcome">
+            <h3>Dobrodošli u prijavko</h3>
+            <p>Brza prijava gostiju u eVisitor — s vrata, bez tišine i bez grešaka.</p>
+            <div class="bullet"><div class="dot">📷</div><div>Skeniraš putovnicu, čuva se šifrirano.</div></div>
+            <div class="bullet"><div class="dot">🔒</div><div>Podaci gosta nestaju 3 dana nakon prijave.</div></div>
+            <div class="bullet"><div class="dot">⚡</div><div>Ne gubi prijavu. Ne šuti pri grešci.</div></div>
+            <div style="flex: 1;"></div>
+            <button class="cta">Nastavi</button>
+            <div style="font-size: 10px; color: var(--on-surface-variant); text-align: center; margin-top: 10px;">Nastavkom prihvaćaš <u>Uvjete</u> i <u>Privatnost</u>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">2</span>eVisitor login</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:15</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Prijava na eVisitor</div><div class="gear">?</div></div>
+          <div class="screen">
+            <div class="field"><label>Korisničko ime</label><div class="input">ana.trogir</div></div>
+            <div class="field"><label>Lozinka</label><div class="input focus">•••••••••••</div></div>
+            <div style="font-size: 10px; color: var(--on-surface-variant); margin-top: 18px; line-height: 1.5;">🔒 Podaci se čuvaju šifrirano u Android Keystore-u.</div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Prijavi se</button></div>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">3</span>Facility picker</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:16</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Odaberi objekt</div><div class="gear">✕</div></div>
+          <div class="screen" style="background: rgba(0,0,0,0.3);">
+            <div class="sheet" style="position: absolute;">
+              <div class="sheet-handle"></div>
+              <h4>Za ovu sesiju</h4>
+              <div class="row last-used"><div class="icon">🏠</div><div><div class="title">Apartman Luna</div><div class="sub">Trogir · zadnji put</div></div><div class="pill">Zadnji</div></div>
+              <div class="row"><div class="icon">🏠</div><div><div class="title">Studio Maris</div><div class="sub">Trogir</div></div></div>
+              <div class="row"><div class="icon">🏠</div><div><div class="title">Villa Petra</div><div class="sub">Okrug Gornji</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Home empty (B style) -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">4</span>Home (empty)</div>
+        <div class="phone dense">
+          <div class="statusbar"><span>10:17</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir · promijeni</div></div><div class="gear">⚙</div></div>
+          <div class="screen">
+            <div class="queue-hero">
+              <div><div class="label">Neposlano</div><div class="count">0</div></div>
+              <div class="meta">Zadnja:<br/>prije 15 min</div>
+            </div>
+            <div style="background: var(--surface-container-high); border-radius: 12px; padding: 14px; text-align: center; font-size: 11px; color: var(--on-surface-variant); line-height: 1.5;">Prazan red<br/><span style="color: var(--outline); font-size: 10px;">Skeniraj ili unesi gosta ručno</span></div>
+          </div>
+          <div class="cta-wrap">
+            <button class="cta">📷  Skeniraj gosta</button>
+            <button class="cta secondary small">⌨  Ručni unos</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Home with 3 queue (B style - denser) -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">5</span>Home (3 unsent)</div>
+        <div class="phone dense">
+          <div class="statusbar"><span>21:44</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir</div></div><div class="gear">⚙</div></div>
+          <div class="screen" style="overflow: auto;">
+            <div class="queue-hero">
+              <div><div class="label">Neposlano</div><div class="count">3</div></div>
+              <div class="meta">Spremno</div>
+            </div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">21:42</div></div><div class="right">✎</div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">21:44</div></div><div class="right">✎</div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">OI · IT5521…</div><div class="meta">21:45 · ručno</div></div><div class="right">✎</div></div>
+          </div>
+          <div class="cta-wrap">
+            <button class="cta">↑  Pošalji sve (3)</button>
+            <button class="cta secondary small">📷  Skeniraj još</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Scan live -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">6</span>Scan (live)</div>
+        <div class="phone">
+          <div class="scan-viewport">
+            <div class="scan-top"><div class="scan-close">✕</div><div class="scan-counter">3 u redu</div></div>
+            <div class="scan-frame"></div>
+            <div class="scan-hint">Drži putovnicu u okviru · auto-okidač</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Send All progress -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">7</span>Send All (in progress)</div>
+        <div class="phone dense">
+          <div class="statusbar"><span>21:46</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility" style="color: var(--primary);">Šaljem 2 od 4…</div><div class="gear">✕</div></div>
+          <div class="screen">
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row"><div class="glyph sending">↑</div><div><div class="name">Putovnica · DE8830…</div><div class="meta" style="color: var(--primary);">Šaljem…</div></div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">OI · IT5521…</div><div class="meta">U redu</div></div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · FR1122…</div><div class="meta">U redu</div></div></div>
+          </div>
+          <div class="cta-wrap"><button class="cta secondary">Prekini</button></div>
+        </div>
+      </div>
+
+      <!-- 8. Send All with 1 failure -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">8</span>Send All · 1 failed</div>
+        <div class="phone dense">
+          <div class="statusbar"><span>21:47</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility" style="color: var(--warning);">3 od 4 · 1 neuspjeh</div><div class="gear">✕</div></div>
+          <div class="screen">
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row" style="border: 1px solid var(--error);"><div class="glyph fail">✗</div><div><div class="name" style="color: var(--error);">OI · IT5521…</div><div class="meta">Nedostaje reg. broj</div></div><div class="right" style="color: var(--error); font-weight: 700;">Uredi</div></div>
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · FR1122…</div><div class="meta">Prihvaćeno</div></div></div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Pokušaj neuspjele (1)</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Direction C — Camera-Forward</div>
+<div class="directions-grid" style="grid-template-columns: 1fr;">
+  <div class="direction-col">
+    <p class="desc"><strong>Bet:</strong> live camera preview lives on home. Scan is always one glance away. Deepest commitment to the defining loop. Trade-offs: battery, hard camera permission gate, heavier Play Store review.</p>
+    <div class="phone-grid" style="grid-template-columns: repeat(4, 1fr);">
+
+      <!-- 1-3 shared -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">1</span>Welcome & consent</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:15</span><span>●●● ⌃</span></div>
+          <div class="screen-noappbar welcome">
+            <h3>Dobrodošli u prijavko</h3>
+            <p>Brza prijava gostiju u eVisitor — s vrata, bez tišine i bez grešaka.</p>
+            <div class="bullet"><div class="dot">📷</div><div>Skeniraš putovnicu, čuva se šifrirano.</div></div>
+            <div class="bullet"><div class="dot">🔒</div><div>Podaci gosta nestaju 3 dana nakon prijave.</div></div>
+            <div class="bullet"><div class="dot">⚡</div><div>Ne gubi prijavu. Ne šuti pri grešci.</div></div>
+            <div style="flex: 1;"></div>
+            <button class="cta">Nastavi</button>
+            <div style="font-size: 10px; color: var(--on-surface-variant); text-align: center; margin-top: 10px;">Nastavkom prihvaćaš <u>Uvjete</u> i <u>Privatnost</u>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">2</span>eVisitor login</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:15</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Prijava na eVisitor</div><div class="gear">?</div></div>
+          <div class="screen">
+            <div class="field"><label>Korisničko ime</label><div class="input">ana.trogir</div></div>
+            <div class="field"><label>Lozinka</label><div class="input focus">•••••••••••</div></div>
+            <div style="font-size: 10px; color: var(--on-surface-variant); margin-top: 18px; line-height: 1.5;">🔒 Podaci se čuvaju šifrirano u Android Keystore-u.</div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Prijavi se</button></div>
+        </div>
+      </div>
+
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">3</span>Facility picker</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:16</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Odaberi objekt</div><div class="gear">✕</div></div>
+          <div class="screen" style="background: rgba(0,0,0,0.3);">
+            <div class="sheet" style="position: absolute;">
+              <div class="sheet-handle"></div>
+              <h4>Za ovu sesiju</h4>
+              <div class="row last-used"><div class="icon">🏠</div><div><div class="title">Apartman Luna</div><div class="sub">Trogir · zadnji put</div></div><div class="pill">Zadnji</div></div>
+              <div class="row"><div class="icon">🏠</div><div><div class="title">Studio Maris</div><div class="sub">Trogir</div></div></div>
+              <div class="row"><div class="icon">🏠</div><div><div class="title">Villa Petra</div><div class="sub">Okrug Gornji</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Home empty -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">4</span>Home (empty, live camera)</div>
+        <div class="phone">
+          <div class="statusbar"><span>10:17</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir</div></div><div class="gear">⚙</div></div>
+          <div class="screen">
+            <div class="camera-preview"><div class="cam-hint">Drži putovnicu · auto-detekcija</div></div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 0 2px;">
+              <div style="background: var(--surface-container-high); border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 600;">0 neposlano</div>
+              <div style="font-size: 10px; color: var(--on-surface-variant);">Zadnja: 15 min</div>
+            </div>
+          </div>
+          <div class="cta-wrap" style="grid-template-columns: 1fr 1fr; grid-auto-flow: column;">
+            <button class="cta secondary small">⌨  Ručni unos</button>
+            <button class="cta small">↑  Pošalji (0)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Home with queue -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">5</span>Home (3 unsent, live)</div>
+        <div class="phone">
+          <div class="statusbar"><span>21:44</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir</div></div><div class="gear">⚙</div></div>
+          <div class="screen">
+            <div class="camera-preview"><div class="cam-hint">Drži putovnicu · auto-detekcija</div></div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 0 2px;">
+              <div style="background: var(--primary-container); color: var(--on-primary-container); border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 700;">3 neposlano</div>
+              <div style="font-size: 10px; color: var(--on-surface-variant);">Spremno</div>
+            </div>
+          </div>
+          <div class="cta-wrap" style="grid-template-columns: 1fr 1fr; grid-auto-flow: column;">
+            <button class="cta secondary small">📋  Pregledaj red</button>
+            <button class="cta small">↑  Pošalji (3)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Capture moment -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">6</span>Capture confirmation</div>
+        <div class="phone">
+          <div class="scan-viewport" style="background: var(--surface);">
+            <div class="scan-top"><div class="scan-close">✕</div><div class="scan-counter" style="background: var(--success); color: #003812;">✓ Gost 4</div></div>
+            <div class="capture-confirm-bg" style="background: var(--surface);">
+              <div class="check">✓</div>
+              <div class="title">Gost 4 dodan</div>
+              <div class="sub">Vrati se na Home za sljedećeg</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Queue review sheet -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">7</span>Queue review (sheet)</div>
+        <div class="phone">
+          <div class="statusbar"><span>21:45</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Red</div><div class="gear">✕</div></div>
+          <div class="screen" style="background: rgba(0,0,0,0.3); padding: 0;">
+            <div class="sheet" style="position: absolute; max-height: 90%;">
+              <div class="sheet-handle"></div>
+              <h4>3 neposlano · Apartman Luna</h4>
+              <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">21:42</div></div><div class="right">✎</div></div>
+              <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">21:44</div></div><div class="right">✎</div></div>
+              <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">OI · IT5521…</div><div class="meta">21:45 · ručno</div></div><div class="right">✎</div></div>
+              <button class="cta" style="margin-top: 10px;">↑  Pošalji sve (3)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Send All results -->
+      <div class="phone-wrap">
+        <div class="phone-label"><span class="phone-num">8</span>Send All · 1 failed</div>
+        <div class="phone">
+          <div class="statusbar"><span>21:47</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility" style="color: var(--warning);">3 od 4 · 1 neuspjeh</div><div class="gear">✕</div></div>
+          <div class="screen">
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">Prihvaćeno</div></div></div>
+            <div class="queue-row" style="border: 1px solid var(--error);"><div class="glyph fail">✗</div><div><div class="name" style="color: var(--error);">OI · IT5521…</div><div class="meta">Nedostaje reg. broj</div></div><div class="right" style="color: var(--error); font-weight: 700;">Uredi</div></div>
+            <div class="queue-row"><div class="glyph sent">✓</div><div><div class="name">Putovnica · FR1122…</div><div class="meta">Prihvaćeno</div></div></div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Pokušaj neuspjele (1)</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Shared across all directions — session recovery</div>
+<div class="directions-grid" style="grid-template-columns: 1fr;">
+  <div class="direction-col">
+    <p class="desc">These session states are the same across all three directions. They preserve the no-door-surprise promise — auth drift is always surfaced hours before the host reaches a guest.</p>
+    <div class="phone-grid" style="grid-template-columns: repeat(4, 1fr);">
+
+      <!-- Credential banner on home -->
+      <div class="phone-wrap">
+        <div class="phone-label">Credential banner (session dead)</div>
+        <div class="phone">
+          <div class="statusbar"><span>14:22</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div><div class="facility">Apartman Luna</div><div class="facility-sub">Trogir</div></div><div class="gear">⚙</div></div>
+          <div class="screen">
+            <div class="banner">
+              <div class="icon">⚠</div>
+              <div>Sesija na eVisitoru je istekla.</div>
+              <div class="action">Ponovi prijavu</div>
+            </div>
+            <div class="queue-hero">
+              <div><div class="label">Neposlano</div><div class="count">2</div></div>
+              <div class="meta">Slanje blokirano<br/>do prijave</div>
+            </div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · HR2184…</div><div class="meta">14:15</div></div></div>
+            <div class="queue-row"><div class="glyph queued">○</div><div><div class="name">Putovnica · DE8830…</div><div class="meta">14:18</div></div></div>
+          </div>
+          <div class="cta-wrap"><button class="cta">📷  Skeniraj gosta</button></div>
+        </div>
+      </div>
+
+      <!-- One-tap recovery -->
+      <div class="phone-wrap">
+        <div class="phone-label">Reauth (one-tap)</div>
+        <div class="phone">
+          <div class="statusbar"><span>14:23</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility">Ponovi prijavu</div><div class="gear">✕</div></div>
+          <div class="screen">
+            <div style="background: var(--surface-container-high); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+              <div style="font-size: 12px; font-weight: 600; margin-bottom: 4px;">ana.trogir</div>
+              <div style="font-size: 10px; color: var(--on-surface-variant);">Podaci spremljeni u Keystore-u.<br/>Samo potvrdi za nastavak.</div>
+            </div>
+            <div class="field"><label>Lozinka (po potrebi)</label><div class="input">•••••••••••</div></div>
+            <div style="font-size: 10px; color: var(--on-surface-variant); margin-top: 12px; line-height: 1.5;">Sesija traje 14 dana. Ako je istekla, prijavko koristi spremljene podatke.</div>
+          </div>
+          <div class="cta-wrap"><button class="cta">Prijavi se</button></div>
+        </div>
+      </div>
+
+      <!-- Lockout -->
+      <div class="phone-wrap">
+        <div class="phone-label">Circuit breaker (lockout)</div>
+        <div class="phone">
+          <div class="statusbar"><span>14:24</span><span>●●● ⌃</span></div>
+          <div class="appbar"><div class="facility" style="color: var(--error);">Previše pokušaja</div><div class="gear">✕</div></div>
+          <div class="screen">
+            <div style="text-align: center; padding: 24px 10px;">
+              <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--error); color: #601410; display: grid; place-items: center; margin: 0 auto 16px; font-size: 24px; font-weight: 800;">!</div>
+              <div style="font-size: 15px; font-weight: 700; margin-bottom: 6px;">Pričekaj 6 minuta</div>
+              <div style="font-size: 12px; color: var(--on-surface-variant); line-height: 1.5;">Tri neuspjele prijave zaredom.<br/>Provjeri lozinku i pokušaj kasnije.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Closure summary (final) -->
+      <div class="phone-wrap">
+        <div class="phone-label">Closure Summary (happy path)</div>
+        <div class="phone">
+          <div class="statusbar"><span>21:47</span><span>●●● ⌃</span></div>
+          <div class="closure">
+            <div>
+              <div class="check">✓</div>
+              <div class="hero">
+                <div class="big">4</div>
+                <div class="label">gostiju prijavljeno</div>
+                <div class="sub">Apartman Luna · 21:47</div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="cta">↗  Podijeli</button>
+              <button class="cta secondary">Gotovo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="matrix">
+  <h2>Direction comparison</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Attribute</th>
+        <th class="col-head">A · Calm & Spacious</th>
+        <th class="col-head">B · Dense Utility</th>
+        <th class="col-head">C · Camera-Forward</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Multi-guest scan + Send All</strong></td><td>✅ Yes (unchanged)</td><td>✅ Yes (unchanged)</td><td>✅ Yes (unchanged)</td></tr>
+      <tr><td><strong>Home when queue empty</strong></td><td>Hero count + empty-state message + single CTA</td><td>Hero count + "empty queue" card + dual CTAs</td><td>Live camera preview + chip</td></tr>
+      <tr><td><strong>Home when queue has guests</strong></td><td>Queue rows inline + dual CTA (Send All + Scan)</td><td>Queue rows inline + dual CTA</td><td>Live camera + chip + "Review queue" sheet</td></tr>
+      <tr><td><strong>Scan initiation</strong></td><td>Full-screen camera on CTA tap</td><td>Full-screen camera on CTA tap</td><td>Live preview on home; full-screen on focus</td></tr>
+      <tr><td><strong>Cognitive load at door</strong></td><td>Lowest — one thing at a time</td><td>Medium — queue context always visible</td><td>Medium — camera always asking for attention</td></tr>
+      <tr><td><strong>Multi-facility fit (Tomislav)</strong></td><td>OK — queue one tap away</td><td>Best — queue + facility always in context</td><td>OK — queue in sheet</td></tr>
+      <tr><td><strong>Battery cost</strong></td><td>Low</td><td>Low</td><td>High — camera always on during home</td></tr>
+      <tr><td><strong>Camera permission as hard gate</strong></td><td>No — manual path fully functional</td><td>No — manual path fully functional</td><td>Yes — home broken without camera</td></tr>
+      <tr><td><strong>Build cost (v1.0 solo)</strong></td><td>Lowest</td><td>Low–medium</td><td>Medium–high (CameraX lifecycle on home)</td></tr>
+      <tr><td><strong>Premium-banking aesthetic fit</strong></td><td>Strongest</td><td>Good</td><td>Weaker — camera feel is utilitarian</td></tr>
+      <tr><td><strong>Play Store sensitive-data review risk</strong></td><td>Lowest</td><td>Lowest</td><td>Higher — always-on camera is bigger story</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="verdict">
+  <h3>Chosen baseline: Direction A + B's inline queue + B's manual-entry CTA</h3>
+  <p>
+    <strong>Core pattern:</strong> Direction A (calm, single-CTA, minimal chrome) as the visual and interaction baseline. When queue has unsent guests, home shifts to B's inline-rows layout. Manual-entry is always a visible secondary CTA (not a hidden fallback) — it's a real path for non-EU IDs, worn documents, and denied camera permissions.
+    <br/><br/>
+    <strong>Login flow:</strong> username + password only. The eVisitor API key is embedded in the app at build time (single shared key across all users — confirmed with HTZ in Week-1 spike). Known residual risk: APK extraction could expose the key; mitigated by Play Store update path (~3-day rotation) and the likely coarse-grained nature of the vendor API key.
+    <br/><br/>
+    <strong>Ad placement (v1.0):</strong> single AdMob anchored-adaptive banner (50–100dp) on Home only, between queue content and CTA section. Never on onboarding, login, facility picker, scan, Send All, credential banner, reauth, closure summary, or "Your Data." No interstitials — preserves the trust thesis and the sacred Closure Summary moment. Pre-agreed pivot (from PRD): if reviews flag ads as #1 complaint, pivot to ad-free free tier + earlier v1.1 Pro unlock.
+    <br/><br/>
+    <strong>Direction C deferred to v1.1</strong> as an optional setting ("Always-on camera on home"), only if real demand surfaces post-launch. No speculative build cost in v1.0.
+  </p>
+</div>
+
+<script>
+  document.querySelectorAll('.theme-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.theme-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.documentElement.setAttribute('data-theme', btn.dataset.theme);
+    });
+  });
+</script>
+
+</body>
+</html>
