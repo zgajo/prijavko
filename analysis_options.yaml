@@ -1,1 +1,25 @@
+# Strict analyzer configuration (Story 1.1, AC2 — NFR-M1 merge gate).
+#
+# Why strict-from-commit-1: every later story assumes that
+# `dart analyze --fatal-warnings --fatal-infos` blocks merges. If the
+# analyzer is loose on day one, classifier regressions, accidental `print`
+# calls (a PII-leak vector), and const-constructor misses land silently.
+# Enabling these rules here prevents that class of defect by construction
+# (Poka-yoke) rather than relying on review discipline.
+
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    # AC2.1 — explicitly enabled rules (in addition to flutter_lints baseline).
+    avoid_print: true
+    prefer_const_constructors: true
+    always_use_package_imports: true
+    directives_ordering: true
+    unnecessary_null_checks: true
