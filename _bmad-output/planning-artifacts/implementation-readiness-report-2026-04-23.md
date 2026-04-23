@@ -1,6 +1,6 @@
 ---
-project: prijavko
 date: 2026-04-23
+project: prijavko
 stepsCompleted:
   - step-01-document-discovery
   - step-02-prd-analysis
@@ -8,16 +8,17 @@ stepsCompleted:
   - step-04-ux-alignment
   - step-05-epic-quality-review
   - step-06-final-assessment
-filesIncluded:
+inputs:
   prd: _bmad-output/planning-artifacts/prd.md
-  architecture: null
-  epics: null
-  stories: null
-  ux: null
-supportingDocs:
-  - _bmad-output/planning-artifacts/product-brief-prijavko-distillate.md
-  - _bmad-output/planning-artifacts/product-brief-prijavko.md
-  - _bmad-output/planning-artifacts/research/technical-evisitor-auth-lifecycle-research-2026-04-22.md
+  architecture: _bmad-output/planning-artifacts/architecture.md
+  epics: _bmad-output/planning-artifacts/epics.md
+  ux: _bmad-output/planning-artifacts/ux-design-specification.md
+  ux_supplements:
+    - _bmad-output/planning-artifacts/figma-code-contract.md
+    - _bmad-output/planning-artifacts/ux-design-directions.html
+  supporting:
+    - _bmad-output/planning-artifacts/product-brief-prijavko-distillate.md
+    - _bmad-output/planning-artifacts/research/technical-evisitor-auth-lifecycle-research-2026-04-22.md
 ---
 
 # Implementation Readiness Assessment Report
@@ -25,483 +26,528 @@ supportingDocs:
 **Date:** 2026-04-23
 **Project:** prijavko
 
-## Step 1 — Document Discovery
+## Step 1 — Document Inventory
 
-### Inventory
+**PRD (whole):** `_bmad-output/planning-artifacts/prd.md` (82 KB, 2026-04-23 16:49)
+**Architecture (whole):** `_bmad-output/planning-artifacts/architecture.md` (60 KB, 2026-04-23 09:51)
+**Epics & Stories (whole):** `_bmad-output/planning-artifacts/epics.md` (248 KB, 2026-04-23 22:56)
+**UX (whole):** `_bmad-output/planning-artifacts/ux-design-specification.md` (76 KB, 2026-04-23 11:08)
 
-**PRD Files Found**
-- Whole: `_bmad-output/planning-artifacts/prd.md` (83 KB, modified 2026-04-23)
-- Sharded: none
+**UX supplements:** `figma-code-contract.md`, `ux-design-directions.html`
+**Supporting context:** product brief + distillate, eVisitor auth lifecycle research
 
-**Architecture Files Found**
-- Whole: none
-- Sharded: none
-
-**Epics & Stories Files Found**
-- Whole: none
-- Sharded: none
-
-**UX Design Files Found**
-- Whole: none
-- Sharded: none
-
-**Supporting (non-canonical) Documents**
-- `product-brief-prijavko-distillate.md` (LLM-optimized distillate — authoritative per memory)
-- `product-brief-prijavko.md` (original brief)
-- `research/technical-evisitor-auth-lifecycle-research-2026-04-22.md`
-
-### Issues
-
-- ⚠️ **WARNING — Architecture document not found.** Required for readiness assessment.
-- ⚠️ **WARNING — Epics & Stories document(s) not found.** Required; without these, the readiness check cannot validate requirements traceability or implementation sequencing.
-- ⚠️ **WARNING — UX Design document not found.** Impact depends on scope; PRD may cover UX inline.
-- ✅ **No duplicate formats detected** (no sharded vs. whole conflicts).
-
-### Selected Files for Assessment
-- PRD: `prd.md`
-- Architecture: *missing*
-- Epics/Stories: *missing*
-- UX: *missing*
+**Duplicates:** none detected.
+**Missing required docs:** none.
+**Notes:** Prior readiness report at the same path (00:41) is stale — epics.md is now 22:56, so a fresh pass is warranted. This file overwrites it.
 
 ## Step 2 — PRD Analysis
 
 ### Functional Requirements
 
 **Onboarding & Consent**
-- **FR1** — Host can launch the app and be guided through first-run consent, permissions, and credential capture in a single linear flow.
-- **FR2** — App can present an EU-consent surface for ad personalization before any ads are requested.
-- **FR3** — App can present a sensitive-data disclosure explaining passport/MRZ processing, 3-day retention, and a link to the Privacy Policy before camera permission is requested.
-- **FR4** — Host can grant or deny camera permission; manual entry remains fully functional if camera is denied.
-- **FR5** — Host can enter and store eVisitor credentials (username, password, apikey) for subsequent sessions without re-entering.
-- **FR6** — App can verify eVisitor credentials by performing a live login against the eVisitor authentication endpoint during onboarding.
-- **FR7** — Host can replace or re-enter credentials at any time from the Settings surface.
+- FR1: Host can launch the app and be guided through first-run consent, permissions, and credential capture in a single linear flow.
+- FR2: App can present an EU-consent surface for ad personalization before any ads are requested.
+- FR3: App can present a sensitive-data disclosure explaining passport/MRZ processing, 3-day retention, and a link to the Privacy Policy before camera permission is requested.
+- FR4: Host can grant or deny camera permission; manual entry remains fully functional if camera is denied.
+- FR5: Host can enter and store eVisitor credentials (username, password, apikey) for subsequent sessions without re-entering.
+- FR6: App can verify eVisitor credentials by performing a live login against the eVisitor authentication endpoint during onboarding.
+- FR7: Host can replace or re-enter credentials at any time from the Settings surface.
 
 **Authentication & Session Lifecycle**
-- **FR8** — App can maintain an eVisitor session across process restarts, device reboots, and periods of background inactivity.
-- **FR9** — App can detect an expired or invalid session from eVisitor responses (regardless of HTTP status code) and classify the cause (session-dead, lockout, credentials-invalid, network, or server error).
-- **FR10** — App can re-authenticate automatically using stored credentials when a dead session is detected, without duplicate concurrent login attempts.
-- **FR11** — App can surface a non-blocking credential banner to the host when session-dead or credentials-invalid is detected, with a single-tap recovery action.
-- **FR12** — App can refuse further login attempts after a configurable threshold of consecutive failures within a rolling window, and communicate the remaining wait to the host in Croatian.
-- **FR13** — App can perform an opportunistic authentication check on app foregrounding without blocking the UI.
-- **FR14** — Host can view current session state (authenticated, reauth-needed, locked-out) at a glance in the Settings surface.
-- **FR14.5** — App can detect missing credentials on launch (Keystore returns no value for an existing facility profile) and surface a non-blocking "credentials missing — re-enter to continue" state with facility names pre-populated, without losing facility context or forcing full re-onboarding.
+- FR8: App can maintain an eVisitor session across process restarts, device reboots, and periods of background inactivity.
+- FR9: App can detect an expired or invalid session from eVisitor responses (regardless of HTTP status code) and classify the cause (session-dead, lockout, credentials-invalid, network, or server error).
+- FR10: App can re-authenticate automatically using stored credentials when a dead session is detected, without duplicate concurrent login attempts.
+- FR11: App can surface a non-blocking credential banner to the host when session-dead or credentials-invalid is detected, with a single-tap recovery action.
+- FR12: App can refuse further login attempts after a configurable threshold of consecutive failures within a rolling window, and communicate the remaining wait to the host in Croatian.
+- FR13: App can perform an opportunistic authentication check on app foregrounding without blocking the UI.
+- FR14: Host can view current session state (authenticated, reauth-needed, locked-out) at a glance in the Settings surface.
+- FR14.5: App can detect missing credentials on launch (Keystore returns no value for an existing facility profile) and surface a non-blocking "credentials missing — re-enter to continue" state with facility names pre-populated, without losing facility context or forcing full re-onboarding.
 
 **Facility Management**
-- **FR15** — App can fetch and cache the list of facilities available to the host's eVisitor account on first successful login.
-- **FR16** — Host can select exactly one facility at the start of each registration session.
-- **FR17** — App can surface the last-used facility as a hint during facility selection, but not pre-select it as a default.
-- **FR18** — Host can see the currently active facility on the home surface during an active registration session.
-- **FR19** — App can refresh the facility list when the host explicitly requests it, without forcing a full re-login.
+- FR15: App can fetch and cache the list of facilities available to the host's eVisitor account on first successful login.
+- FR16: Host can select exactly one facility at the start of each registration session.
+- FR17: App can surface the last-used facility as a hint during facility selection, but not pre-select it as a default.
+- FR18: Host can see the currently active facility on the home surface during an active registration session.
+- FR19: App can refresh the facility list when the host explicitly requests it, without forcing a full re-login.
 
 **Guest Capture**
-- **FR20** — Host can capture guest identity data by holding a passport or ID card in front of the camera; the app detects and parses a valid MRZ automatically.
-- **FR21** — Host can tap a static capture control to capture a document image when live MRZ detection does not succeed within a bounded time.
-- **FR22** — Host can enter guest data manually as a fallback when neither live nor static capture succeeds.
-- **FR23** — App can validate captured or entered guest data against semantic sanity rules (date plausibility, document expiry, valid country codes, realistic birth years) before accepting it into the queue.
-- **FR24** — Host can review and correct captured guest data before it is committed to the queue.
-- **FR25** — App can reject a capture or entry inline with a Croatian-language explanation when sanity validation fails, without committing it to the queue.
-- **FR26** — App can support future fields required by the May-2026 apartment registration-number mandate, gated by a feature flag, without breaking the existing capture flow.
+- FR20: Host can capture guest identity data by holding a passport/ID in front of the camera; the app detects and parses a valid MRZ automatically.
+- FR21: Host can tap a static capture control to capture a document image when live MRZ detection does not succeed within a bounded time.
+- FR22: Host can enter guest data manually as a fallback when neither live nor static capture succeeds.
+- FR23: App can validate captured or entered guest data against semantic sanity rules (date plausibility, document expiry, valid country codes, realistic birth years) before accepting it into the queue.
+- FR24: Host can review and correct captured guest data before it is committed to the queue.
+- FR25: App can reject a capture or entry inline with a Croatian-language explanation when sanity validation fails, without committing it to the queue.
+- FR26: App can support future fields required by the May-2026 apartment registration-number mandate, gated by a feature flag, without breaking the existing capture flow.
 
 **Queue & Local Persistence**
-- **FR27** — App can persist every captured guest to encrypted local storage with a client-generated unique identifier, synchronously, before surfacing any success indication to the host.
-- **FR28** — App can preserve unsent guests across app kills, device reboots, and offline periods indefinitely until either submission succeeds or the host deletes them.
-- **FR29** — Host can view the unsent queue with a per-guest status and initiate per-guest edit or delete actions.
-- **FR30** — App can automatically delete successfully submitted guests after a 3-day soft-undo retention window, regardless of host action.
-- **FR31** — Host can manually delete individual unsent or recently-submitted guests from the queue at any time.
-- **FR31.5** — Host can replace the active OIB from the Settings surface via a destructive, typed-OIB-guarded confirmation that wipes all facility profiles, queue entries, credentials, and cookie jar, then re-launches onboarding.
+- FR27: App can persist every captured guest to encrypted local storage with a client-generated unique identifier, synchronously, before surfacing any success indication to the host.
+- FR28: App can preserve unsent guests across app kills, device reboots, and offline periods indefinitely until either submission succeeds or the host deletes them.
+- FR29: Host can view the unsent queue with a per-guest status and initiate per-guest edit or delete actions.
+- FR30: App can automatically delete successfully submitted guests after a 3-day soft-undo retention window, regardless of host action.
+- FR31: Host can manually delete individual unsent or recently-submitted guests from the queue at any time.
+- FR31.5: Host can replace the active OIB from the Settings surface via a destructive, typed-OIB-guarded confirmation that wipes all facility profiles, queue entries, credentials, and cookie jar, then re-launches onboarding.
 
 **Submission (Send All)**
-- **FR32** — Host can trigger a batch submission of all unsent guests for the active facility via an explicit action (no automatic submission, no background retry).
-- **FR33** — App can perform a pre-flight check for authentication and network reachability immediately before submitting and block the submission with a clear message if either check fails.
-- **FR34** — App can submit guests individually to eVisitor such that a rejection of one guest does not cause rejection of other guests in the same batch.
-- **FR35** — App can report per-guest success or failure outcomes to the host after a submission batch completes.
-- **FR36** — Host can edit a failed guest inline and retry only the failed guests without re-submitting already-successful ones.
-- **FR36.5** — App can distinguish a rate-limited response (HTTP 429 or equivalent eVisitor throttling) from a submission failure and surface a non-blocking "eVisitor is busy — retrying..." message with exponential backoff, without counting the rate-limit as a per-guest failure outcome.
-- **FR36.6** — App can track an `in_flight` queue state between `ready-to-send` and `accepted/rejected`; on app resume after process kill or crash, any `in_flight` entries are re-queried against eVisitor before any retry is attempted (or held for host review if a lookup endpoint is unavailable) — preventing silent double-submits.
+- FR32: Host can trigger a batch submission of all unsent guests for the active facility via an explicit action (no automatic submission, no background retry).
+- FR33: App can perform a pre-flight check for authentication and network reachability immediately before submitting and block the submission with a clear message if either check fails.
+- FR34: App can submit guests individually to eVisitor such that a rejection of one guest does not cause rejection of other guests in the same batch.
+- FR35: App can report per-guest success or failure outcomes to the host after a submission batch completes.
+- FR36: Host can edit a failed guest inline and retry only the failed guests without re-submitting already-successful ones.
+- FR36.5: App can distinguish a rate-limited response (HTTP 429 or equivalent eVisitor throttling) from a submission failure and surface a non-blocking "eVisitor is busy — retrying..." message with exponential backoff, without counting the rate-limit as a per-guest failure outcome.
+- FR36.6: App can track an `in_flight` queue state between `ready-to-send` and `accepted/rejected`; on app resume after process kill or crash, any `in_flight` entries are re-queried against eVisitor before any retry is attempted (or held for host review if a lookup endpoint is unavailable) — preventing silent double-submits.
 
 **Post-Submission Closure**
-- **FR37** — App can present a closure summary after every submission batch, containing the facility name, number of guests registered, and the local submission timestamp — and containing no guest names, document numbers, or other PII.
-- **FR38** — Host can share or screenshot the closure summary for their own records.
+- FR37: App can present a closure summary after every submission batch, containing the facility name, number of guests registered, and the local submission timestamp — and containing no guest names, document numbers, or other PII.
+- FR38: Host can share or screenshot the closure summary for their own records.
 
 **Privacy & Data Lifecycle**
-- **FR39** — Host can view a "Your Data" surface listing what is currently stored on the device (unsent queue count, recently-submitted count within retention), with links to the Privacy Policy and Terms of Service.
-- **FR40** — Host can trigger a complete wipe of all local data (queue, cached facilities, cookie jar, credentials) in a single action.
+- FR39: Host can view a "Your Data" surface listing what is currently stored on the device (unsent queue count, recently-submitted count within retention), with links to the Privacy Policy and Terms of Service.
+- FR40: Host can trigger a complete wipe of all local data (queue, cached facilities, cookie jar, credentials) in a single action.
 
 **Observability & Compliance Signals**
-- **FR41** — App can emit zero-PII telemetry events that allow the operator to measure submission success rate, session-dead-recovery rate, queue-stuck-over-24h count, and crash-free session rate — without transmitting any guest or credential data.
-- **FR42** — App can present a forced-update banner when a remote minimum-supported-version signal indicates the current client is incompatible with eVisitor, and block submissions while the banner is active.
+- FR41: App can emit zero-PII telemetry events that allow the operator to measure submission success rate, session-dead-recovery rate, queue-stuck-over-24h count, and crash-free session rate — without transmitting any guest or credential data.
+- FR42: App can present a forced-update banner when a remote minimum-supported-version signal indicates the current client is incompatible with eVisitor, and block submissions while the banner is active.
 
-**Total FRs: 46** (FR1–FR42 + FR14.5, FR31.5, FR36.5, FR36.6)
+**Total FRs: 46** (FR1–FR42 = 42, plus inserts FR14.5, FR31.5, FR36.5, FR36.6 = 4)
 
 ### Non-Functional Requirements
 
-**Performance (NFR-P1 → NFR-P10)**
-- **NFR-P1** — Live MRZ auto-shutter fires within 1.5s (p95) on well-lit in-date MRD.
-- **NFR-P2** — Static-tap fallback surfaces no later than 3s of failed live detection.
-- **NFR-P3** — Scanned guest persisted to encrypted queue + reflected in unsent-row UI within 300ms (p95), synchronous DB commit before haptic.
-- **NFR-P4** — Semantic sanity validation completes within 50ms (p95).
-- **NFR-P5** — Send All pre-flight (auth + network) completes within 1s (p95).
-- **NFR-P6** — Per-guest progress indicator updates within 200ms of each eVisitor response.
-- **NFR-P7** — Post-submit closure summary renders within 200ms of last guest's response.
-- **NFR-P8** — Cold start → home ready within 2.5s (p95) on mid-range 2023+ hardware.
-- **NFR-P9** — Warm resume + opportunistic auth check within 1s (p95), non-blocking.
-- **NFR-P10** — Holds ≥40 unsent guests in a session without UI degradation (60fps scroll, 200ms edit/delete); verified by integration test.
+**Performance (10)**
+- NFR-P1: Live MRZ auto-shutter fires within 1.5s (p95) on a well-lit, flat, in-date MRZ.
+- NFR-P2: Static-tap fallback surfaces no later than 3s of failed live detection.
+- NFR-P3: Scanned guest persisted + reflected in unsent-row UI within 300ms (p95); synchronous DB commit before success haptic.
+- NFR-P4: Semantic sanity validation completes within 50ms (p95) of capture submission.
+- NFR-P5: Send All pre-flight (auth + network) completes within 1s (p95).
+- NFR-P6: Per-guest submission UI progress updates within 200ms of each eVisitor response.
+- NFR-P7: Post-submit closure summary renders within 200ms of last guest's response.
+- NFR-P8: Cold start ≤ 2.5s (p95) on mid-range Android 2023+.
+- NFR-P9: Warm resume + opportunistic auth check ≤ 1s (p95), non-blocking.
+- NFR-P10: Capable of holding ≥ 40 unsent guests in one session without UI degradation (60fps scroll, 200ms edit/delete). Integration-test verified.
 
-**Security (NFR-S1 → NFR-S11)**
-- **NFR-S1** — HTTPS TLS 1.2+ only; cleartext rejected at platform level.
-- **NFR-S2** — SHA-256 cert pinning to `www.evisitor.hr` (leaf + intermediate); pin mismatch aborts without retry.
-- **NFR-S3** — Credentials in flutter_secure_storage with Keystore-backed AES/GCM, hardware-backed where available.
-- **NFR-S4** — Cookie jar AES-GCM-encrypted at rest; key in flutter_secure_storage.
-- **NFR-S5** — Drift queue AES-GCM-encrypts PII columns.
-- **NFR-S6** — Android `allowBackup="false"` and `fullBackupContent="false"`.
-- **NFR-S7** — Zero PII in logs/telemetry: (a) PII-bearing types override `toString() → [REDACTED]`, (b) CI grep guard build-blocking.
-- **NFR-S8** — Crashlytics traces symbolicated, zero free-text from guest records; custom events carry counts/IDs/codes only.
-- **NFR-S9** — OWASP MASVS L1 self-audit pre-submission.
-- **NFR-S10** — 3-day auto-purge enforced regardless of host action/app state.
-- **NFR-S11** — Release builds disable verbose Dio logging; Crashlytics custom-key allowlist; transitive-dep log review; staging crash-in-PII-path test inspecting Firebase Console output.
+**Security (11)**
+- NFR-S1: HTTPS with TLS 1.2+; cleartext rejected at platform level (`network_security_config.xml`).
+- NFR-S2: SHA-256 cert pinning to `www.evisitor.hr` (leaf + intermediate); pin mismatch aborts without retry.
+- NFR-S3: Credentials in flutter_secure_storage with Keystore-backed AES/GCM; hardware-backed keys where available.
+- NFR-S4: Cookie jar (`authentication`, `affinity`, `language`) AES-GCM-encrypted at rest; key in flutter_secure_storage.
+- NFR-S5: Drift queue guest-identifying fields AES-GCM-encrypted at column level.
+- NFR-S6: `allowBackup="false"` and `fullBackupContent="false"` — no cloud backup path.
+- NFR-S7: Zero PII in logs/telemetry. Enforced at two layers: (a) PII types override `toString()` to `[REDACTED]`, (b) build-blocking CI grep guard.
+- NFR-S8: Crashlytics carries only counts, facility IDs, error codes — no free-text guest data.
+- NFR-S9: OWASP MASVS L1 self-audit pre-submission (documented checklist).
+- NFR-S10: 3-day auto-purge enforced regardless of host action or app state; documented in Privacy Policy + in-app "Your Data" surface.
+- NFR-S11: Release builds disable verbose Dio logging; Crashlytics custom-key allowlist; transitive-dependency logging reviewed pre-submission; staging acceptance test intentionally crashes a PII-carrying path and Firebase Console inspected for leakage.
 
-**Reliability (NFR-R1 → NFR-R9)**
-- **NFR-R1** — Crash-free session rate ≥ 99.5%.
-- **NFR-R2** — `scan_to_submit` first-time success ≥ 90% without corrections.
-- **NFR-R3** — Silent-failure rate = 0 confirmed cases during peak season (2026-06-01 → 2026-09-30).
-- **NFR-R4** — Queue-stuck count (>24h) = 0 at every app open; telemetry on non-zero.
-- **NFR-R5** — No submission loss from process kill, reboot, network drop, or storage pressure.
-- **NFR-R6** — Auto-recover from expired session on next action without re-credential entry (unless credentials invalid).
-- **NFR-R7** — Exactly ONE login call under concurrent auth-triggering requests (QueuedInterceptor serialization).
-- **NFR-R8** — Client-side circuit breaker: 3 consecutive login failures → 6 minutes open (strictly more conservative than Rhetos 5/5).
-- **NFR-R9** — Offline for all capture/queue/facility flows; only Send All + opportunistic auth need network.
+**Reliability (9)**
+- NFR-R1: Crash-free session rate ≥ 99.5% (Crashlytics).
+- NFR-R2: `scan_to_submit` first-time success ≥ 90% without field corrections.
+- NFR-R3: Silent-failure rate (auth-classifier false negatives) = 0 during 2026-06-01 → 2026-09-30 peak.
+- NFR-R4: Queue-stuck count (unsent > 24h) = 0 at every app open (telemetry fires when non-zero).
+- NFR-R5: No submission lost to process kill, device reboot, network drop, or storage pressure — queue always pending or submitted, never "gone."
+- NFR-R6: Auto-recovery from expired session on next action without re-entering credentials (unless credentials themselves invalid).
+- NFR-R7: Concurrent auth-triggering requests produce exactly one login call (QueuedInterceptor).
+- NFR-R8: Client-side circuit breaker opens at 3 consecutive login failures for 6 minutes (more conservative than Rhetos 5/5).
+- NFR-R9: Offline-capable for capture/queue/facility-picker; only Send All + opportunistic auth check require network.
 
-**Integration (NFR-I1 → NFR-I7)**
-- **NFR-I1** — JSON envelopes everywhere; `ImportTourists` XML-as-string-in-JSON; dates `/Date(ms+offset)/`.
-- **NFR-I2** — Classifier handles 401, 403, 400+SystemMessage, 200+error-envelope-at-non-Login.
-- **NFR-I3** — Classifier matches Croatian text (`locked|zaključan`, `invalid|nevažeć|neispra`, `session|prijava|auth`) + English; refined in Week-1 spike.
-- **NFR-I4** — Permanent in-repo Dio fake on every CI build + nightly CI against real testApi with minimal-data canary.
-- **NFR-I5** — Fake-to-real drift triggers CI failure; drift resolved before merging.
-- **NFR-I6** — No guest PII to AdMob/Crashlytics/Firebase/Play/any third party — only to eVisitor.
-- **NFR-I7** — Forced-update via static `prijavko.hr/min-version.json` check on cold start; blocks Send All when active.
+**Integration (7)**
+- NFR-I1: JSON everywhere; `ImportTourists` is XML-as-string inside JSON body; dates `/Date(ms+offset)/`.
+- NFR-I2: Error classifier correctly identifies session-dead across HTTP 401/403, HTTP 400-with-`SystemMessage`, and HTTP 200-with-error-envelope on non-Login endpoints.
+- NFR-I3: Classifier matches Croatian text (`locked|zaključan`, `invalid|nevažeć|neispra`, `session|prijava|auth`) and English; regex refined in Week-1 spike.
+- NFR-I4: Permanent in-repo Dio fake on every CI build + nightly real testApi canary.
+- NFR-I5: Drift between fake and real eVisitor fails CI; resolved before merging.
+- NFR-I6: Zero guest PII transmitted to AdMob/Crashlytics/Firebase/Google Play/any third party — only to eVisitor.
+- NFR-I7: Forced-update mechanism: `prijavko.hr/min-version.json` polled on cold start; below min → banner blocks Send All.
 
-**Compatibility (NFR-C1 → NFR-C5)**
-- **NFR-C1** — Android 7.0 (API 24)+; target SDK per Play mandate at submission.
-- **NFR-C2** — arm64-v8a + armeabi-v7a; no x86.
-- **NFR-C3** — Phone portrait 4.7"–6.9"; landscape/tablet portrait render without breakage (not optimized).
-- **NFR-C4** — CameraX-compatible devices (effectively all API-24+ with rear camera).
-- **NFR-C5** — No Google Play Services beyond ML Kit MRZ (on-device) + Firebase Crashlytics.
+**Compatibility (5)**
+- NFR-C1: Android 7.0 (API 24) minimum; target SDK per latest Play Store mandate at submission.
+- NFR-C2: arm64-v8a + armeabi-v7a; no x86.
+- NFR-C3: Phone portrait 4.7"–6.9" fully designed; landscape + tablet portrait non-breaking but not design-optimized.
+- NFR-C4: Camera works on CameraX-capable API-24+ devices with rear camera.
+- NFR-C5: No Google Play Services beyond ML Kit MRZ (on-device) + Firebase Crashlytics.
 
-**Localization (NFR-L1 → NFR-L4)**
-- **NFR-L1** — Croatian primary, English secondary; follows Android system locale, Croatian fallback.
-- **NFR-L2** — Date/time/number formats follow active locale.
-- **NFR-L3** — Error messages include Croatian eVisitor `UserMessage` (when present) + prijavko Croatian explanation safe for UI.
-- **NFR-L4** — No English-only user-facing strings; missing translations block release.
+**Localization (4)**
+- NFR-L1: Croatian primary, English secondary; active language follows Android system locale, Croatian fallback for unsupported locales.
+- NFR-L2: Date/time/number formats follow active locale.
+- NFR-L3: Host-facing errors include Croatian eVisitor `UserMessage` (when present) + prijavko-provided Croatian explanation safe for UI.
+- NFR-L4: No English-only user-facing strings; missing translations block release.
 
-**Accessibility (NFR-A1 → NFR-A4)** — *good-stewardship baselines, not legal minimums*
-- **NFR-A1** — 48×48 dp minimum touch targets.
-- **NFR-A2** — WCAG 2.1 AA contrast (4.5:1 body, 3:1 large) in light + dark.
-- **NFR-A3** — Content descriptions for TalkBack on every actionable control; scan/Send All/banner/closure fully navigable.
-- **NFR-A4** — Manual-entry respects system font scaling up to 200% without layout breakage.
+**Accessibility (4)**
+- NFR-A1: Minimum 48×48 dp touch target (note: project design-system rule requires 56 dp — stricter).
+- NFR-A2: WCAG 2.1 AA contrast (≥4.5:1 body, ≥3:1 large text) in light + dark.
+- NFR-A3: Every actionable control exposes TalkBack content description; scan/Send All/credential banner/closure summary fully screen-reader navigable.
+- NFR-A4: Manual-entry flows respect system font scaling up to 200% without layout breakage.
 
-**Maintainability (NFR-M1 → NFR-M8)**
-- **NFR-M1** — `dart analyze --fatal-warnings --fatal-infos` on CI; zero warnings merged.
-- **NFR-M2** — No `dynamic` in production paths except at deserialization boundaries.
-- **NFR-M3** — Public classes/functions carry WHY doc comments (not WHAT).
-- **NFR-M4** — Atomic commits, WHY-focused messages.
-- **NFR-M5** — Coverage measured, not percentage-gated; capability contract + integration harness cover every MVP capability; ≥70% meaningful on auth + queue + classifier.
-- **NFR-M6** — Pre-peak code freeze 2026-06-15; post-freeze = bugs only until 2026-09-30 kill-criteria checkpoint.
-- **NFR-M7** — PRD + brief + distillate + eVisitor research are authoritative context; scope changes update PRD first.
-- **NFR-M8** — AI coverage review + security scan at end of every epic (Weeks 1–4); findings remediated same week; Week 5 = Play Store prep only.
+**Maintainability (8)**
+- NFR-M1: `dart analyze --fatal-warnings --fatal-infos` on CI; zero warnings in merged code.
+- NFR-M2: No production `dynamic` except boundary deserialization that immediately coerces to typed models.
+- NFR-M3: Public classes/functions carry doc comments explaining *why*, not *what*.
+- NFR-M4: Commit messages explain *why*; atomic preferred over batched.
+- NFR-M5: Coverage measured not gated; capability contract (FRs) + integration harness (NFR-I4) must cover every MVP capability; meaningful coverage ≥ 70% on auth + queue + classifier.
+- NFR-M6: Pre-peak code freeze 2026-06-15; post-freeze merges are bugs only until 2026-09-30 kill-criteria checkpoint.
+- NFR-M7: PRD + brief + distillate + auth research are authoritative context; scope change updates PRD first, then code.
+- NFR-M8: AI coverage review + security scan at end of every epic (Weeks 1–4); remediated same week; Week 5 reserved for Play Store prep with zero open technical dependencies.
 
-**Total NFRs: 47** (10 Performance + 11 Security + 9 Reliability + 7 Integration + 5 Compatibility + 4 Localization + 4 Accessibility + 8 Maintainability. Wait — recount: 10+11+9+7+5+4+4+8 = 58. Corrected total: **58 NFRs**.)
+**Total NFRs: 58** (10+11+9+7+5+4+4+8)
 
-### Additional Requirements (constraints, commitments, dated milestones)
+### Additional Requirements & Constraints
 
-**Compliance deadlines (hard-dated, pre-launch 2026-05-27):**
-- Play Store Data Safety declaration submitted and sensitive-data manual-review accepted
-- Privacy Policy URL live (`prijavko.hr/privacy`)
-- ToS with liability disclaimer live (`prijavko.hr/terms`) — host is sole legal data controller
-- AdMob + UMP/CMP EU consent surface
-- May-2026 registration-number mandate payload support (blocker — depends on Week-1 spike)
+**Compliance & regulatory (domain):**
+- Host is **sole legal data controller** under Croatian tourism law; prijavko is a transient processor/courier. ToS must disclaim liability for fines from app failure.
+- 24-hour registration window is legally mandatory. The queue-stuck-over-24h metric (NFR-R4) is the observable form of this.
+- May-2026 apartment registration-number mandate is a **Week-1 spike blocker**; payload shape TBD against testApi.
+- GDPR Art. 6(1)(c) legal-obligation basis (not consent) for guest flow. Data-minimization, storage limitation (3 days), right-to-erasure via zero-retention, in-app "Your Data" surface.
+- Play Store **sensitive-data manual review** expected 1–3 weeks; Data Safety declaration + privacy policy + ToS must all be live before upload (target 2026-05-27).
 
-**Scope commitments (non-negotiable signed-off list):**
-- v1.0 MUST NOT include: iOS, web/PWA host surface, multi-OIB UI, NFC, guest self-scan, reported-history view, CSV/PDF export, compliance receipt, auto-retry, push notifications, geolocation, widgets, iCal import, tax computation, boravišna-pristojba filing, social/community features.
-- No feature survives into v1.0 without an observable success metric.
+**Technical constraints:**
+- No refresh token against Rhetos — re-auth is always full re-login with stored credentials.
+- Rhetos server-side 5-failure / 5-minute lockout; client circuit breaker opens at 3 / 6 minutes.
+- Stack lock-in (per architecture): Flutter 3.x, Dart 3.x, Riverpod 3, Drift, Dio 5.x, flutter_secure_storage, dio_cookie_manager + PersistCookieJar, Firebase Crashlytics, UMP/CMP.
+- No push, no FCM, no foreground service, no geolocation, no background auto-retry.
+- Permanent in-repo Dio fake is a **first-class repo artifact** (not a dev-only fixture).
 
-**Slip protocol (defer order if 5-week timeline compresses):**
+**Visual contract:**
+- Figma file + `figma-code-contract.md` + `tools/figma-scripts/` are authoritative for UI-fidelity questions (PRD §Visual Contract). Not duplicated in PRD.
+
+**Slip protocol (explicit):**
 1. Hybrid live-first capture → static-only
-2. Opportunistic auth banner → login-on-send (manual refresh only)
-3. Replace-Active-OIB setting (schema-ready, UI deferred)
+2. Opportunistic auth banner → login-on-send
+3. Replace-Active-OIB setting (schema-ready) → UI deferred
 4. Shareable closure-summary screenshot → textual only
+Below the irreducible floor (scan → queue → Send All → success + six-state auth + zero-PII + Play Store compliance): **slip the date, not the scope.**
 
-**Irreducible launch floor (below this, slip the date not the scope):**
-- Scan → queue → manual Send All → successful submission against real eVisitor
-- Six-state auth machine with classifier handling HTTP 400 + SystemMessage
-- Zero-PII log guarantee at type level + CI grep guard
-- Play Store Data Safety + privacy policy + ToS accepted
-
-**Operational constraints:**
-- Solo-dev, ~12 effective working days between 2026-04-23 and 2026-05-27
-- Pre-peak code freeze 2026-06-15 (bugs-only June–Aug)
-- Kill-criteria checkpoint 2026-09-30 (<1000 installs OR <3.5★ OR <10% M3 retention → planned sunset)
-- Budget sub-€500 out-of-pocket
-- 5 host interviews are a **pre-build blocker** (validates top-pain hypothesis)
-
-**Measurable outcomes dashboard (Crashlytics + Play Console):**
-1. Crash-free session rate ≥ 99.5%
-2. `scan_to_submit` success ≥ 90% without corrections
-3. Auth-recovery latency p50 < 30s
-4. Queue-stuck-count >24h = 0
-5. Play Store rating ≥ 4.5
-6. Weekly active hosts ≥500 by July 2026
-
-**Risk mitigations flagged as requirement-bearing:**
-- Production-canary ping account against testApi (nightly CI)
-- In-app forced-update banner on contract break (NFR-I7)
-- Feature-flagged May-2026 mandate field (FR26)
+**Kill criteria (2026-09-30):** <1,000 installs OR <3.5 Play Store rating OR <10% month-3 retention → planned sunset.
 
 ### PRD Completeness Assessment
 
 **Strengths:**
-- Requirements are **numbered, traceable, and verb-prefixed** ("Host can…" / "App can…") — clean testability surface.
-- Every capability in the Journey Requirements Summary table maps to at least one FR.
-- Technical-success metrics in Step 3 are tied directly to NFRs (crash-free → NFR-R1; scan_to_submit → NFR-R2; silent-failure → NFR-R3; queue-stuck → NFR-R4).
-- NFRs cover the full ISO-25010-ish spread: performance, security, reliability, integration, compatibility, localization, accessibility, maintainability.
-- Slip protocol + irreducible floor give epic planners an explicit priority gradient.
-- Compliance + dated milestones are first-class; no hand-waving "GDPR-compliant" — every claim is actionable (AES-GCM, 3-day purge, CI grep guard, UMP/CMP).
+- Requirements are behaviour-outcome shaped, not implementation-shaped — leaves architectural freedom while still being testable.
+- Every FR is traced to at least one journey; every capability in Step 4's Journey Requirements table has a corresponding FR.
+- NFRs are numeric and measurable (p95 latencies, error rates, touch-target sizes, contrast ratios). Few mushy clauses.
+- Observability-as-MVP posture forces the reliability promise to be falsifiable from day one (NFR-I4 + NFR-R1–R4 + FR41).
+- Slip protocol + irreducible floor clearly separates negotiable from non-negotiable scope.
+- Innovation moat (zero-retention, classifier, Neutral App, type-level PII, Dio fake) is called out and validation-tied.
 
-**Gaps & concerns:**
-- **No architecture document exists.** Several FRs/NFRs imply architectural decisions (six-state auth machine, QueuedInterceptor, Drift schema with `in_flight` state per FR36.6, certificate pin set management, feature-flag infrastructure for FR26) that an implementation agent cannot execute from the PRD alone.
-- **No epics/stories exist.** The capability contract is ready to be decomposed into epics, but no decomposition has been performed.
-- **No UX design document exists.** The PRD describes journeys narratively but contains no wireframes, surface inventory, component-level interaction specs, Croatian-language microcopy, or screen-by-screen layouts. Several FRs (e.g., FR11 non-blocking credential banner, FR35 per-guest outcomes, FR37 closure summary) will need UX specificity before a developer can implement them consistently.
-- **FR26 depends on a Week-1 spike** that has not yet been performed — spec is intentionally deferred, but epics must plan for this as a gated blocker.
-- **FR36.6 `in_flight` state** introduces a state machine requirement on top of the basic queue; needs either architecture or story-level design to nail down the "lookup endpoint unavailable" fallback path.
-- Minor internal inconsistency flagged during extraction: the earlier text references a "six-state" auth machine; the distillate should be checked to ensure the PRD's Settings-visible states (authenticated, reauth-needed, locked-out) are consistent with the six states. Not a blocker, but a story-level clarification will be needed.
+**Gaps / things to watch in later steps:**
+- **NFR-A1 vs design-system rule:** PRD says 48×48 dp minimum; `.claude/rules/design-system.md` §5 and UX spec require 56 dp. Epics must reflect the stricter 56 dp (not the PRD minimum) to avoid drift.
+- **May-2026 mandate field (FR26):** entire enforcement depends on a Week-1 spike. An epic must own the spike and the feature flag; if missing, readiness fails.
+- **FR36.6 `in_flight` dedup:** requires an eVisitor lookup endpoint for pre-retry reconciliation; fallback is "hold for host review." Epics must pick one of the two paths and have stories for both the lookup and the human-review UX.
+- **FR14.5 credential-missing (non-destructive recovery) vs FR31.5 destructive OIB-replace:** two separate flows. Epics must not conflate them.
+- **Forced-update mechanism (FR42 + NFR-I7):** depends on a static JSON at `prijavko.hr/min-version.json` — a deployment artifact outside the Flutter build. Epics should own its setup.
+- **NFR-S11 staging PII-leak acceptance test:** process-level test. Should be a story, not a handwave.
+- **NFR-M8 per-epic AI coverage + security review:** a schedule commitment; readiness check should confirm epics surface this as an exit gate, not a footnote.
 
-**Verdict:** PRD is complete and high-quality as a requirements artifact. It is **not** sufficient on its own to begin implementation — architecture + epics/stories + UX spec remain prerequisites.
+The PRD is coherent, internally traceable, and measurement-grounded. No structural defects blocking coverage validation — proceed.
 
 ## Step 3 — Epic Coverage Validation
 
-### Epics Document Status
+### Epics Overview
 
-🛑 **No epics document found** in `_bmad-output/planning-artifacts/`. Search pattern `*epic*.md` returned zero results — neither a whole-file nor a sharded `epics/index.md` structure exists.
+The epics document defines **10 epics and 59 stories**, with an explicit Requirements Inventory (FR/NFR/UX-DR), an FR Coverage Map, a Story-to-Requirements matrix, an FR-to-Story inverse map, a UX-DR inverse map, and a selected NFR coverage section.
 
-### Coverage Matrix
-
-| FR | PRD Requirement (summary) | Epic Coverage | Status |
+| Epic | Title | Stories | Declared FRs |
 |---|---|---|---|
-| FR1 | First-run linear flow (consent → perms → creds) | **NOT FOUND** | ❌ MISSING |
-| FR2 | UMP/CMP EU consent before ads | **NOT FOUND** | ❌ MISSING |
-| FR3 | Sensitive-data disclosure + 3-day retention + Privacy link | **NOT FOUND** | ❌ MISSING |
-| FR4 | Camera permission grant/deny; manual-entry always works | **NOT FOUND** | ❌ MISSING |
-| FR5 | Enter + store eVisitor credentials | **NOT FOUND** | ❌ MISSING |
-| FR6 | Verify credentials via live login at onboarding | **NOT FOUND** | ❌ MISSING |
-| FR7 | Replace/re-enter credentials from Settings | **NOT FOUND** | ❌ MISSING |
-| FR8 | Maintain session across restarts/reboots/inactivity | **NOT FOUND** | ❌ MISSING |
-| FR9 | Detect + classify session state from eVisitor responses | **NOT FOUND** | ❌ MISSING |
-| FR10 | Auto re-auth with stored creds, no duplicate concurrent logins | **NOT FOUND** | ❌ MISSING |
-| FR11 | Non-blocking credential banner, single-tap recovery | **NOT FOUND** | ❌ MISSING |
-| FR12 | Circuit breaker after N consecutive failures, Croatian wait message | **NOT FOUND** | ❌ MISSING |
-| FR13 | Opportunistic auth check on foregrounding, non-blocking | **NOT FOUND** | ❌ MISSING |
-| FR14 | Session state visible in Settings | **NOT FOUND** | ❌ MISSING |
-| FR14.5 | Missing-credentials state with facility-preserved re-entry | **NOT FOUND** | ❌ MISSING |
-| FR15 | Fetch + cache facility list on first login | **NOT FOUND** | ❌ MISSING |
-| FR16 | Explicit per-session facility choice | **NOT FOUND** | ❌ MISSING |
-| FR17 | Last-used facility as hint, not default | **NOT FOUND** | ❌ MISSING |
-| FR18 | Active facility visible on home | **NOT FOUND** | ❌ MISSING |
-| FR19 | Explicit facility-list refresh without re-login | **NOT FOUND** | ❌ MISSING |
-| FR20 | Live MRZ detection + parse | **NOT FOUND** | ❌ MISSING |
-| FR21 | Static-tap capture fallback after bounded time | **NOT FOUND** | ❌ MISSING |
-| FR22 | Manual-entry fallback | **NOT FOUND** | ❌ MISSING |
-| FR23 | Semantic sanity validation (date/expiry/ISO/birth year) | **NOT FOUND** | ❌ MISSING |
-| FR24 | Review + correct before queue commit | **NOT FOUND** | ❌ MISSING |
-| FR25 | Inline rejection with Croatian explanation | **NOT FOUND** | ❌ MISSING |
-| FR26 | Feature-flagged May-2026 mandate fields | **NOT FOUND** | ❌ MISSING |
-| FR27 | Synchronous encrypted persist + UUID before success | **NOT FOUND** | ❌ MISSING |
-| FR28 | Unsent queue persists across kills/reboots/offline | **NOT FOUND** | ❌ MISSING |
-| FR29 | View unsent queue; per-guest edit/delete | **NOT FOUND** | ❌ MISSING |
-| FR30 | 3-day auto-purge of submitted guests | **NOT FOUND** | ❌ MISSING |
-| FR31 | Manual delete of individual queue entries | **NOT FOUND** | ❌ MISSING |
-| FR31.5 | Destructive Replace-Active-OIB with typed confirmation | **NOT FOUND** | ❌ MISSING |
-| FR32 | Explicit Send All, no auto-retry | **NOT FOUND** | ❌ MISSING |
-| FR33 | Pre-flight auth + network check before send | **NOT FOUND** | ❌ MISSING |
-| FR34 | Per-guest submission (one rejection does not kill batch) | **NOT FOUND** | ❌ MISSING |
-| FR35 | Per-guest success/failure reporting | **NOT FOUND** | ❌ MISSING |
-| FR36 | Edit failed inline + retry-failed-only | **NOT FOUND** | ❌ MISSING |
-| FR36.5 | 429/throttle distinguished from failure; exponential backoff | **NOT FOUND** | ❌ MISSING |
-| FR36.6 | `in_flight` state + resume reconciliation to prevent double-submit | **NOT FOUND** | ❌ MISSING |
-| FR37 | Zero-PII closure summary (facility + count + time) | **NOT FOUND** | ❌ MISSING |
-| FR38 | Share/screenshot closure summary | **NOT FOUND** | ❌ MISSING |
-| FR39 | "Your Data" surface with counts + policy links | **NOT FOUND** | ❌ MISSING |
-| FR40 | Single-action complete local-data wipe | **NOT FOUND** | ❌ MISSING |
-| FR41 | Zero-PII telemetry: submission/recovery/stuck/crash-free | **NOT FOUND** | ❌ MISSING |
-| FR42 | Forced-update banner from min-version signal, blocks Send All | **NOT FOUND** | ❌ MISSING |
+| 1 | First-Run Onboarding & Credential Trust | 9 | FR1–FR8 |
+| 2 | Resilient Auth Lifecycle (No Door Surprises) | 9 | FR9–FR14, FR14.5 |
+| 3 | Facility Choice (Neutral App Pattern) | 6 | FR15–FR19 |
+| 4 | Confident Capture Pipeline | 9 | FR20–FR26 |
+| 5 | Zero-Loss Encrypted Queue | 8 | FR27–FR31, FR31.5 |
+| 6 | Explicit Send All with Per-Guest Isolation | 8 | FR32–FR36, FR36.5, FR36.6 |
+| 7 | Closure Summary | 3 | FR37, FR38 |
+| 8 | Privacy Transparency & Data Wipe | 2 | FR39, FR40 |
+| 9 | Observability & Forced-Update Safety Net | 5 | FR41, FR42 |
+| 10 | Monetization & Launch Readiness | 8 | — (NFR-S9, NFR-I6, Play Store compliance) |
 
-### Missing Requirements — all 46
+### FR Coverage Matrix (PRD ↔ Epics ↔ Story)
 
-Every FR in the PRD is uncovered. No prioritization by subgroup is useful at this stage because the epics decomposition simply hasn't been attempted yet.
+| FR | PRD? | Epic | Story(ies) | Status |
+|---|---|---|---|---|
+| FR1 | ✓ | 1 | 1.4, 1.5, 1.6, 1.7 (compose linear flow) | ✓ Covered |
+| FR2 | ✓ | 1 | 1.4 | ✓ Covered |
+| FR3 | ✓ | 1 | 1.5 | ✓ Covered |
+| FR4 | ✓ | 1 | 1.6 | ✓ Covered |
+| FR5 | ✓ | 1 | 1.7 | ✓ Covered |
+| FR6 | ✓ | 1 | 1.7 | ✓ Covered |
+| FR7 | ✓ | 1 | 1.9 | ✓ Covered |
+| FR8 | ✓ | 1 | 1.8 | ✓ Covered |
+| FR9 | ✓ | 2 | 2.2 | ✓ Covered |
+| FR10 | ✓ | 2 | 2.3, 2.4 | ✓ Covered |
+| FR11 | ✓ | 2 | 2.7 | ✓ Covered |
+| FR12 | ✓ | 2 | 2.5 | ✓ Covered |
+| FR13 | ✓ | 2 | 2.6 | ✓ Covered |
+| FR14 | ✓ | 2 | 2.9 | ✓ Covered |
+| FR14.5 | ✓ | 2 | 2.8 | ✓ Covered |
+| FR15 | ✓ | 3 | 3.2 | ✓ Covered |
+| FR16 | ✓ | 3 | 3.4 | ✓ Covered |
+| FR17 | ✓ | 3 | 3.4 | ✓ Covered |
+| FR18 | ✓ | 3 | 3.5 | ✓ Covered |
+| FR19 | ✓ | 3 | 3.6 | ✓ Covered |
+| FR20 | ✓ | 4 | 4.2 | ✓ Covered |
+| FR21 | ✓ | 4 | 4.5 | ✓ Covered |
+| FR22 | ✓ | 4 | 4.6 | ✓ Covered |
+| FR23 | ✓ | 4 | 4.1 | ✓ Covered |
+| FR24 | ✓ | 4 | 4.8 | ✓ Covered |
+| FR25 | ✓ | 4 | 4.7 | ✓ Covered |
+| FR26 | ✓ | 4 | 4.9 | ✓ Covered |
+| FR27 | ✓ | 5 | 5.2 | ✓ Covered |
+| FR28 | ✓ | 5 | 5.5 (visible on Home) + persistence in 5.1+5.2 | ✓ Covered |
+| FR29 | ✓ | 5 | 5.6 | ✓ Covered |
+| FR30 | ✓ | 5 | 5.7 | ✓ Covered |
+| FR31 | ✓ | 5 | 5.6 | ✓ Covered |
+| FR31.5 | ✓ | 5 | 5.8 | ✓ Covered |
+| FR32 | ✓ | 6 | 6.4 | ✓ Covered |
+| FR33 | ✓ | 6 | 6.4 | ✓ Covered |
+| FR34 | ✓ | 6 | 6.5 | ✓ Covered |
+| FR35 | ✓ | 6 | 6.5 | ✓ Covered |
+| FR36 | ✓ | 6 | 6.7 | ✓ Covered |
+| FR36.5 | ✓ | 6 | 6.6 | ✓ Covered |
+| FR36.6 | ✓ | 6 | 6.8 | ✓ Covered |
+| FR37 | ✓ | 7 | 7.1, 7.3 | ✓ Covered |
+| FR38 | ✓ | 7 | 7.2 | ✓ Covered |
+| FR39 | ✓ | 8 | 8.1 | ✓ Covered |
+| FR40 | ✓ | 8 | 8.2 | ✓ Covered |
+| FR41 | ✓ | 9 | 9.2, 9.3 | ✓ Covered |
+| FR42 | ✓ | 9, 10 | 9.4 (client) + 10.5 (server-side JSON publish) | ✓ Covered |
 
-**Recommendation:** run `bmad-create-epics-and-stories` to generate the epic structure. Based on the PRD's capability groupings, a natural decomposition is:
+### Missing FR Coverage
 
-- **Epic 1 — Onboarding, Consent & Credentials** (FR1–FR7, FR14.5) — gates camera + login path
-- **Epic 2 — Auth Lifecycle & Classifier** (FR8–FR14) — six-state machine, QueuedInterceptor, circuit breaker; the reliability headline promise
-- **Epic 3 — Facility Management (Neutral App)** (FR15–FR19)
-- **Epic 4 — Capture Pipeline** (FR20–FR26) — MRZ + static-tap + manual + sanity layer + mandate feature flag
-- **Epic 5 — Queue & Drift Persistence** (FR27–FR31.5) — encrypted synchronous persist, 3-day auto-purge, OIB replace
-- **Epic 6 — Send All & Submission** (FR32–FR36.6) — pre-flight, per-guest isolation, `in_flight` reconciliation, throttling
-- **Epic 7 — Closure, Privacy Surface & Data Wipe** (FR37–FR40)
-- **Epic 8 — Observability, Forced-Update & Compliance Readiness** (FR41–FR42 + NFR cross-cuts: CI grep guard, permanent Dio fake, nightly testApi canary, Play Store submission package)
+**None.** All 46 PRD FRs map to at least one story with acceptance criteria.
+
+### Drift / Discrepancies (epics vs. PRD)
+
+Not missing, but worth flagging for later steps:
+
+- **NFR-M8 missing from epics Requirements Inventory.** PRD defines NFR-M8 (AI coverage review + security scan at end of every epic, remediated same week; Week 5 reserved for Play Store prep with zero open technical dependencies). Epics list NFR-M1 through NFR-M7 only — NFR-M8 is dropped. Given it is an epic-exit-gate commitment, this is a notable omission to address in Step 5 (epic quality). Remediation: either add as a per-epic exit gate, or cite it explicitly in Story 10.8 / Week-5 sequence.
+- **NFR-P8 (cold start ≤2.5s p95) not mapped to any story.** The NFR-to-Story table is labelled "selected high-criticality NFRs" and lists P1–P7, P9, P10 but omits P8. Worth assigning to Story 1.1 (bootstrap) or Story 10.8 (production submission) as an acceptance gate.
+- **Epic 10 declares no FRs directly** — correct per the epic description (monetization/launch readiness), but note that FR42 has its operational half (publishing `min-version.json`) owned by Story 10.5. This is already reflected in the inverse map and is fine.
+- **Epics total count declared as "46 FRs"** at line 3668 — matches PRD inventory exactly (including the four `.5`/`.6` inserts).
 
 ### Coverage Statistics
 
 - **Total PRD FRs:** 46
-- **FRs covered in epics:** 0
-- **Coverage percentage:** **0%**
+- **FRs covered by ≥1 story:** 46
+- **Coverage percentage:** **100%**
+- **UX-DR coverage:** 33 / 33 (from inverse map, verified by sampling)
+- **NFR coverage:** 56 / 58 explicitly mapped (NFR-P8, NFR-M8 unmapped; flagged above)
 
-### Verdict
+**Result:** Functional coverage is complete. Two NFR gaps (P8, M8) warrant a note but are non-blocking — both are operational/process concerns that can be owned via Story-10 / per-epic checkpoints. Proceed to UX alignment.
 
-Epic coverage validation cannot produce a meaningful gap analysis against an artifact that doesn't exist. The gap **is** the artifact. This is the biggest single blocker to implementation readiness.
-
-## Step 4 — UX Alignment Assessment
+## Step 4 — UX Alignment
 
 ### UX Document Status
 
-**Not Found.** Search patterns `*ux*.md` and `*ux*/index.md` returned zero results in `_bmad-output/planning-artifacts/`. No wireframes, surface inventory, component spec, Croatian microcopy catalog, or screen-by-screen layout document exists.
+**Found — primary spec + two supplements:**
+- `ux-design-specification.md` (1628 lines) — authoritative spec: vision, personas, journeys, experience principles, design system foundation (tokens, color, typography, spacing, accessibility), custom components (10 widgets), UX consistency patterns, responsive/accessibility, screen implementation roadmap.
+- `figma-code-contract.md` (171 lines) — authoritative Figma-node → Flutter-widget mapping (PRD §Visual Contract names it so).
+- `ux-design-directions.html` (53 KB) — exploration asset (28 mockups across 3 directions); Adriatic Teal chosen; included for provenance.
 
-### Is UX Implied by the PRD?
+### UX ↔ PRD Alignment
 
-**Yes — strongly.** Prijavko is a user-facing Android mobile app whose entire thesis depends on interaction quality at the door. The PRD itself describes multiple UX artifacts that must exist before implementation:
+Verified:
 
-- **5 narrative journeys** (onboarding, 4-guest happy path, session death + Wi-Fi drop, one-bad-passport, multi-facility) — each implies screens, transitions, microcopy
-- **Capability contract specifies UI affordances** — non-blocking credential banner (FR11), inline Croatian rejection messages (FR25), per-guest success/failure rendering (FR35), edit-and-retry-failed-only affordance (FR36), closure summary shareable (FR38), "Your Data" surface (FR39), forced-update banner (FR42)
-- **Neutral App facility pattern** (FR16–FR18) — explicit UX inversion requiring careful visual treatment; last-used as hint-not-default is a design decision that needs a wireframe, not prose
-- **Localization NFRs** — all strings need to exist in Croatian (primary) + English (secondary); a microcopy catalog is effectively prerequisite
+- **All 5 user journeys align 1:1.** UX spec §User Journey Flows (lines 829–1045) mirrors PRD §User Journeys — same personas (Ana / Marko / Ivana / Tomislav), same door-side scenes, same capabilities surfaced. No divergence.
+- **Experience Principles map to PRD Success Criteria.** UX's "calm under pressure," "no door surprises," "zero-PII closure" match PRD's user-success guarantees 1:1.
+- **Accessibility tiers are reconciled correctly.**
+  - PRD NFR-A1 = **48×48 dp** minimum (Android guideline).
+  - UX-DR26 = "Touch target minimum 48×48 dp everywhere; primary button min-height **56 dp** (one-handed night-shift)."
+  - Project rule `.claude/rules/design-system.md` §5 = 56 dp tap-target minimum (stricter than PRD).
+  - These are a tiered rule, not a contradiction: 48 dp is the floor, 56 dp is mandated on primary CTAs. Epics honour both (UX-DR26 wording reused in FilledButton component theme + design-system rule). **Non-blocking**, but stories 1.2 and 3.3 should make the tier explicit in acceptance criteria wording.
+- **Innovation moats have a UX surface.** Zero-retention → "Your Data" screen (FR39 / UX-DR22). Error classifier → `CredentialBanner` (FR11 / UX-DR10). Neutral App → `FacilityPickerSheet` (FR16 / UX-DR11). Type-level PII → propagated throughout UX via document-number masking (UX-DR8, UX-DR14). Permanent Dio fake → not UX-visible (correct).
+- **Closure Summary emotional-payoff language is consistent** across PRD (signature moment, shareable, zero-PII) and UX (Adriatic gold `closureAccent` used **only** on this screen; native ShareSheet with text-only payload).
 
-### Alignment Issues
+### UX ↔ Architecture Alignment
 
-| Concern | Impact |
-|---|---|
-| No UX ↔ PRD traceability possible (no UX document to cross-check) | Cannot confirm that the journey narratives decompose into concrete screens covering every FR. A dev agent will invent UX per-story, producing inconsistent treatment of core patterns (banners, inline errors, progress indicators). |
-| No UX ↔ Architecture alignment possible (neither document exists) | Cannot check that performance NFRs (NFR-P1 live MRZ 1.5s, NFR-P3 300ms queue reflect, NFR-P6 200ms per-guest progress, NFR-P7 200ms closure render) are architecturally achievable through planned UI rendering strategy. |
-| No Croatian microcopy catalog | FR25 (inline Croatian explanation), NFR-L3 (Croatian UserMessage + prijavko explanation), FR12 ("Previše neuspješnih pokušaja — pričekajte 6 minuta") all require exact phrasing that beta hosts will react to. Without a catalog, each story will bikeshed its own microcopy. |
-| Screen inventory absent | Unclear which screens exist, what their state variants are (empty queue, offline banner, auth-dead banner, in-flight submission progress), or how navigation connects them. |
-| Interaction specification gaps for the innovation bets | The five declared novelty patterns (zero-retention framing, classifier-as-feature, Neutral App, type-level zero-PII, permanent Dio fake) include two UX-facing ones (zero-retention framing surfaces, Neutral App facility picker) that need concrete design to land in beta testing. |
+Verified:
+
+- Architecture selects Flutter 3.x + Material 3 + Riverpod 3 + Freezed + go_router v14+ + Drift + `cryptography_flutter` — matches the UX stack requirements (Material 3 primitives, theming via `ThemeData` extensions, `AsyncValue.when()` for state rendering).
+- `SystemChrome.setPreferredOrientations` for portrait-lock on scan + closure — not an architectural concern (widget-level); stories 4.3, 4.5, 7.2 own it. **OK.**
+- `ShellRoute` overlay for `ForceUpdateBanner` (UX-DR32 modal/overlay priority) — architecture mentions go_router `redirect` but does **not** explicitly name `ShellRoute`. Story 9.4 description names it correctly (`ShellRoute overlay`). **Minor gap:** architecture.md §App Architecture should be cross-referenced when Story 9.4 is implemented; not a readiness blocker because the story itself is specific.
+- Component theme slots (FilledButton min height 56 dp, Card radius 16 dp, button radius 12 dp) live in UX spec + `.claude/rules/design-system.md` + story 1.2. Architecture is silent on theming — **intentional separation of concerns**, but worth noting.
+- Haptic-before-render (UX-DR13/UX-DR29) as a poka-yoke signal — architectural support is implicit (synchronous Drift commit in story 5.2 feeds the haptic firing in story 4.4). **No gap.**
+- 200% font-scale clamp (UX-DR28) — architecture neutral; widget responsibility. **OK.**
+- `AppLocalizations` / ARB files + `GlobalMaterialLocalizations.delegate` (UX-DR24) — architecture does not explicitly list localization delegates; project rule `.claude/rules/design-system.md` §6 does; story 1.5 baseline owns it. **Minor gap** (architecture addendum opportunity, but non-blocking).
+
+### Alignment Issues (internal)
+
+1. **UX-spec internal inconsistency:** early §Implementation Approach (line 371) says "~5 custom widgets" — later authoritative §Custom Components (line 1089) lists 10 widgets. Epics list 10. **Tiny editorial drift in the UX spec** — not a readiness blocker, but worth cleaning up in the spec itself (the "~5" passage is pre-decision prose that was not updated when the final 10-widget list was committed).
+2. **Architecture does not enumerate design-system responsibilities.** Theming, typography, and iconography live exclusively in UX spec + `figma-code-contract.md` + `.claude/rules/design-system.md`. This is a deliberate separation (consistent with PRD §Visual Contract: "those three artifacts are authoritative for any UI-fidelity question"), but a first-time reader of architecture.md may look for a "UI Architecture" section and not find it. **Non-blocking.** Could add a 2-line cross-reference in architecture.md §3 pointing to the three authoritative UI artifacts.
+3. **Architecture lacks explicit l10n setup note.** `GlobalMaterialLocalizations.delegate` + ARB build is implicit; story 1.5 covers it per the UX-DR24 baseline. **Non-blocking.**
 
 ### Warnings
 
-- ⚠️ **UX is implied but missing.** This is a blocker-class gap for a consumer mobile app with explicit user-experience differentiation as part of its value proposition.
-- ⚠️ Closed beta starts 2026-05-13 (11 working days from today). Without a UX spec, beta feedback will reflect inconsistent UX choices made story-by-story, not a coherent design.
-- ⚠️ Play Store listing requires 6 Croatian-language screenshots — cannot be produced without a screen inventory and a stable UI.
+- None that block readiness. The UX spec is comprehensive, aligns with the PRD on journeys/principles/accessibility, and its 10-widget component contract is mirrored in the epics' UX-DR inverse map.
+- The two minor cross-reference nits (architecture ↔ UX and UX-spec internal "~5 widgets" prose) are documentation hygiene, not planning defects.
+
+**Conclusion:** UX alignment is sound. PRD, UX spec, figma-code-contract, project design-system rule, and epics tell a consistent story at every layer. Proceed.
 
 ## Step 5 — Epic Quality Review
 
-### Reviewable Artifact Status
+Validation scope: user-value framing, epic independence, story sizing, acceptance-criteria structure, within-epic dependency flow, cross-epic dependency flow, database/entity JIT creation, starter-template discipline. Findings are categorized by severity.
 
-**No epics or stories exist to review.** Quality assessment against `bmad-create-epics-and-stories` standards requires an artifact to critique. Since the artifact does not exist, this step cannot be executed in its standard form.
+### Epic User-Value Framing
 
-### What Can Still Be Checked — Quality Preconditions
+| Epic | Title | User-outcome framed? | Notes |
+|---|---|---|---|
+| 1 | First-Run Onboarding & Credential Trust | ✅ | "First-ever host lands on Home in <90s with persistent credentials" |
+| 2 | Resilient Auth Lifecycle (No Door Surprises) | ✅ | "Session-dead caught hours before the door; one-tap restore" |
+| 3 | Facility Choice (Neutral App Pattern) | ✅ | "No wrong-facility submissions" |
+| 4 | Confident Capture Pipeline | ✅ | "3-tier capture with inline Croatian sanity rejection" |
+| 5 | Zero-Loss Encrypted Queue | ✅ | "Queue survives kills/reboots; 3-day soft-undo" |
+| 6 | Explicit Send All with Per-Guest Isolation | ✅ | "One-tap submission; per-guest ✓/✗; no silent double-submit" |
+| 7 | Closure Summary (The Signature Moment) | ✅ | "Emotional payoff, shareable, zero-PII" |
+| 8 | Privacy Transparency & Data Wipe | ✅ | "Host sees what's stored + one-action wipe" |
+| 9 | Observability & Forced-Update Safety Net | ✅ | "Reliability thesis measured in production; contract-break block" |
+| 10 | Monetization & Launch Readiness | ⚠️ Borderline | Ad-supported free tier on Play Store — user outcome framed, but still a compliance/release epic. Acceptable per Step 5 §5B (greenfield needs release epic). |
 
-Although there are no epics to score, several preconditions for epic *creation* can be examined so that when epics are generated, the common anti-patterns are headed off. Below is a forward-looking quality checklist derived from the PRD, flagged by risk.
+**Verdict:** No "Setup Database" / "API Development" / "Infrastructure Setup" anti-patterns. Epic 10 is the only one that leans toward release management; its user-outcome framing ("host installs a Play-Store-listed v1.0") is defensible.
 
-#### 🔴 Critical preconditions (must hold before epics exist)
+### Starter-Template Discipline
 
-| Precondition | Current State | Risk if Ignored |
-|---|---|---|
-| Architecture document with starter-template decision | **Missing** | Epic 1 Story 1 normally is "set up project from starter template." Without architecture, there is no template choice; implementation cannot begin. |
-| FR → Epic mapping is stable | **Not started** | The recommended 8-epic decomposition in Step 3 is a suggestion, not a committed structure. |
-| Database/entity creation timing is understood | **Partially** | PRD specifies Drift for queue + facility cache, flutter_secure_storage for credentials, encrypted file for cookie jar — but which story creates which Drift tables is not decomposed. Anti-pattern to avoid: "Epic 1 Story 1 creates all tables." |
-| Week-1 spike (May-2026 mandate + reported-history endpoint) is identifiable as a gated story | **Not yet in any epic** | PRD names these as blockers. If epics are generated without explicit spike stories at the top of Epic 4 and Epic 8, those blockers will be rediscovered mid-build. |
+- Architecture §2 mandates `flutter create --org hr.prijavko --project-name prijavko --platforms=android --empty -a kotlin .` with no third-party starter.
+- **Story 1.1** implements this exact command in acceptance criteria (line 450, verified). ✅
+- `--dart-define=EVISITOR_ENV=<prod|test|fake>` wiring tested per AC (line 470). ✅
 
-#### 🟠 Major anti-patterns to avoid when epics are created
+### Database/Entity JIT Creation
 
-Based on common BMAD epic-quality failures + this project's shape:
+- `FacilitiesTable` → Story 3.1 (first story that needs facilities). ✅
+- `GuestEntriesTable` → Story 5.1 (first story that needs the queue). ✅
+- `AppDatabase` is **not** created in Story 1.1 with all tables upfront. ✅
+- Epics' own validation results (line 3739) call this out explicitly. ✅
 
-- **❌ "Auth System" as a single epic.** Auth is user-value-deliverable only when paired with onboarding + classifier surfacing. A story like "set up Dio + cookie jar" has no user-observable outcome. Instead: Epic 1 delivers "host logs in and sees home screen," which internally covers the first slice of auth infrastructure; Epic 2 then delivers "session survives inactivity and surfaces banner when dead" on top of Epic 1's plumbing. This preserves user-value framing.
-- **❌ Technical-milestone epics.** "Epic X — Set up CI/CD," "Epic Y — Dio Fake Harness," "Epic Z — Crashlytics wiring" all fail the user-value test. These must be absorbed into epics 1–8 as stories or cross-cutting work.
-- **❌ Forward dependencies.** Example trap: Epic 6 (Send All) stories assuming Epic 8 (forced-update banner) exists. The two must be independently completable.
-- **❌ Epic-sized stories.** "Build the classifier" is an epic, not a story. A correct story is "classifier returns session-dead verdict on HTTP 400 + Croatian SystemMessage matching `session|prijava|auth`" — testable, shippable, small.
-- **❌ Upfront schema creation.** A common BMAD failure is "Epic 1 Story 1 creates full Drift schema." Correct pattern: each story creates only the tables it needs at the time it needs them (queue row type in Epic 5; facility row type in Epic 3; `in_flight` state column in Epic 6).
+### Story Quality Assessment (sampled)
 
-#### 🟡 Minor concerns worth pre-empting
+Sampled Stories 1.1, 1.2, 1.3, 2.2, 2.3, 6.8, 7.1, 9.3, 10.8. Across the sample:
 
-- Observability FRs (FR41) + NFR-M8 (per-epic AI coverage + security review) imply a cross-cutting rhythm, not a single epic. Without explicit guidance, epic 8 risks becoming a dumping ground.
-- PRD uses sub-numbered FRs (FR14.5, FR31.5, FR36.5, FR36.6) — these are refinements added after the main numbering. Story creators should treat them with equal weight to integer-numbered FRs.
-- The slip protocol (hybrid-live → static-only, etc.) implies **every deferred capability must be a separately slippable story**, not threaded through a must-have story. E.g., "hybrid live-first capture" must be a story distinct from "static-tap capture" so that the former can slip while the latter stays.
+- **User story format (As a / I want / So that):** present on every sampled story with a specific persona and a rationale. ✅
+- **Given/When/Then BDD structure:** every AC block uses the G/W/T form correctly. No vague "user can login" phrasing found. ✅
+- **Specificity & testability:** ACs name file paths, classes, method signatures, Croatian copy strings, exact regex patterns, exact latency targets, mocked assertion counts (e.g., Story 2.3 AC: "an integration test dispatches 10 concurrent requests and asserts exactly one `POST /Login` call"). ✅
+- **Story size:** sampled stories run 30–90 lines with 5–10 G/W/T blocks; each sized for a single-dev-session per project constraints. ✅
+- **Error/edge-case coverage:** Story 2.2 covers every `EvisitorErrorClass` enum variant exhaustively via a sealed-enum switch that fails compilation if a variant is unhandled — textbook Poka-yoke. ✅
+- **Traceability:** every story in the Story-to-Requirements matrix names the FR(s)/NFR(s)/UX-DR(s) it delivers (confirmed for 100% of the 59 stories via the matrix at lines 3547–3616). ✅
+- **"Why" doc comments** called out in story ACs (e.g., Story 7.1 AC: "the file has a top-of-file `why` doc comment explaining the emotional-payoff constraint") — aligns with project craftsmanship rules. ✅
 
-### Dependency Analysis (proposed epic structure)
+### Dependency Analysis
 
-Using the Step 3 proposed epic decomposition and testing for independence:
+**Within-epic flow** (sampled linearly):
+- Epic 1: 1.1 (bootstrap) → 1.2 (design) → 1.3 (security) → 1.4 (consent) → 1.5 (welcome) → 1.6 (camera) → 1.7 (login) → 1.8 (persist) → 1.9 (re-enter). Forward-only. ✅
+- Epic 2: 2.1 (state skeleton) → 2.2 (classifier pure) → 2.3 (interceptor) → 2.4 (re-auth) → 2.5 (breaker) → 2.6 (opportunistic) → 2.7 (banner) → 2.8 (missing-creds) → 2.9 (settings). Forward-only. ✅
+- Epic 6: 6.1 (date codec) → 6.2 (XML builder) → 6.3 (API client) → 6.4 (notifier + pre-flight) → 6.5 (per-guest loop) → 6.6 (throttle) → 6.7 (review UI) → 6.8 (reconciler). Forward-only. ✅
 
-| Epic | Stands Alone? | Dependencies |
-|---|---|---|
-| Epic 1 — Onboarding/Consent/Credentials | ✅ Yes (delivers first-launch working home screen) | Architecture + UX prerequisite |
-| Epic 2 — Auth Lifecycle & Classifier | ✅ Yes (requires Epic 1's credentials) | Epic 1 only |
-| Epic 3 — Facility Management | ✅ Yes (requires Epic 2's live session) | Epics 1–2 |
-| Epic 4 — Capture Pipeline | ✅ Yes (can dry-commit to in-memory queue for demo; but most natural after Epic 5) | Epics 1–3; *best paired with Epic 5* |
-| Epic 5 — Queue & Drift Persistence | ⚠️ Partially — queue exists for no reason without capture (Epic 4) or submit (Epic 6) | Epics 1–3 |
-| Epic 6 — Send All | ✅ Yes (requires Epics 4+5 for guests to send) | Epics 1–5 |
-| Epic 7 — Closure/Privacy/Wipe | ✅ Yes (closure requires Epic 6; wipe + "Your Data" stand on Epic 5) | Epics 5–6 |
-| Epic 8 — Observability/Forced-Update/Compliance | ✅ Yes (cross-cutting; can ship last) | Epics 1–7 |
+**Cross-epic flow:**
+- Epic 1 → 2 → 3 → 4 → 5 → 6 → 7 for the core flow. Epics 8, 9, 10 layer on top. ✅
+- **Story 9.3 (telemetry call-site wiring across Epics 1–8)** is the **only intentional retroactive dependency**. The story itself declares "this is a retroactive wiring sweep across prior epics — no new product features are introduced." The epics' own Validation Results (line 3745) calls it out as "by design, not a violation." ✅ **Accepted as deliberate Jidoka-style late wiring.**
+- No circular dependencies detected.
+- FR42 is split across Story 9.4 (client-side `MinVersionChecker` + `ForceUpdateBanner`) and Story 10.5 (server-side `prijavko.hr/min-version.json` publish). These are parallel, not a forward dependency. ✅
 
-**Note:** Epics 4 and 5 are tightly coupled — they should probably be a single combined "Capture & Queue" epic, or the boundary must be carefully designed so that Epic 5's persistence story delivers a user-observable outcome (e.g., "unsent queue survives app kill" as a demonstrable acceptance criterion) rather than being hidden plumbing.
+### Compliance Checklist
 
-### Verdict
+| Rule | Status |
+|---|---|
+| Epics deliver user value | ✅ (Epic 10 borderline but acceptable) |
+| Epics function independently (once Epic-N dependencies satisfied) | ✅ |
+| Stories appropriately sized | ✅ (single-dev-session) |
+| No forward dependencies within epics | ✅ |
+| Cross-epic forward dependencies only via explicit retroactive sweep (9.3) | ✅ by design |
+| Database tables created when needed (JIT) | ✅ |
+| Acceptance criteria in G/W/T, testable, specific | ✅ |
+| Every FR / UX-DR traceable to ≥1 story | ✅ |
+| Starter template command captured in Story 1.1 | ✅ |
+| CI/CD pipeline scaffolded in Story 1.1 (greenfield) | ✅ |
 
-No epics exist, so no quality violations exist in the traditional sense — but the absence of the artifact is itself the dominant finding. When epics are created, apply the above anti-pattern list verbatim. The proposed decomposition is a starting point, not a ruling.
+### Findings by Severity
 
-## Step 6 — Summary and Recommendations
+#### 🔴 Critical Violations
+
+None found.
+
+#### 🟠 Major Issues
+
+None found.
+
+#### 🟡 Minor Concerns
+
+1. **NFR-M8 (per-epic AI coverage review + security scan) is not an epic-exit acceptance criterion anywhere.** PRD commits to "AI coverage review + security scan at end of every epic (Weeks 1–4); findings remediated the same week they are discovered; Week 5 reserved for Play Store prep with zero open technical dependencies." This NFR is missing from epics.md's own Requirements Inventory (inventory stops at NFR-M7) and is not surfaced as an exit gate on Epics 1–9. **Remediation:** add a single "Epic Exit Gate" AC at the last story of each epic — e.g., "Given the epic is claimed complete, When the AI coverage review + security scan completes, Then findings are remediated within the same week, and the epic is not considered closed until remediated." Low effort, high audit value.
+2. **NFR-P8 (cold start ≤ 2.5s p95) unassigned.** The NFR-to-Story table is labeled "selected high-criticality NFRs" and omits P8. **Remediation:** add P8 to Story 1.1 or Story 10.8 acceptance criteria (cold-start latency probed via an integration test + staging-acceptance gate at rollout).
+3. **Epic 10's declared "FRs covered: none" is slightly inaccurate.** Story 10.5 owns the operational half of FR42 (publishing `min-version.json`). Epic 10 description line 430 says "none"; the FR-to-Story inverse map correctly shows "FR42: 9.4, 10.5." **Remediation:** update Epic 10's epic-header line to "FRs covered: FR42 (operational half, paired with 9.4)." Purely cosmetic.
+4. **UX spec internal drift — "~5 custom widgets" (line 371) vs. later authoritative "10 custom widgets" (line 1089).** Editorial. **Remediation:** remove/update the "~5 widgets" sentence in the early §Implementation Approach to cross-reference the authoritative §Custom Components section. Documentation hygiene.
+5. **Architecture lacks explicit cross-reference to UX/design-system artifacts.** Arch is silent on theming; UX spec + figma-code-contract + `.claude/rules/design-system.md` are the authoritative stack. **Remediation:** add a 2-line note in architecture.md §3 pointing to those three artifacts so a first-time reader is not confused.
+6. **`ShellRoute` for `ForceUpdateBanner` overlay is implied, not named in architecture.md.** Story 9.4's acceptance criteria name it correctly, so this is more of a documentation completeness observation than a defect.
+
+### Summary
+
+**Epic quality is high.** The epics document is unusually rigorous: 59 stories, every FR traced to ≥1 story, every UX-DR traced to ≥1 story, Given/When/Then structure throughout, exhaustive enum coverage in test ACs, explicit JIT database creation, forward-only dependency flow with a single documented retroactive sweep (9.3) that is itself called out as deliberate. The six minor concerns are all either editorial cleanup or missing exit-gate acceptance — none of them block Phase 4 start. Proceed to final assessment.
+
+## Step 6 — Final Assessment
 
 ### Overall Readiness Status
 
-🔴 **NOT READY** — implementation cannot safely begin from the current artifact set.
+**✅ READY for Phase 4 implementation**, conditional on two Week-1 spikes which are already identified as blockers in the epics document and do not affect Phase 4 *start* (Epic 1 does not depend on them).
 
-Only 1 of 4 required planning artifacts exists. The existing artifact (PRD) is high-quality, but it is the *requirements* input — it does not substitute for architecture, epic decomposition, or UX specification. Beginning implementation now means a dev agent would invent architecture per-story, invent UX per-story, and invent epic boundaries per-story — producing the exact incoherence the Japanese-craftsmanship principles and NFR-M3/M4/M7 exist to prevent.
+- No 🔴 Critical violations.
+- No 🟠 Major issues.
+- 6 🟡 Minor concerns, all documentation or exit-gate polish — none block Phase 4 start.
 
-### Artifact Scorecard
+### Scorecard
 
-| Artifact | Status | Readiness Signal |
+| Dimension | Status | Notes |
 |---|---|---|
-| PRD | ✅ Complete, high quality | 46 FRs + 58 NFRs, traceable, observable-metrics-backed |
-| Architecture | ❌ Missing | Cannot execute six-state machine, QueuedInterceptor, Drift schema, `in_flight` state, cert-pin set, feature-flag infrastructure without it |
-| Epics & Stories | ❌ Missing | 0% FR coverage in epics |
-| UX Design | ❌ Missing | No screen inventory, no Croatian microcopy catalog, no wireframes for banners / inline errors / per-guest progress / closure summary |
+| Document inventory complete (PRD, Architecture, Epics, UX) | ✅ | No duplicates, no missing required docs |
+| PRD requirements extracted (FR + NFR) | ✅ | 46 FRs + 58 NFRs |
+| FR coverage by epics/stories | ✅ | 100% (46/46) |
+| NFR coverage by stories | ⚠️ | 56/58 explicitly mapped; NFR-P8, NFR-M8 unassigned |
+| UX-DR coverage by stories | ✅ | 33/33 |
+| UX ↔ PRD alignment | ✅ | Journeys, principles, a11y reconciled |
+| UX ↔ Architecture alignment | ✅ | No contradictions; 2 minor cross-ref gaps |
+| Epic user-value framing | ✅ | Epic 10 borderline but defensible |
+| Epic independence | ✅ | Retroactive wiring (9.3) is deliberate |
+| Story sizing | ✅ | Single-dev-session sized |
+| AC structure (Given/When/Then) | ✅ | Consistent across sample |
+| Database JIT creation | ✅ | FacilitiesTable in 3.1, GuestEntriesTable in 5.1 |
+| Starter template discipline | ✅ | `flutter create --empty` enforced in 1.1 |
+| Forward dependencies | ✅ | None found; only retroactive 9.3 is deliberate |
 
 ### Critical Issues Requiring Immediate Action
 
-1. **🔴 Create the architecture document.** Blocker for every FR that implies a design decision (the six-state auth machine, QueuedInterceptor, Drift schema including FR36.6 `in_flight` reconciliation, encrypted cookie jar scheme, cert-pin management, forced-update mechanism, feature flag for FR26). Run `bmad-create-architecture`. Starter-template decision at minimum is required before Epic 1 Story 1 can exist.
+**None.** Phase 4 can begin on Epic 1.
 
-2. **🔴 Create epics and stories.** Run `bmad-create-epics-and-stories` after architecture is in place. Apply the anti-pattern checklist from Step 5 (no technical-milestone epics, no forward dependencies, no upfront-schema creation, no epic-sized stories). Suggested 8-epic decomposition (from Step 3) is a starting point only.
+### Recommended Next Steps
 
-3. **🔴 Produce UX design.** Run `bmad-create-ux-design`. Minimum viable artifact for this project: a screen inventory (12–15 screens), Croatian microcopy catalog for the banner / inline error / closure-summary surfaces, wireframes for the Neutral App facility picker and per-guest send-progress UI, and a design treatment of the "zero-retention" framing as it appears in-app.
+Ordered by value and sequencing. **None are readiness blockers**; all can be addressed during or between sprints.
 
-4. **🟠 Schedule the Week-1 spike as a gated story.** FR26 (May-2026 mandate payload shape) + the v1.1 Pro feature gate (reported-history endpoint) are both named blockers in the PRD. When epics are generated, both must appear as explicit spike stories at the top of their respective epics so they cannot be accidentally deprioritized.
+1. **Add NFR-M8 epic-exit acceptance gate** to the last story of each epic (1–9). Pattern: "Given the epic is claimed complete, When the AI coverage review + security scan completes, Then findings are remediated within the same week, and the epic is not closed until remediated." This closes the most material gap between PRD commitment and story enforcement.
+2. **Assign NFR-P8 (cold start ≤ 2.5s p95)** to either Story 1.1 (startup integration test) or Story 10.8 (production rollout gate). Pick one and make it a G/W/T acceptance criterion.
+3. **Run the Week-1 spikes immediately** — all four are already captured in the epics document (lines 241–245):
+   - FR26 May-2026 apartment registration-number payload shape (blocker for Story 4.9 / FR26).
+   - eVisitor idempotency key support (affects UUID use in ImportTourists).
+   - FR36.6 lookup-by-client-UUID endpoint existence → determines `InFlightReconciler` Path A vs. Path B (Story 6.8).
+   - eVisitor API-key scope (vendor-wide vs. per-account) → affects Login UI shape (Story 1.7).
+   These do not block the start of Epic 1, but Epic 4 (Story 4.9) and Epic 6 (Story 6.8) depend on them. Front-loading them keeps the 5-week solo-dev timeline safe.
+4. **Documentation hygiene sweep (30-min pass):**
+   - UX spec line 371: replace "~5 custom widgets" with a cross-reference to §Custom Components (10 widgets).
+   - Architecture §3: add a 2-line cross-reference pointing to UX spec + figma-code-contract.md + `.claude/rules/design-system.md` as the UI-fidelity authorities.
+   - Architecture: name `ShellRoute` for the force-update overlay to match Story 9.4 language.
+   - Epic 10 header: change "FRs covered: none" → "FRs covered: FR42 (operational half, paired with 9.4)".
+5. **Reconcile NFR-A1 wording across docs** (non-breaking but cleaner): make explicit that 48 dp is the universal touch-target floor and 56 dp is the primary-CTA minimum. UX-DR26 already phrases this correctly; mirror the exact wording into PRD NFR-A1 + design-system rule for zero ambiguity.
+6. **Consider adding an Epic 0 "ceremonies" note** (non-blocking) — this is a solo-dev engagement, so "Epic 0" could simply be a README/Runbook pointer. Not required; just a Hansei-style aid for future-you.
 
-5. **🟠 Lock in the 5 host interviews as a pre-build gate.** The PRD flags this as a blocker. Do not let epic/architecture creation substitute for validation of the top-pain hypothesis.
+### Week-1 Implementation Start Plan
 
-6. **🟡 Reconcile the "six-state" auth machine with PRD's three Settings-visible states.** Internal inconsistency flagged in Step 2. Either the architecture or a story acceptance criterion needs to specify the exact state set.
+On the basis of this readiness assessment, Phase 4 can begin with:
 
-7. **🟡 Consider whether Epics 4 (Capture) and 5 (Queue) should merge.** They are tightly coupled; separating them risks Epic 5 becoming user-value-free plumbing.
+- **Day 1:** Story 1.1 (Project Bootstrap & CI Foundation) — unblocks every subsequent story.
+- **Day 1 (parallel):** Begin the four Week-1 spikes against the eVisitor testApi. These run alongside, not in front of, Story 1.1.
+- **Day 2–3:** Stories 1.2 (Design System Foundation) + 1.3 (Security Primitives, Dio & Cert Pinning). Tokens + theme needed before any UI; Dio + Keystore wiring needed before 1.4/1.7.
+- **Day 4–5:** Story 1.4 (UMP/CMP) + 1.5 (Welcome + sensitive-data disclosure).
 
-### Recommended Next Steps (in order)
+### Summary Note
 
-1. **Today (2026-04-23) — 30 min:** Confirm (a) whether the PRD passed the `bmad-validate-prd` check already or needs that pass before continuing; (b) whether the 5 host interviews are scheduled/done. If the interviews change the top-pain hypothesis, PRD scope shifts first — *before* architecture.
-2. **Day 1–2:** Run `bmad-create-architecture`. Treat the eVisitor auth-lifecycle research document as a first-class input alongside the PRD.
-3. **Day 2–3:** Run `bmad-create-ux-design` (can overlap with architecture — both block epics, neither blocks the other).
-4. **Day 3–4:** Run `bmad-create-epics-and-stories`. Validate against the anti-pattern checklist in Step 5 of this report.
-5. **Day 4:** Re-run `bmad-check-implementation-readiness` (this workflow) against the full artifact set. The output should flip to ✅ READY with a real coverage percentage, not 0%.
-6. **Day 5+:** Begin Epic 1 story execution via `bmad-dev-story`.
+This assessment identified **6 minor concerns across 3 categories** (NFR coverage polish, documentation hygiene, epic-exit gating). Zero critical or major defects. The planning artifacts — PRD, Architecture, UX spec, Epics — are internally consistent, numerically traceable, and measurement-grounded. The reliability thesis that the product positioning hinges on is observable in production from day 1 (NFR-I4 permanent Dio fake + Crashlytics `scan_to_submit`). The solo-dev slip protocol and kill criteria are explicit.
 
-**Timeline reality check:** 11 working days remain to 2026-05-13 closed beta start and 22 working days to 2026-05-27 submission. Days 1–4 above are planning, leaving ~7 working days for Epic 1–3 implementation before beta (aggressive), ~18 working days before submission (feasible against slip protocol). This is why the slip protocol exists.
-
-### Final Note
-
-This assessment identified **one dominant blocker** (three of the four required planning artifacts do not exist) and **seven secondary concerns** covering validation gating, internal consistency, and epic-boundary design. The critical path is unambiguous: architecture → UX → epics → implementation. The PRD is ready to serve as the requirements input to each of those steps — it is good enough that no PRD rework is on the critical path.
-
-Findings can be used to drive the next three BMAD workflows, or to document accepted risk if the user chooses to proceed as-is. Proceeding as-is is strongly discouraged: Japanese-craftsmanship rules (`/Users/darko/Documents/Projects/private/prijavko/.claude/rules/japanese-craftsmanship.md`) + NFR-M3/M4/M7 require that architecture and design precede implementation. Skipping them now buys days against the 2026-05-27 deadline at the cost of *exactly* the discipline the project's differentiation is built on.
+**Recommendation: begin Phase 4 on Epic 1 Story 1.1, run the four Week-1 spikes in parallel, and fold the six minor concerns into the same week as cleanup commits.**
 
 ---
 
-**Assessor:** prijavko implementation-readiness check (bmad-check-implementation-readiness)
+**Assessor:** Claude (bmad-check-implementation-readiness)
 **Date:** 2026-04-23
-**Artifacts scanned:** PRD (`prd.md`, 915 lines), planning-artifacts directory, docs directory
-**Issues found:** 1 critical (3 missing artifacts), 7 secondary
-
+**Input artifacts:** PRD (916 lines), Architecture (1011 lines), Epics (3749 lines, 10 epics / 59 stories), UX Spec (1628 lines) + Figma Code Contract (171 lines)
 
 
 
