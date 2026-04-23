@@ -39,9 +39,23 @@ bump. The derivation lives inline in [`build_aab.yml`](../../.github/workflows/b
 
 ## SDK targets
 
-_Populated by Story 1.1 Task 6 (AC7.2) — `minSdkVersion`, `targetSdkVersion`,
-`compileSdkVersion`, and the Play policy URL that justifies the chosen
-target. Not yet filled in; will be updated before Task 6 is committed._
+Hardcoded in [`android/app/build.gradle.kts`](../../android/app/build.gradle.kts)
+— deliberately **not** inherited from `flutter.*` so a Flutter channel bump
+cannot silently drift what Play sees.
+
+| Setting | Value | Rationale |
+| --- | --- | --- |
+| `minSdk` | `24` (Android 7.0, Nougat) | PRD NFR-C1 floor. ~98% Play device coverage; gets `NetworkSecurityConfig`, JIT, and modern TLS defaults for free. |
+| `targetSdk` | `36` (Android 16) | Play requires `35` for new apps/updates since 2025-08-31 and moves the floor to `36` on 2026-08-31. Pinning `36` now clears that cliff ahead of time. |
+| `compileSdk` | `36` | Matches `targetSdk`. Lets us call Android 16 APIs behind runtime version checks without the compiler complaining. |
+| `ndkVersion` | `28.2.13676358` | Exact NDK mandated by Flutter `3.38.7` stable (`FlutterExtension.ndkVersion`). Bumping Flutter = bumping this string in lockstep. |
+
+**Chosen on:** 2026-04-23.
+**Play policy source:** <https://developer.android.com/google/play/requirements/target-sdk>.
+
+When Flutter is upgraded, re-read `FlutterExtension.ndkVersion` in the new
+Flutter SDK and update `ndkVersion` in `build.gradle.kts` — do not leave it
+unpinned.
 
 ## PII guard regex
 

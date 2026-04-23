@@ -7,8 +7,13 @@ plugins {
 
 android {
     namespace = "hr.prijavko.prijavko"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+
+    // WHY: SDK targets are pinned to literals rather than `flutter.*` so that
+    // a silent Flutter channel bump cannot drift the Play Store surface. Any
+    // change here is a deliberate, reviewable edit and must be mirrored in
+    // docs/ci/README.md "SDK targets". See Story 1.1 AC7.
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -20,12 +25,20 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "hr.prijavko.prijavko"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+
+        // WHY: API 24 (Android 7.0) is the floor promised in the PRD
+        // (NFR-C1) — roughly 98% Play device coverage while shedding
+        // pre-Nougat edge cases (no `NetworkSecurityConfig`, no JIT).
+        minSdk = 24
+
+        // WHY: Android 16 (API 36). Play already mandates 35 for new apps
+        // (effective 2025-08-31) and moves the floor to 36 on 2026-08-31 —
+        // pinning 36 now clears that cliff months ahead and matches
+        // Flutter 3.38.x's default so codegen paths stay on the hot path.
+        // Policy source: https://developer.android.com/google/play/requirements/target-sdk
+        targetSdk = 36
+
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
