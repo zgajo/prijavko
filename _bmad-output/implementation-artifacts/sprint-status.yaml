@@ -1,0 +1,150 @@
+# generated: 2026-04-23
+# last_updated: 2026-04-23
+# project: prijavko
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-23
+last_updated: 2026-04-23
+project: prijavko
+project_key: NOKEY
+tracking_system: file-system
+story_location: "{project-root}/_bmad-output/implementation-artifacts"
+
+development_status:
+  # Epic 1: First-Run Onboarding & Credential Trust
+  epic-1: in-progress
+  1-1-project-bootstrap-and-ci-foundation: ready-for-dev
+  1-2-design-system-foundation: backlog
+  1-3-security-primitives-dio-and-cert-pinning: backlog
+  1-4-ump-cmp-eu-consent-surface: backlog
+  1-5-welcome-and-sensitive-data-disclosure: backlog
+  1-6-camera-permission-with-manual-entry-fallback: backlog
+  1-7-evisitor-login-and-live-credential-verification: backlog
+  1-8-session-persistence-across-restarts: backlog
+  1-9-credential-re-entry-from-settings: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Resilient Auth Lifecycle (No Door Surprises)
+  epic-2: backlog
+  2-1-authstate-sealed-class-and-authnotifier-skeleton: backlog
+  2-2-error-classifier-pure-function-with-exhaustive-tests: backlog
+  2-3-queuedinterceptor-wiring-with-serialized-re-auth: backlog
+  2-4-auto-re-authentication-with-stored-credentials: backlog
+  2-5-circuit-breaker-3-failures-6-minute-open: backlog
+  2-6-opportunistic-auth-check-on-foreground: backlog
+  2-7-credentialbanner-materialbanner-subclass: backlog
+  2-8-credentials-missing-recovery-preserving-facility-context: backlog
+  2-9-auth-state-view-in-settings: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Facility Choice (Neutral App Pattern)
+  epic-3: backlog
+  3-1-facility-model-and-drift-table: backlog
+  3-2-fetch-and-cache-facilities-on-first-login: backlog
+  3-3-facilitypickersheet-custom-widget: backlog
+  3-4-explicit-per-session-facility-choice-neutral-app-enforcement: backlog
+  3-5-facility-chip-on-home-appbar: backlog
+  3-6-explicit-facility-list-refresh: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Confident Capture Pipeline (MRZ → Static-Tap → Manual)
+  epic-4: backlog
+  4-1-mrz-parser-and-semantic-sanity-layer-pure-dart: backlog
+  4-2-camera-and-ml-kit-stream-service: backlog
+  4-3-mrzviewfinder-custom-widget: backlog
+  4-4-captureconfirmation-overlay-widget: backlog
+  4-5-scan-screen-assembly-with-3-second-static-tap-fallback: backlog
+  4-6-manual-entry-form-first-class-path: backlog
+  4-7-inline-croatian-sanity-rejection: backlog
+  4-8-review-and-correct-captured-data-before-commit: backlog
+  4-9-may-2026-mandate-field-behind-feature-flag: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Zero-Loss Encrypted Queue
+  epic-5: backlog
+  5-1-guestentry-model-queueentrystate-enum-and-drift-table: backlog
+  5-2-queuenotifier-single-write-chokepoint-with-synchronous-commit: backlog
+  5-3-gueststatusglyph-custom-widget: backlog
+  5-4-queuerow-and-queuehero-custom-widgets: backlog
+  5-5-home-screen-assembly-empty-and-non-empty-states: backlog
+  5-6-per-guest-edit-and-delete-from-queue: backlog
+  5-7-3-day-auto-purge-on-app-open: backlog
+  5-8-replace-active-oib-via-typedconfirmationdialog: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Explicit Send All with Per-Guest Isolation
+  epic-6: backlog
+  6-1-evisitordatecodec-single-date-ms-offset-source: backlog
+  6-2-importtouristsbuilder-single-xml-builder: backlog
+  6-3-evisitorapiclient-importtourists-endpoint: backlog
+  6-4-sendallnotifier-and-pre-flight-check: backlog
+  6-5-per-guest-serial-submission-loop: backlog
+  6-6-rate-limit-throttling-with-exponential-backoff: backlog
+  6-7-send-all-results-review-screen-with-edit-and-retry-failed-only: backlog
+  6-8-inflightreconciler-path-a-path-b-on-app-resume: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Closure Summary (The Signature Moment)
+  epic-7: backlog
+  7-1-closuresummary-custom-widget: backlog
+  7-2-closuresummary-screen-assembly-with-share-affordance: backlog
+  7-3-closure-summary-navigation-wiring: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Privacy Transparency & Data Wipe
+  epic-8: backlog
+  8-1-your-data-screen-with-live-counts-and-policy-links: backlog
+  8-2-one-action-delete-all-via-typedconfirmationdialog: backlog
+  epic-8-retrospective: optional
+
+  # Epic 9: Observability & Forced-Update Safety Net
+  epic-9: backlog
+  9-1-applogger-facade-and-type-level-pii-discipline: backlog
+  9-2-telemetryservice-singleton-sole-firebasecrashlytics-entry-point: backlog
+  9-3-telemetry-call-site-wiring-across-epics-1-8: backlog
+  9-4-minversionchecker-and-forceupdatebanner-contract-break-safety-net: backlog
+  9-5-queue-stuck-24h-tripwire-emission-on-app-open: backlog
+  epic-9-retrospective: optional
+
+  # Epic 10: Monetization & Launch Readiness
+  epic-10: backlog
+  10-1-adbanner-custom-widget: backlog
+  10-2-adbanner-integration-on-home-screen: backlog
+  10-3-owasp-masvs-l1-self-audit-checklist: backlog
+  10-4-privacy-policy-and-tos-static-pages-published: backlog
+  10-5-prijavko-hr-min-version-json-initial-publish: backlog
+  10-6-play-store-data-safety-declaration-and-listing-assets: backlog
+  10-7-closed-beta-track-setup-2026-05-13-target: backlog
+  10-8-production-submission-with-staged-rollout: backlog
+  epic-10-retrospective: optional
