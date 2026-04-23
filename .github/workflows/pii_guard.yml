@@ -1,0 +1,47 @@
+# Story 1.1 AC3.2 / NFR-S7 (CI half) — block the PII log-leak pattern at CI.
+#
+# Why a grep and not a custom lint: NFR-S7 also requires a type-level half
+# (PII `toString()` overrides on the models that carry PII), but those
+# models do not exist until Epic 2+. This workflow exists from commit #1
+# to protect future commits — if a dev accidentally writes
+# `debugPrint('name=${guest.firstName}')`, the build fails before review.
+#
+# Regex source of truth: docs/ci/pii-guard-regex.md (passing/failing
+# examples live there). If the regex needs to change, update both.
+
+name: pii_guard
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  pii_guard:
+    name: grep for forbidden PII log patterns
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan lib/ test/ integration_test/ for PII log patterns
+        env:
+          # Keep this env var in sync with docs/ci/pii-guard-regex.md.
+          PII_REGEX: '(print|debugPrint|AppLogger\.\w+)\(.*\.(documentNumber|firstName|lastName|dateOfBirth|nationality|documentExpiry|mrzLine1|mrzLine2)'
+        run: |
+          set -euo pipefail
+          SCAN_DIRS=()
+          for d in lib test integration_test; do
+            if [ -d "$d" ]; then SCAN_DIRS+=("$d"); fi
+          done
+          if [ ${#SCAN_DIRS[@]} -eq 0 ]; then
+            echo "No Dart source directories present yet — nothing to scan."
+            exit 0
+          fi
+          echo "Scanning: ${SCAN_DIRS[*]}"
+          if grep -rnP --include='*.dart' -- "$PII_REGEX" "${SCAN_DIRS[@]}"; then
+            echo "::error::PII log pattern detected. Remove any print/debugPrint/AppLogger.* call that references a PII field."
+            exit 1
+          fi
+          echo "PII grep guard clean."

@@ -1,0 +1,28 @@
+# Story 1.1 AC3.5 / NFR-I4 (nightly canary) — detect eVisitor contract
+# drift by exercising the live test API (test.evisitor.hr) on a nightly
+# cron.
+#
+# Why a placeholder now: the live client, XML builder, and date codec
+# (Epic 6) do not exist yet. Landing the workflow shell on day one means
+# the cron schedule is active from commit #1, so when Epic 6 wires the
+# real canary tests the schedule already fires. Swapping the placeholder
+# step for the real `flutter test integration_test/ --dart-define=...`
+# invocation is a one-line edit.
+#
+# 03:00 UTC chosen for the cron — low repo activity, no other scheduled
+# workflows yet. Revisit if another nightly job lands.
+
+name: testapi_canary
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  testapi_canary:
+    name: nightly canary (placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder — real canary arrives with Epic 6
+        run: echo "canary placeholder"

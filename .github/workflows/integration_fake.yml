@@ -1,0 +1,85 @@
+# Story 1.1 AC3.4 / NFR-I4 (harness half) — run integration tests against
+# the in-repo eVisitor fake transport on every push and PR.
+#
+# EVISITOR_ENV=fake routes the Dio transport (Story 1.3+) through the fake
+# adapter, so this job exercises the full app wiring without hitting
+# test.evisitor.hr. Story 1.1 only stands up a first-frame-paints probe;
+# the permanent Dio fake arrives with Epic 2+.
+#
+# Why an Android emulator: `flutter test integration_test/` (the command
+# AC3.4 mandates) routes to Flutter's integration-test runner, which
+# requires a running device. Since the app is `--platforms=android`, an
+# x86_64 emulator at the project's minSdk (24) is the canonical target.
+# AVD boot is the slow part — we cache the snapshot and re-use it to keep
+# the job under a few minutes on hot runs.
+
+name: integration_fake
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  integration_fake:
+    name: flutter test integration_test/ (EVISITOR_ENV=fake)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.38.7'
+          cache: true
+
+      - name: Enable KVM for Android emulator
+        run: |
+          set -euo pipefail
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: AVD cache
+        id: avd-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-api24-x86_64-v1
+
+      - name: Create AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 24
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot-load -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "AVD snapshot generated"
+
+      - name: Integration tests (fake transport)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 24
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -no-snapshot-load -no-audio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: flutter test integration_test/ --dart-define=EVISITOR_ENV=fake

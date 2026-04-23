@@ -1,0 +1,39 @@
+# Story 1.1 AC3.1 / NFR-M1 — build-blocking static analysis on every push and PR.
+#
+# Why fatal-warnings AND fatal-infos: the architecture chose strict-casts /
+# strict-inference / strict-raw-types in analysis_options.yaml as the
+# Poka-yoke at the compiler boundary. If the workflow only escalated
+# warnings, `dart analyze` would still exit 0 on infos, and strict-* info
+# diagnostics would leak into main. Escalating infos too closes that hole.
+
+name: analyze
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  analyze:
+    name: dart analyze --fatal-warnings --fatal-infos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.38.7'
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: dart analyze --fatal-warnings --fatal-infos
+
+      - name: Format check
+        run: dart format --set-exit-if-changed .

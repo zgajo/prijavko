@@ -1,0 +1,106 @@
+# Story 1.1 AC3.6 / AC9 — release-AAB pipeline triggered by `v*` tags.
+#
+# Why on tag push only: regular pushes run analyze/test/integration_fake;
+# that's the fast path. Building an obfuscated AAB is slow and should only
+# happen on an intentional release cut. A `v1.0.0` (or `v1.0.0-dryrun`)
+# tag is the signal.
+#
+# Why --obfuscate + --split-debug-info: Play requires both for release
+# quality. The `build/symbols/` tree is how Crashlytics de-obfuscates
+# stack traces post-crash (Story 9.2), so we retain it as a workflow
+# artifact for ≥90 days even before Crashlytics is wired (Epic 9).
+#
+# versionCode derivation (AC9.3): vX.Y.Z → X*10000 + Y*100 + Z.
+# Pre-release suffixes (`-dryrun`, `-beta`) are stripped when computing
+# the code but preserved in the build name.
+#
+# Signing: real release keystore is Story 10.7/10.8. Today the build
+# defaults to Flutter's debug signing when no release signingConfig is
+# present — the workflow must not hard-fail on missing secrets.
+
+name: build_aab
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_aab:
+    name: flutter build appbundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.38.7'
+          cache: true
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Derive version name + code from tag
+        id: version
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          TAG_NAME="$GITHUB_REF_NAME"
+          VERSION_NAME="${TAG_NAME#v}"
+          CORE="${VERSION_NAME%%-*}"
+          IFS=. read -r MAJOR MINOR PATCH <<<"$CORE"
+          : "${MAJOR:=0}" "${MINOR:=0}" "${PATCH:=0}"
+          VERSION_CODE=$((MAJOR*10000 + MINOR*100 + PATCH))
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Derived: name=$VERSION_NAME code=$VERSION_CODE"
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Build release AAB (obfuscated, symbols split out)
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          flutter build appbundle \
+            --release \
+            --dart-define=EVISITOR_ENV=prod \
+            --build-name="$VERSION_NAME" \
+            --build-number="$VERSION_CODE" \
+            --obfuscate \
+            --split-debug-info=build/symbols/
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: prijavko-${{ steps.version.outputs.version_name }}-aab
+          path: build/app/outputs/bundle/release/*.aab
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Upload obfuscation symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: prijavko-${{ steps.version.outputs.version_name }}-symbols
+          path: build/symbols/
+          retention-days: 90
+          if-no-files-found: error
