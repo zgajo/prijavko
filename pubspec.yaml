@@ -16,6 +16,12 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Flutter-SDK-bundled integration binding. Gives `integration_test/`
+  # access to `IntegrationTestWidgetsFlutterBinding`, whose `pumpWidget`
+  # drives a real on-device rasterizer so `binding.firstFrameRasterized`
+  # actually flips (NFR-P8 / Story 1.1 AC10). Not a third-party prod dep.
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
 
 flutter:
