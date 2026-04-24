@@ -1,5 +1,23 @@
+# ---------------------------------------------------------------------------
+# prijavko .gitignore
+#
+# Story 1.1 AC11 contract:
+#   (1) MUST exclude: build/, .dart_tool/, .flutter-plugins,
+#       .flutter-plugins-dependencies, IDE metadata (.idea/, *.iml,
+#       .vscode/ except launch.json / settings.json).
+#   (2) MUST NOT exclude: pubspec.lock, *.g.dart, *.freezed.dart,
+#       android/app/proguard-rules.pro,
+#       android/app/src/main/res/xml/network_security_config.xml.
+#
+# All broader patterns below (*.lock, build/, etc.) are re-opened via
+# explicit `!` negations at the bottom so AC11.2 stays true even if a
+# future edit tightens an upstream pattern. Poka-yoke: invalid state
+# requires a deliberate edit of two stanzas, not one.
+# ---------------------------------------------------------------------------
+
 # Miscellaneous
 *.class
+*.lock
 *.log
 *.pyc
 *.swp
@@ -12,34 +30,161 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# IntelliJ / Android Studio
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code — launch.json / settings.json are intentionally tracked
+# (Story 1.1 AC11.1). Everything else under .vscode/ is developer-local.
+# NOTE: `.vscode/*` (not `.vscode/`) — git cannot un-ignore children of
+# an ignored directory, so the directory must stay walkable.
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
 
-# Flutter/Dart/Pub related
+# Flutter repo-specific (no-ops in an app-only repo; kept verbatim from
+# the upstream Flutter template to minimise drift from community tooling
+# that greps for these lines).
+/bin/cache/
+/bin/internal/bootstrap.bat
+/bin/internal/bootstrap.sh
+/bin/mingit/
+/dev/benchmarks/mega_gallery/
+/dev/bots/.recipe_deps
+/dev/bots/android_tools/
+/dev/devicelab/ABresults*.json
+/dev/docs/doc/
+/dev/docs/flutter.docs.zip
+/dev/docs/lib/
+/dev/docs/pubspec.yaml
+/dev/integration_tests/**/xcuserdata
+/dev/integration_tests/**/Pods
+/packages/flutter/coverage/
+version
+analysis_benchmark.json
+
+# packages file containing multi-root paths
+.packages.generated
+
+# Flutter / Dart / Pub
 **/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
+**/generated_plugin_registrant.dart
+.packages
 .pub-cache/
+.pub-preload-cache/
 .pub/
-/build/
-/coverage/
+build/
+flutter_*.png
+linked_*.ds
+unlinked.ds
+unlinked_spec.ds
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# Android
+**/android/**/gradle-wrapper.jar
+.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+# Android Studio build artifacts
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS / Xcode — Story 1.1 enforces --platforms=android. These patterns
+# are defensive so that if a future epic ever adds iOS, generated files
+# are pre-ignored before anyone commits them by accident.
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS
+**/Flutter/ephemeral/
+**/Pods/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral
+**/xcuserdata/
+
+# Windows
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+
+# Linux
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+
+# Coverage
+coverage/
+/coverage/
+
+# Obfuscation / symbolication local outputs — CI uploads the canonical
+# copies as workflow-run artifacts (Story 1.1 AC9.2 / build_aab.yml).
+app.*.symbols
+app.*.map.json
+
+# Upstream template exception escapes — no-ops in an android-only app;
+# retained for parity with Flutter's default template.
+!**/ios/**/default.mode1v3
+!**/ios/**/default.mode2v3
+!**/ios/**/default.pbxuser
+!**/ios/**/default.perspectivev3
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+!/dev/ci/**/Gemfile.lock
+
+# ---------------------------------------------------------------------------
+# AC11.2 anchors — files that MUST remain tracked. These live at the
+# bottom so later edits can't accidentally shadow them with a broader
+# pattern added above. Adding a new broad exclusion? Add the matching
+# `!` counter-rule here too.
+# ---------------------------------------------------------------------------
+
+# Reproducible builds require a locked dependency graph. pubspec.lock
+# is a first-class artifact (Architecture §4 + Story 1.1 AC1.3).
+# Negates the broader `*.lock` pattern above.
+!pubspec.lock
+
+# freezed + json_serializable + drift + riverpod_generator emit these;
+# Architecture §4 mandates they are committed so CI builds don't have
+# to re-run build_runner on every fetch.
+!**/*.g.dart
+!**/*.freezed.dart
+
+# Story 1.1 AC6 + AC5 — hand-authored security surfaces, not build
+# outputs. Must not be shadowed by any /android/** exclusion above.
+!/android/app/proguard-rules.pro
+!/android/app/src/main/res/xml/network_security_config.xml
