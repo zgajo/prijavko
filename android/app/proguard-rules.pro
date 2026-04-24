@@ -1,36 +1,42 @@
 # =============================================================================
 # prijavko — ProGuard / R8 keep rules
 # =============================================================================
-# WHY: Release builds run `flutter build appbundle --obfuscate
+# WHY: release builds run `flutter build appbundle --obfuscate
 # --split-debug-info=build/symbols/` with `isMinifyEnabled = true` and
 # `isShrinkResources = true` on the release buildType (see build.gradle.kts).
 # R8 operates on the Kotlin/Java side only — Dart code is obfuscated
 # separately by the Flutter --obfuscate flag.
 #
-# The libraries named below (Drift, Riverpod, Freezed, Dio) are Dart-only as
-# of Story 1.1. They do NOT emit Android bytecode directly, so these keep
-# rules currently match nothing. They are committed now because:
-#   1. Story 1.3 introduces native plugin dependencies (sqlite3_flutter_libs
-#      for Drift, `native_dio_adapter` + Cronet for Dio) that DO ship Kotlin
-#      code resolved reflectively — R8 must not rename those classes.
-#   2. Having the rules green from commit #1 means no Story-1.3+ dev has to
-#      debug a release-only ClassNotFoundException in the middle of wiring
-#      auth / queue. Poka-yoke: the rule set catches the mistake at build
-#      time, not at first launch on the Play Store.
+# Story 1.1 scope (per AC6 amendment in the story file's Review Findings):
+# the only Kotlin/Java code in this app today is the Flutter engine plus the
+# single-line MainActivity. No native plugins are in `pubspec.yaml` yet, so
+# there is nothing library-specific for R8 to keep. This file therefore ships
+# with:
 #
-# Reference: each library's official ProGuard / R8 guidance.
-#   - Drift: https://drift.simonbinder.eu/platforms/  (sqlite3_flutter_libs)
-#   - Dio: https://pub.dev/packages/native_dio_adapter  (Cronet / OkHttp)
-#   - Riverpod / Freezed: Dart-only; kept for documentation + Kotlin mirror
-#     scenarios (sealed-class bridges, telemetry shims).
+#   1. Flutter engine & plugin-registry keeps  — the Flutter Gradle plugin
+#      applies most engine keeps automatically, but some plugin authors skip
+#      `consumer-proguard-rules.pro`. Pinning these explicitly is cheap
+#      insurance and cannot regress.
+#   2. Crashlytics-adjacent attribute keeps   — symbol upload (Story 9.2)
+#      depends on `SourceFile` and `LineNumberTable` surviving shrink.
+#
+# Native-plugin keeps (sqlite3_flutter_libs for Drift, native_dio_adapter /
+# Cronet / OkHttp for Dio cert pinning, Firebase / AdMob transitive keeps)
+# land with the STORIES that introduce those plugins. Writing them
+# speculatively today would be Muri (overburden): we would be maintaining
+# package-name and reflection-contract guesses against libraries this repo
+# does not yet import. Story 1.3 (Security Primitives) adds Dio's rules;
+# Story 9.2 (Telemetry) confirms Crashlytics; Epic 6+ adds the SQLite-path
+# rules alongside the Drift dependency itself.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
 # Flutter engine & plugin entry points
 # -----------------------------------------------------------------------------
-# The Flutter Gradle plugin applies most engine keep rules automatically, but
-# plugin authors occasionally forget `consumer-proguard-rules.pro` in their
-# POMs. Pinning these explicitly is cheap insurance.
+# Plugins discovered via GeneratedPluginRegistrant are constructed by name;
+# R8 renaming them breaks the registry lookup at app launch. Keeping the
+# embedding surface also protects the method-channel plumbing used by every
+# plugin the project will eventually pull in.
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.** { *; }
 -keep class io.flutter.plugins.** { *; }
@@ -40,67 +46,14 @@
 -dontwarn io.flutter.embedding.**
 
 # -----------------------------------------------------------------------------
-# Drift — sqlite3_flutter_libs native loader
+# Attributes required by reflection-driven frameworks + Crashlytics uploads
 # -----------------------------------------------------------------------------
-# Drift itself is pure Dart. Its native SQLite runtime is supplied by
-# `sqlite3_flutter_libs` (package author: simolus3), whose plugin class is
-# resolved reflectively by name from the Dart isolate. Renaming it breaks the
-# JNI bridge with `ClassNotFoundException` at first DB open.
--keep class com.simolus3.sqlite3_flutter_libs.** { *; }
--dontwarn com.simolus3.sqlite3_flutter_libs.**
-
-# If a future spike moves Drift onto a background isolate, kotlinx.coroutines
-# field-volatile reflection needs protection.
--keepclassmembernames class kotlinx.coroutines.** {
-    volatile <fields>;
-}
--dontwarn kotlinx.coroutines.**
-
-# -----------------------------------------------------------------------------
-# Riverpod — @riverpod generated providers
-# -----------------------------------------------------------------------------
-# Riverpod is Dart-only. These rules exist as a placeholder for the day a
-# Kotlin-side telemetry shim reflects on provider class names (Story 9.2+).
-# Today they match nothing, which is the correct behaviour.
--dontwarn riverpod_annotation.**
--dontwarn riverpod.**
-
-# -----------------------------------------------------------------------------
-# Freezed — $CopyWith / $When generated artefacts
-# -----------------------------------------------------------------------------
-# Freezed generates Dart code (`*.freezed.dart`). No Kotlin/Java is emitted.
-# The patterns below protect any hypothetical Kotlin sealed-class mirror of a
-# Freezed union (e.g. a native JSON serializer bridge) from being renamed.
--keep class **$CopyWithImpl { *; }
--keep class **$Copy { *; }
--keep class **$When { *; }
-
-# -----------------------------------------------------------------------------
-# Dio — HttpClientAdapter, Interceptor, and the Cronet adapter path
-# -----------------------------------------------------------------------------
-# Dio's `HttpClientAdapter` and `Interceptor` are Dart interfaces. The
-# Android-side concern is `native_dio_adapter` + Cronet (reserved for Story
-# 1.3's networking layer): Cronet ships native classes loaded reflectively by
-# the Chromium net stack. Certificate pinning (Story 1.3) relies on these
-# symbols surviving R8.
--keep class org.chromium.net.** { *; }
--keep interface org.chromium.net.** { *; }
--dontwarn org.chromium.net.**
-
-# OkHttp arrives transitively with Firebase and AdMob plugins. Keep its SSL
-# and interceptor surfaces so custom interceptors and cert pinning keep
-# working after R8.
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
--dontwarn okhttp3.**
--dontwarn okio.**
-
-# -----------------------------------------------------------------------------
-# Attributes required by reflection-driven frameworks (Crashlytics, Firebase)
-# -----------------------------------------------------------------------------
+# `SourceFile` + `LineNumberTable` are what lets Story 9.2's Crashlytics
+# symbol upload resolve an obfuscated stack trace back to source. Stripping
+# them saves ~a few KB per class but destroys post-crash triage.
 -keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature, Exceptions
 -keepattributes SourceFile, LineNumberTable
 
-# Hide original source file name but keep line numbers for Crashlytics
-# symbol uploads (Story 9.2 wires the upload; the attribute must be kept now).
+# Hide the original source filename while preserving line numbers — the
+# Crashlytics symbol uploader re-maps filenames server-side.
 -renamesourcefileattribute SourceFile

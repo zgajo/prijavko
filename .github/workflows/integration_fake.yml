@@ -17,7 +17,7 @@ name: integration_fake
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: ['**']
 
@@ -49,6 +49,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Log Flutter + Dart versions
+        run: |
+          flutter --version
+          dart --version
+
       - name: Resolve dependencies
         run: flutter pub get
 
@@ -59,7 +64,10 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api24-x86_64-v1
+          # Invalidate the AVD snapshot whenever the workflow itself
+          # changes (new emulator options, API level, arch, or image
+          # profile) so a stale snapshot cannot shadow a real bump.
+          key: avd-api24-x86_64-${{ hashFiles('.github/workflows/integration_fake.yml') }}
 
       - name: Create AVD snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'

@@ -10,7 +10,7 @@ name: analyze
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: ['**']
 
@@ -29,6 +29,11 @@ jobs:
           flutter-version: '3.38.7'
           cache: true
 
+      - name: Log Flutter + Dart versions
+        run: |
+          flutter --version
+          dart --version
+
       - name: Resolve dependencies
         run: flutter pub get
 
@@ -36,4 +41,7 @@ jobs:
         run: dart analyze --fatal-warnings --fatal-infos
 
       - name: Format check
-        run: dart format --set-exit-if-changed .
+        # Narrowed to hand-written source roots so the gate stays stable
+        # when build_runner lands (generated `*.g.dart` / `*.freezed.dart`
+        # are not guaranteed `dart format`-clean across tool bumps).
+        run: dart format --set-exit-if-changed lib test integration_test

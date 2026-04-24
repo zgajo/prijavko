@@ -1,6 +1,6 @@
 # Story 1.1: Project Bootstrap & CI Foundation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -51,24 +51,24 @@ so that every subsequent story lands on a build-blocking foundation that catches
 ### AC4 — Android manifest hardening
 
 1. `android/app/src/main/AndroidManifest.xml` declares `android:allowBackup="false"` and `android:fullBackupContent="false"` on the `<application>` element.
-2. Declares exactly three runtime/install permissions — no more, no less: `android.permission.CAMERA`, `android.permission.INTERNET`, `android.permission.ACCESS_NETWORK_STATE`.
-3. No `<uses-permission>` lines exist for storage, location, contacts, SMS, background, FCM, boot-completed, or any other permission.
+2. `android/app/src/main/AndroidManifest.xml` declares exactly three runtime/install permissions — no more, no less: `android.permission.CAMERA`, `android.permission.INTERNET`, `android.permission.ACCESS_NETWORK_STATE`. (Amended 2026-04-24 per Review Findings D2: scoped to `src/main/AndroidManifest.xml` only. The scaffold-emitted `src/debug/AndroidManifest.xml` and `src/profile/AndroidManifest.xml` include `android.permission.INTERNET` to wire Flutter's hot-reload channel — these are build-time-only overrides that merge into debug/profile builds only and never reach the release AAB.)
+3. `src/main/AndroidManifest.xml` has no `<uses-permission>` lines for storage, location, contacts, SMS, background, FCM, boot-completed, or any other permission.
 
 ### AC5 — Network security configuration
 
 1. `android/app/src/main/res/xml/network_security_config.xml` exists and declares:
-   - `<base-config cleartextTrafficPermitted="false" />`
-   - A `<domain-config>` scoped to `www.evisitor.hr` that references the cert-pinning pin set by file/inline placeholder (pin values themselves are Story 1.3's responsibility; this story creates the file skeleton and ensures the manifest references it).
+   - `<base-config cleartextTrafficPermitted="false" />` with a `<trust-anchors>` pointing at the system certificate store.
+   - A `<domain-config>` scoped to `www.evisitor.hr`. (Amended 2026-04-24 per Review Findings D6: Story 1.1 no longer carries a placeholder `<pin-set>`. The empty `<domain-config>` shell keeps the manifest wiring exercised today; the `<pin-set>` with real SPKI SHA-256 digests is an additive edit owned entirely by Story 1.3 — JIT.)
 2. `AndroidManifest.xml` `<application>` element wires `android:networkSecurityConfig="@xml/network_security_config"`.
 
 ### AC6 — ProGuard/R8 keep rules
 
-1. `android/app/proguard-rules.pro` exists with `-keep` rules covering:
-   - Drift generated code (class patterns from Drift's proguard guidance).
-   - Riverpod annotations (`@riverpod`, generated providers).
-   - Freezed `copyWith` / union types.
-   - Dio `HttpClientAdapter` and `Interceptor` subclasses.
-2. `android/app/build.gradle` (or `build.gradle.kts`) enables `minifyEnabled true` + `shrinkResources true` on the release build type and references `proguard-rules.pro`.
+1. `android/app/proguard-rules.pro` exists with `-keep` rules covering the Kotlin/Java surface that actually exists in the build today:
+   - Flutter engine + plugin-registry classes (`io.flutter.**`) so `GeneratedPluginRegistrant` reflection survives shrink.
+   - Crashlytics-adjacent `keepattributes` — `SourceFile`, `LineNumberTable`, annotation metadata — so Story 9.2's symbol upload can resolve obfuscated stacks.
+2. `android/app/build.gradle.kts` enables `isMinifyEnabled = true` + `isShrinkResources = true` on the release build type and references `proguard-rules.pro`.
+
+(Amended 2026-04-24 per Review Findings D4: the original AC6.1 called for keep rules against Drift / Riverpod / Freezed / Dio. Those four libraries are pure Dart; R8 operates only on JVM bytecode, so "keep the Dart class X" is a no-op and "keep the native plugin *adjacent* to X" is a guess about libraries this story does not yet import. Native-plugin keeps land with the stories that add those plugins: Story 1.3 for Dio's native_dio_adapter/Cronet + `sqlite3_flutter_libs` when Drift arrives, Story 9.2 for Firebase transitive keeps. JIT > speculation.)
 
 ### AC7 — SDK targets
 
@@ -91,12 +91,12 @@ so that every subsequent story lands on a build-blocking foundation that catches
 
 1. Pushing a tag matching `v*` (e.g., `v1.0.0-dryrun`) to a disposable branch triggers `build_aab.yml` and produces a signed AAB (signing config uses a placeholder keystore in the workflow — actual release signing keys are Story 10.7/10.8 concern, but the workflow must not hard-fail on missing secrets; use an upload-keystore dry-run path).
 2. The `build/symbols/` obfuscation symbols are uploaded as a workflow-run artifact with a retention period ≥ 90 days.
-3. Version code strategy documented in `docs/ci/README.md`: `vX.Y.Z` → versionCode `X*10000 + Y*100 + Z` (e.g., `v1.0.0` → `10000`, `v1.0.1` → `10001`, `v1.1.0` → `10100`). A simple script or workflow step derives the versionCode from the tag.
+3. Version code strategy documented in `docs/ci/README.md`: `vX.Y.Z` → versionCode `X*1_000_000 + Y*10_000 + Z*10` (e.g., `v1.0.0` → `1000000`, `v1.0.1` → `1000010`, `v1.1.0` → `1010000`, `v1.0.100` → `1001000`). A workflow step derives the versionCode from the tag after validating the tag shape against `^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?$` (garbage tags rejected before arithmetic). (Amended 2026-04-24 per Review Findings D5: original formula `X*10000 + Y*100 + Z` collided at PATCH ≥ 100 and MINOR ≥ 100 — `v1.0.100 == v1.1.0 == 10100` would conflict on Play.)
 
-### AC10 — Cold-start latency probe (NFR-P8)
+### AC10 — Mount-to-first-frame guard rail (NFR-P8, Story 1.1 scope)
 
-1. `integration_test/app_test.dart` contains a probe that measures cold-start duration from `binding.firstFrameRasterized` and fails if it exceeds **2.5 seconds** on the CI runner. Given CI hardware variance, use 2.5s as the hard fail threshold and log the observed p50/p95 to the test output for trend review.
-2. The probe is run inside the `integration_fake.yml` workflow.
+1. `integration_test/app_test.dart` contains a guard rail that measures the interval from `pumpWidget(MainApp)` to `WidgetsBinding.instance.waitUntilFirstFrameRasterized` and fails if it exceeds **2.5 seconds** on the CI runner. A single sample is used; `firstFrameRasterized` is a per-binding one-shot, so multi-sample "p95" in a test harness was theatre. (Amended 2026-04-24 per Review Findings D1: the original wording "measures cold-start duration" overpromised — this probe cannot observe process-launch time from inside an integration-test harness. A driver-based or native-channel true cold-start probe is deferred to the story that needs the stronger signal.)
+2. The guard is run inside the `integration_fake.yml` workflow against the `reactivecircus/android-emulator-runner@v2` API 24 x86_64 AVD.
 
 ### AC11 — `.gitignore` discipline
 
@@ -276,4 +276,54 @@ Claude Opus 4.7 (1M context)
 - `test/app_smoke_test.dart` (created, Task 3 — keeps `flutter test` exit code 0 on commit #1)
 - `lib/core/env/evisitor_env.dart` (created, Task 7 — `EvisitorEnv` enum, ambient `evisitorEnv` getter, pure `envFromDefine` resolver with ArgumentError on unknown)
 - `test/core/env/evisitor_env_test.dart` (created, Task 7 — AC8.2 coverage: default → prod, `test`/`fake` overrides, unknown throws)
+
+### Review Findings
+
+_Code review completed 2026-04-24 (3-layer adversarial: Blind Hunter + Edge Case Hunter + Acceptance Auditor). 7 decisions, 19 patches, 11 deferred, 9 dismissed._
+
+#### Decision-needed
+
+- [x] [Review][Decision] Cold-start probe measures widget-rebuild, not cold-start (AC10.1) — `integration_test/app_test.dart:46-72`. Stopwatch starts *after* `IntegrationTestWidgetsFlutterBinding.ensureInitialized()` and measures `pumpWidget(MainApp)` elapsed. `firstFrameRasterized` fires once per binding lifetime, so iterations 1..4 measure warm widget rebuilds — labelled "cold-start" samples. Needs: either (a) drop to 1 sample and accept it measures mount-to-first-frame only, (b) split into its own test-file so binding is fresh per run, or (c) move to `flutter drive` / native-channel probe for true process-start timing. Sources: auditor+blind+edge.
+- [x] [Review][Decision] Debug + profile manifests declare INTERNET permission — `android/app/src/debug/AndroidManifest.xml`, `android/app/src/profile/AndroidManifest.xml`. Dev notes self-grant "AC4.2 targets src/main only" — spec does not say this. Either (a) remove from debug/profile manifests (may break Flutter hot-reload channel), (b) add an explicit spec addendum excluding scaffold-emitted debug permissions, or (c) accept as letter-vs-spirit and document. Sources: auditor+blind.
+- [x] [Review][Decision] Release AAB signed with debug keystore, uploaded as 90-day artifact — `.github/workflows/build_aab.yml:143-157` + `android/app/build.gradle.kts:34-36`. Spec deliberately allows debug-keystore placeholder ("workflow must not hard-fail on missing secrets; use an upload-keystore dry-run path"), but the artifact is named `prijavko-<version>-aab` with no `UNSIGNED` / `DRY-RUN` tag. Decision: (a) rename artifact to `prijavko-<version>-aab-UNSIGNED-DRY-RUN` until Story 10.7/10.8 wires real signing, (b) fail the workflow when `KEYSTORE_BASE64` secret is absent and fork/branch is `main`, or (c) accept current labeling. Sources: blind+edge.
+- [x] [Review][Decision] ProGuard keep rules target wrong things — `android/app/proguard-rules.pro`. AC6.1 literal: "Drift generated code (class patterns from Drift's proguard guidance)", "Riverpod annotations (@riverpod, generated providers)", "Dio HttpClientAdapter and Interceptor subclasses". Implementation: (a) Drift/Riverpod/Dio are pure Dart — no JVM classes to keep; (b) the rules instead keep `com.simolus3.sqlite3_flutter_libs.**` (sibling plugin, package name unverified), `okhttp3.**` + `org.chromium.net.**` (Dio's potential native adapters, not present), and `-dontwarn riverpod.**` (suppresses warnings, not a keep rule). Decision: (a) rewrite to literal no-op `-keep` rules matching AC wording with a comment that they match nothing today, (b) keep current speculative rules and amend AC6, or (c) verify real plugin package names and trim the sibling-plugin rule to what Story 1.3+ actually imports. Sources: auditor+blind+edge.
+- [x] [Review][Decision] versionCode formula collides at MINOR ≥ 100 or PATCH ≥ 100 — `.github/workflows/build_aab.yml:121` + `docs/ci/README.md §Release versioning strategy`. Formula `MAJOR*10000 + MINOR*100 + PATCH` makes `v1.0.100 == v1.1.0 == 10100`. Formula is **spec-defined in AC9.3**, so the implementation is compliant with a buggy spec. Decision: (a) widen formula to `MAJOR*1000000 + MINOR*10000 + PATCH*10` and update AC9.3 + docs, (b) hard-cap PATCH<100 and MINOR<100 in the workflow with an explicit error, or (c) accept and document the limitation. Sources: blind.
+- [x] [Review][Decision] Pin-set `expiration="2026-04-24"` is today's date — `android/app/src/main/res/xml/network_security_config.xml:37`. Dev intentionally expired the placeholder pin-set so TLS falls back to system trust anchors until Story 1.3 populates real digests. Timezone-sensitive: on devices ahead of UTC the pin-set may still be active today and block all evisitor.hr TLS. Decision: (a) change to `2000-01-01` (clearly-past, timezone-proof), (b) remove `<pin-set>` entirely until Story 1.3 (leaving only the `<domain-config>` skeleton), or (c) change to far-future + real placeholder hashes that match one leaf cert to avoid open-by-default behavior. Sources: auditor+blind+edge.
+- [x] [Review][Decision] `gradle.properties` sets `-Xmx8G -XX:MaxMetaspaceSize=4G` — `android/gradle.properties:1`. GitHub-hosted `ubuntu-latest` runners have ~7 GB RAM; the heap alone exceeds available memory. Gradle will OOM-kill or thrash on release-AAB builds. Decision: (a) lower to `-Xmx4G -XX:MaxMetaspaceSize=1G` for all environments, (b) split: default to `-Xmx4G`, override via `ORG_GRADLE_PROJECT_jvmargs` on local devs with more RAM, or (c) accept intermittent CI OOM. Sources: auditor+blind+edge.
+
+#### Patch
+
+- [x] [Review][Patch] Cold-start p50/p95 collapses to max with 5 samples — `integration_test/app_test.dart:62-66`. `sorted[(5*0.95).ceil() - 1] == sorted[4] == sorted.last == maxSample`. Fix: raise `_sampleCount` to ≥20 or use linear-interpolation percentile.
+- [x] [Review][Patch] PII guard grep exit code 2 (internal error) silently passes as clean — `.github/workflows/pii_guard.yml:31-34`. `if grep…; then exit 1; fi` falls through to "clean" echo on exit 2. Fix: capture `rc=$?` explicitly; `case $rc in 0) exit 1;; 1) echo clean;; *) exit 2;; esac`.
+- [x] [Review][Patch] PII guard exits 0 on "no SCAN_DIRS" — `.github/workflows/pii_guard.yml:28-31`. Currently unreachable (all 3 dirs exist), but future regression (deleted `lib/`) silently passes. Fix: `echo "::error::No source dirs — guard disabled"; exit 1`.
+- [x] [Review][Patch] build_aab accepts non-semver / garbage tags — `.github/workflows/build_aab.yml:100-121`. `vfoo` → `MAJOR=foo` → `$((foo*10000))` arithmetic abuse; `v1.0.0.1` → `PATCH=0.1` errors; `v` alone → empty VERSION_NAME. Fix: gate with `[[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?$ ]] || exit 1` before arithmetic.
+- [x] [Review][Patch] Network security config pin digest is 43 chars, not 44 — `android/app/src/main/res/xml/network_security_config.xml:29-31`. SHA-256 base64 is 44 chars including `=` padding. Fix: pad `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=` → `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=` (44) and same for BBBB.
+- [x] [Review][Patch] Workflows double-run on PRs (push + pull_request both fire) — `.github/workflows/{analyze,test,integration_fake,pii_guard}.yml`. Each PR push triggers 2× CI. Fix: drop `pull_request:` or narrow `push:` to `branches: [main]` + keep `pull_request:`.
+- [x] [Review][Patch] testapi_canary placeholder always green — `.github/workflows/testapi_canary.yml:373-375`. Fix: add `echo "::warning::Canary not yet implemented — see Epic 6"` so the run surfaces deferred work even while exit 0.
+- [x] [Review][Patch] `--dart-define=EVISITOR_ENV=` (empty value) crashes at first getter access — `lib/core/env/evisitor_env.dart:32`. `EvisitorEnv.values.byName('')` throws `ArgumentError`. Fix: `if (raw.isEmpty) return EvisitorEnv.prod;` before `byName`.
+- [x] [Review][Patch] `--dart-define=EVISITOR_ENV=PROD` (mixed case) crashes — `lib/core/env/evisitor_env.dart:32`. `byName` is case-sensitive. Fix: `EvisitorEnv.values.byName(raw.toLowerCase())`.
+- [x] [Review][Patch] `evisitorEnv` lazy getter — ArgumentError becomes time bomb at first access — `lib/core/env/evisitor_env.dart:30-33`. Fix: resolve once at top level — `final EvisitorEnv evisitorEnv = envFromDefine(_rawEnv);` so a bad `--dart-define` crashes at program startup (real Poka-yoke).
+- [x] [Review][Patch] evisitor_env_test missing empty/case/whitespace cases — `test/core/env/evisitor_env_test.dart`. Add: `envFromDefine('')`, `envFromDefine('PROD')`, `envFromDefine(' prod ')`.
+- [x] [Review][Patch] `dart format --set-exit-if-changed .` will trip on generated files once build_runner lands — `.github/workflows/analyze.yml:39`. Fix: narrow to `dart format --set-exit-if-changed lib/ test/ integration_test/`.
+- [x] [Review][Patch] Gradle cache key omits Flutter/Java versions — `.github/workflows/build_aab.yml:100-108`. Flutter bumps reuse stale Gradle cache. Fix: include `${{ steps.flutter.outputs.version }}` in the key.
+- [x] [Review][Patch] AVD cache key `avd-api24-x86_64-v1` never invalidates — `.github/workflows/integration_fake.yml:225`. Fix: `key: avd-api24-x86_64-${{ hashFiles('.github/workflows/integration_fake.yml') }}`.
+- [x] [Review][Patch] build_aab doesn't capture R8 `mapping.txt` — `.github/workflows/build_aab.yml:143-157`. Crashlytics symbol upload needs both Dart debug info (`build/symbols/`) AND R8 mapping (`build/app/outputs/mapping/release/mapping.txt`). Fix: add second upload step for the mapping file.
+- [x] [Review][Patch] `app_smoke_test` assertion is tautological — `test/app_smoke_test.dart:2049-2053`. `find.byType(MainApp)` after pumping `const MainApp()` always passes. Fix: `expect(find.text('Hello World!'), findsOneWidget);` or assert no `ErrorWidget` in tree.
+- [x] [Review][Patch] `README.md` is the 3-line scaffold stub — `README.md`. Contradicts `pubspec.yaml` description. Fix: replace with a real orientation (project purpose, build instructions, CI overview, link to `_bmad-output/`).
+- [x] [Review][Patch] No `flutter --version` / `dart --version` log step in workflows — `.github/workflows/*.yml`. Failed builds can't be reproduced without the exact SDK hash. Fix: add `- run: flutter --version && dart --version` as the first post-setup step.
+- [x] [Review][Patch] `gradle-wrapper.properties` has no `distributionSha256Sum` — `android/gradle/wrapper/gradle-wrapper.properties:5`. Supply-chain risk: MITM or yanked distribution corrupts wrapper silently. Fix: add `distributionSha256Sum=<hash>` for Gradle 8.14.
+
+#### Deferred (pre-existing / out of story scope)
+
+- [x] [Review][Defer] PII grep regex bypassable by local-var assignment, alt facades (`log.info`, `developer.log`, `Fimber`), multiline splits — grep is a partial guard; type-level NFR-S7 (PII `toString()` overrides) lands with Epic 2+ models. Sources: auditor+blind+edge.
+- [x] [Review][Defer] `EVISITOR_ENV=fake` has no consumer branching in `lib/` yet — consumer lands with Dio fake (Story 1.3+).
+- [x] [Review][Defer] build_aab doesn't emit SHA256 digest alongside AAB — quality-of-life, not spec-required.
+- [x] [Review][Defer] `.gitignore` `!pubspec.lock` doesn't un-ignore nested `packages/*/pubspec.lock` — single-module today.
+- [x] [Review][Defer] `.gitignore` retains Flutter-SDK template paths (`/bin/cache/`, `/dev/…`, `/packages/flutter/…`) — user's deliberate choice, harmless in app repo.
+- [x] [Review][Defer] ProGuard wildcard keeps on `io.flutter.plugins.**` defeat R8 tree-shaking — spec accepts "class patterns"; refine per-plugin when the plugin lands.
+- [x] [Review][Defer] integration test hardcodes `'Hello World!'` — will be replaced when l10n lands (Epic 1.2+).
+- [x] [Review][Defer] `CLAUDE.md` symlink without trailing newline fails on Windows — Android-only project, Linux/Mac developers.
+- [x] [Review][Defer] No `CODEOWNERS` / branch protection doc — out of Story 1.1 scope.
+- [x] [Review][Defer] `networkSecurityConfig` attribute merges into debug builds — blocks localhost HTTP fixtures. Story 1.3+ concern when Dio fake server lands.
+- [x] [Review][Defer] `actions/checkout@v4` default `fetch-depth: 1` — trap only if later workflows read git history.
 

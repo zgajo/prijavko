@@ -10,13 +10,20 @@
 # stack traces post-crash (Story 9.2), so we retain it as a workflow
 # artifact for ≥90 days even before Crashlytics is wired (Epic 9).
 #
-# versionCode derivation (AC9.3): vX.Y.Z → X*10000 + Y*100 + Z.
-# Pre-release suffixes (`-dryrun`, `-beta`) are stripped when computing
-# the code but preserved in the build name.
+# versionCode derivation (AC9.3): vX.Y.Z → X*1000000 + Y*10000 + Z*10.
+# The widened formula leaves two decimal digits of headroom per position,
+# so `v1.0.100 != v1.1.0` and `v1.100.0 != v2.0.0` cannot collide. The
+# trailing *10 reserves a four-bump "build counter" slot per patch should
+# a hotfix re-release ever need a monotonically higher code on the same
+# semver. Pre-release suffixes (`-dryrun`, `-beta`) are stripped when
+# computing the code but preserved in the build name.
 #
 # Signing: real release keystore is Story 10.7/10.8. Today the build
 # defaults to Flutter's debug signing when no release signingConfig is
-# present — the workflow must not hard-fail on missing secrets.
+# present — the workflow must not hard-fail on missing secrets. The
+# resulting AAB artifact is suffixed `-UNSIGNED-DRY-RUN` so an operator
+# downloading it from the Actions tab cannot mistake it for a Play-ready
+# bundle.
 
 name: build_aab
 
@@ -46,14 +53,24 @@ jobs:
           flutter-version: '3.38.7'
           cache: true
 
+      - name: Log Flutter + Dart versions
+        run: |
+          flutter --version
+          dart --version
+
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
+          # Include Flutter version in the key: a channel bump ships a
+          # new Android Gradle Plugin / Kotlin plugin combo that a stale
+          # Gradle cache can silently mis-serve as "Unsupported class file
+          # major version" or a mysterious missing-dependency error.
+          key: gradle-${{ runner.os }}-flutter3.38.7-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
           restore-keys: |
+            gradle-${{ runner.os }}-flutter3.38.7-
             gradle-${{ runner.os }}-
 
       - name: Derive version name + code from tag
@@ -63,11 +80,24 @@ jobs:
         run: |
           set -euo pipefail
           TAG_NAME="$GITHUB_REF_NAME"
+          # Gate: reject non-semver tags before the arithmetic layer. A
+          # tag like `vfoo` or `v1.0.0.1` would otherwise pass garbage
+          # into `$((…))` and either silently ship versionCode=0 or
+          # arithmetic-error the build into opaque CI failure.
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+)?$ ]]; then
+            echo "::error::Tag '$TAG_NAME' is not a valid release tag. Expected vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-suffix (alphanumeric)."
+            exit 1
+          fi
           VERSION_NAME="${TAG_NAME#v}"
           CORE="${VERSION_NAME%%-*}"
           IFS=. read -r MAJOR MINOR PATCH <<<"$CORE"
-          : "${MAJOR:=0}" "${MINOR:=0}" "${PATCH:=0}"
-          VERSION_CODE=$((MAJOR*10000 + MINOR*100 + PATCH))
+          # Widened formula: MAJOR*1_000_000 + MINOR*10_000 + PATCH*10.
+          # Leaves two decimal digits of headroom per position so a
+          # patch or minor bump into three digits cannot collide with
+          # the next major/minor step (prior formula X*10000+Y*100+Z
+          # made v1.0.100 == v1.1.0). Trailing *10 reserves a 0..9
+          # hotfix counter on the same semver.
+          VERSION_CODE=$((MAJOR*1000000 + MINOR*10000 + PATCH*10))
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "Derived: name=$VERSION_NAME code=$VERSION_CODE"
@@ -92,7 +122,11 @@ jobs:
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
-          name: prijavko-${{ steps.version.outputs.version_name }}-aab
+          # Poka-yoke artifact name: until Story 10.7/10.8 wires a real
+          # upload-keystore secret, every artifact this workflow produces
+          # is debug-signed and MUST NOT be uploaded to Google Play. The
+          # visible suffix stops a half-awake operator from shipping it.
+          name: prijavko-${{ steps.version.outputs.version_name }}-aab-UNSIGNED-DRY-RUN
           path: build/app/outputs/bundle/release/*.aab
           retention-days: 90
           if-no-files-found: error
@@ -100,7 +134,20 @@ jobs:
       - name: Upload obfuscation symbols
         uses: actions/upload-artifact@v4
         with:
-          name: prijavko-${{ steps.version.outputs.version_name }}-symbols
+          name: prijavko-${{ steps.version.outputs.version_name }}-symbols-UNSIGNED-DRY-RUN
           path: build/symbols/
           retention-days: 90
           if-no-files-found: error
+
+      - name: Upload R8 mapping
+        # R8's `mapping.txt` is the Kotlin/Java de-obfuscation counterpart
+        # to Dart's --split-debug-info output. Crashlytics symbol upload
+        # (Story 9.2) needs BOTH to resolve a stack trace that crosses
+        # the JNI boundary. Capturing it here keeps tag → (AAB + Dart
+        # symbols + R8 mapping) a single atomic artifact bundle.
+        uses: actions/upload-artifact@v4
+        with:
+          name: prijavko-${{ steps.version.outputs.version_name }}-r8-mapping-UNSIGNED-DRY-RUN
+          path: build/app/outputs/mapping/release/mapping.txt
+          retention-days: 90
+          if-no-files-found: warn

@@ -25,4 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Placeholder — real canary arrives with Epic 6
-        run: echo "canary placeholder"
+        run: |
+          # Emit a GitHub warning annotation so the run surfaces as
+          # yellow on the Actions tab instead of quietly green. The
+          # placeholder cannot actually detect eVisitor drift; a silently
+          # passing canary gives false confidence until Epic 6 lands the
+          # real XML round-trip.
+          echo "::warning::Canary placeholder — real test.evisitor.hr round-trip lands with Epic 6. This run does NOT detect contract drift."
+          echo "canary placeholder"

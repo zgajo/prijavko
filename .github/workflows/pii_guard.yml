@@ -13,7 +13,7 @@ name: pii_guard
 
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
     branches: ['**']
 
@@ -36,12 +36,31 @@ jobs:
             if [ -d "$d" ]; then SCAN_DIRS+=("$d"); fi
           done
           if [ ${#SCAN_DIRS[@]} -eq 0 ]; then
-            echo "No Dart source directories present yet — nothing to scan."
-            exit 0
-          fi
-          echo "Scanning: ${SCAN_DIRS[*]}"
-          if grep -rnP --include='*.dart' -- "$PII_REGEX" "${SCAN_DIRS[@]}"; then
-            echo "::error::PII log pattern detected. Remove any print/debugPrint/AppLogger.* call that references a PII field."
+            # Fail-closed: if none of the canonical Dart source dirs exist,
+            # the guard cannot do its job. Better to block the build and
+            # prompt investigation than silently pass as "clean".
+            echo "::error::No Dart source dirs (lib/ test/ integration_test/) found — PII guard cannot scan. Did a refactor rename the source tree?"
             exit 1
           fi
-          echo "PII grep guard clean."
+          echo "Scanning: ${SCAN_DIRS[*]}"
+          # Explicit exit-code dispatch so a grep internal error (status 2 —
+          # broken regex, unreadable file, PCRE unsupported) is surfaced
+          # instead of being silently treated as "no match" by a bare
+          # `if grep; then`. grep exits 0 on match, 1 on no match, ≥2 on error.
+          set +e
+          grep -rnP --include='*.dart' -- "$PII_REGEX" "${SCAN_DIRS[@]}"
+          rc=$?
+          set -e
+          case "$rc" in
+            0)
+              echo "::error::PII log pattern detected. Remove any print/debugPrint/AppLogger.* call that references a PII field."
+              exit 1
+              ;;
+            1)
+              echo "PII grep guard clean."
+              ;;
+            *)
+              echo "::error::grep exited with status $rc — regex broken, file unreadable, or PCRE unsupported on this runner. Guard cannot certify the tree."
+              exit "$rc"
+              ;;
+          esac

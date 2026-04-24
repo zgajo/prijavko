@@ -1,39 +1,45 @@
-// Story 1.1 AC3.4 + AC10 — boot probe & cold-start guard rail for
+// Story 1.1 AC3.4 + AC10 — mount-to-first-frame guard rail for
 // integration_fake.yml.
 //
-// Why this uses `IntegrationTestWidgetsFlutterBinding` (and therefore
-// requires an emulator/device): AC10 calls for
-// `binding.firstFrameRasterized` as the cold-start marker. That flag
-// only flips inside `RendererBinding` when a real `ui.View.render` call
-// lands a frame on the GPU — the headless `AutomatedTestWidgetsFlutterBinding`
-// never rasterizes, so the marker stays false there. Running against
-// the `reactivecircus/android-emulator-runner@v2` AVD wired by
-// `integration_fake.yml` (Task 3) is what makes the probe honest.
-// Local `flutter test integration_test/` without an emulator will
-// therefore fail with "No supported devices connected" — that is
-// expected for integration tests and matches PRD Day-One integration
-// posture.
+// Honest framing (per code-review decision D1, 2026-04-24): this probe is
+// a *guard rail*, not a true cold-start metric. It measures the interval
+// from `pumpWidget(MainApp)` to `waitUntilFirstFrameRasterized` inside an
+// already-running Dart VM and integration-test binding — meaning the
+// process, isolate, engine, and rasterizer are all warm by the time the
+// Stopwatch starts. Real cold start (process launch → first frame) needs
+// a `flutter drive` driver or a native-channel Activity.onCreate probe;
+// that is deferred until a story actually requires the stronger signal.
 //
-// AC10 / NFR-P8 (cold-start p95 ≤ 2.5s) is covered by:
-//   1. A single true cold-start sample gated on
-//      `WidgetsBinding.instance.waitUntilFirstFrameRasterized` (fires
-//      once per binding lifetime, which is exactly what cold start is).
-//   2. N-1 subsequent pump-and-render samples, each measured against a
-//      live `pump()` — on the integration binding `pump()` awaits a
-//      real vsync, so the stopwatch spans build + layout + GPU paint.
-// p50/p95 are computed across all samples (cold + warm) so trend
-// review in CI logs has distribution, not just the headline number.
+// What this DOES catch: a regression that makes MainApp's first build
+// exceed 2.5 s on the `reactivecircus/android-emulator-runner@v2` API 24
+// AVD — e.g. a heavy synchronous init, a blocking provider, a secure-
+// storage round-trip on the UI thread. That is the class of failure NFR-P8
+// protects against at story-1.1 scope. When the app grows native init
+// (Story 1.3+ keystore fetch, Dio bootstrap), the single-sample timing
+// starts telling us something meaningful even without true cold start.
+//
+// Why `IntegrationTestWidgetsFlutterBinding` (and therefore an emulator):
+// `firstFrameRasterized` only flips inside `RendererBinding` when a real
+// `ui.View.render` call lands a frame on the GPU. The headless
+// `AutomatedTestWidgetsFlutterBinding` never rasterizes, so the marker
+// stays false there and the probe is unreachable without a device.
+//
+// Why a single sample, not N: with 5 samples, iteration 0 consumed the
+// one-shot `waitUntilFirstFrameRasterized` Completer; iterations 1..4
+// measured warm widget rebuilds on the same binding — producing a
+// "p95" that was arithmetically identical to `max`, which is theatre,
+// not signal. A single sample is honest. p50/p95 return when a driver-
+// based cold-start harness lands.
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:prijavko/main.dart';
 
-// Sample count + threshold are inlined rather than `--dart-define`d: a
-// guard rail that can be silently loosened from CI arguments is not a
-// guard rail. Changes must land as a code change + review.
-const _sampleCount = 5;
-const _coldStartThreshold = Duration(milliseconds: 2500);
+// Threshold inlined rather than `--dart-define`d: a guard rail that can
+// be silently loosened from CI arguments is not a guard rail. Changes
+// must land as a code change + review.
+const _firstFrameThreshold = Duration(milliseconds: 2500);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -45,78 +51,39 @@ void main() {
     expect(find.text('Hello World!'), findsOneWidget);
   });
 
-  testWidgets('cold-start stays under 2.5s across $_sampleCount samples '
-      '(AC10 / NFR-P8)', (tester) async {
-    final samples = <Duration>[];
+  testWidgets('mount-to-first-frame stays under 2.5s (AC10 / NFR-P8 guard)', (
+    tester,
+  ) async {
+    final stopwatch = Stopwatch()..start();
+    await tester.pumpWidget(const MainApp());
+    // `waitUntilFirstFrameRasterized` is a per-binding one-shot Completer.
+    // On the integration binding, awaiting it blocks until a real vsync
+    // lands the first GPU frame — which is the best proxy to "the app is
+    // visible" we can honestly produce from inside a test harness.
+    await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
+    stopwatch.stop();
 
-    for (var i = 0; i < _sampleCount; i++) {
-      // Tear the tree down between iterations so each measurement
-      // covers a fresh MainApp mount, not a re-attach to an already-
-      // built element tree.
-      await tester.pumpWidget(const SizedBox.shrink());
-      await tester.pump();
+    expect(
+      WidgetsBinding.instance.firstFrameRasterized,
+      isTrue,
+      reason: 'first-frame marker must be set after initial render',
+    );
 
-      final stopwatch = Stopwatch()..start();
-      await tester.pumpWidget(const MainApp());
-      if (i == 0) {
-        // `waitUntilFirstFrameRasterized` is a per-binding Completer —
-        // it fires exactly once. On iteration 0 this delimits the real
-        // cold start (AC10.1); from iteration 1 on, `pump()` already
-        // blocks on a live vsync under the integration binding so it's
-        // the canonical "frame done" signal.
-        await WidgetsBinding.instance.waitUntilFirstFrameRasterized;
-        expect(
-          WidgetsBinding.instance.firstFrameRasterized,
-          isTrue,
-          reason: 'cold-start marker must be set after first render',
-        );
-      } else {
-        await tester.pump();
-      }
-      stopwatch.stop();
-
-      samples.add(stopwatch.elapsed);
-    }
-
-    final coldStart = samples.first;
-    final sorted = [...samples]..sort();
-    final p50 = sorted[(_sampleCount * 0.5).floor()];
-    final p95 =
-        sorted[((_sampleCount * 0.95).ceil() - 1).clamp(0, _sampleCount - 1)];
-    final maxSample = sorted.last;
-
-    // debugPrint so CI log parsers can trend p50/p95 over time without
-    // re-running failing builds. No PII (pii_guard regex only matches
-    // `.documentNumber|.firstName|…` accessors — pure numeric output).
+    // debugPrint so CI log parsers can trend the number without re-running
+    // failing builds. No PII (pii_guard regex matches `.firstName` etc. —
+    // pure numeric output is safe).
     debugPrint(
-      'cold-start probe: '
-      'cold_start_ms=${coldStart.inMilliseconds} '
-      'samples_ms=${samples.map((s) => s.inMilliseconds).toList()} '
-      'p50_ms=${p50.inMilliseconds} '
-      'p95_ms=${p95.inMilliseconds} '
-      'max_ms=${maxSample.inMilliseconds} '
-      'threshold_ms=${_coldStartThreshold.inMilliseconds}',
+      'first-frame probe: '
+      'first_frame_ms=${stopwatch.elapsed.inMilliseconds} '
+      'threshold_ms=${_firstFrameThreshold.inMilliseconds}',
     );
 
-    // Hard-fail against the cold-start sample: AC10.1 is a cold-start
-    // budget, not a steady-state frame budget. The warm samples exist
-    // only to surface distribution in the log; they don't change the
-    // gate. We also fail if *any* sample exceeds the threshold so that
-    // a single slow outlier can't hide behind a lower p50/p95.
     expect(
-      coldStart <= _coldStartThreshold,
+      stopwatch.elapsed <= _firstFrameThreshold,
       isTrue,
       reason:
-          'cold-start ${coldStart.inMilliseconds}ms exceeded '
-          '${_coldStartThreshold.inMilliseconds}ms threshold',
-    );
-    expect(
-      maxSample <= _coldStartThreshold,
-      isTrue,
-      reason:
-          'slowest pump ${maxSample.inMilliseconds}ms exceeded '
-          '${_coldStartThreshold.inMilliseconds}ms threshold '
-          '(p50=${p50.inMilliseconds}ms, p95=${p95.inMilliseconds}ms)',
+          'mount-to-first-frame ${stopwatch.elapsed.inMilliseconds}ms '
+          'exceeded ${_firstFrameThreshold.inMilliseconds}ms threshold',
     );
   });
 }

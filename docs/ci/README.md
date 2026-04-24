@@ -21,21 +21,40 @@ every workflow plus `pubspec.yaml`.
 
 ## Release versioning strategy (AC9.3)
 
-Tag shape is `vX.Y.Z` with an optional pre-release suffix:
+Tag shape is `vX.Y.Z` with an optional alphanumeric pre-release suffix
+(`-dryrun`, `-beta`, `-rc1`, …). Non-matching tags are rejected by the
+`Derive version name + code from tag` step before any build work begins.
 
 | Tag | `versionName` | `versionCode` |
 | --- | --- | --- |
-| `v1.0.0` | `1.0.0` | `10000` |
-| `v1.0.1` | `1.0.1` | `10001` |
-| `v1.1.0` | `1.1.0` | `10100` |
-| `v1.0.0-dryrun` | `1.0.0-dryrun` | `10000` |
-| `v2.3.4-beta` | `2.3.4-beta` | `20304` |
+| `v1.0.0` | `1.0.0` | `1000000` |
+| `v1.0.1` | `1.0.1` | `1000010` |
+| `v1.1.0` | `1.1.0` | `1010000` |
+| `v1.0.100` | `1.0.100` | `1001000` |
+| `v1.100.0` | `1.100.0` | `2000000` *(rejected — minor ≥ 100 would collide with `v2.0.0`; bump the major)* |
+| `v1.0.0-dryrun` | `1.0.0-dryrun` | `1000000` |
+| `v2.3.4-beta` | `2.3.4-beta` | `2030040` |
 
-Formula: `versionCode = MAJOR * 10000 + MINOR * 100 + PATCH`. Pre-release
-suffixes (`-dryrun`, `-beta`, etc.) are preserved in `versionName` for
-traceability but stripped from `versionCode` so two tags sharing the same
-`X.Y.Z` core cannot be uploaded to the same Play track without an explicit
-bump. The derivation lives inline in [`build_aab.yml`](../../.github/workflows/build_aab.yml) `Derive version name + code from tag`.
+Formula: `versionCode = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 10`.
+
+Why this shape rather than `X*10000 + Y*100 + Z` (the initial story draft):
+the narrower formula collides at `PATCH ≥ 100` or `MINOR ≥ 100`
+(`v1.0.100 == v1.1.0 == 10100`) — a real-world possibility once the app
+ships past its first year. The widened formula reserves two decimal digits
+of headroom per position, and the trailing `* 10` leaves a 0..9 hotfix
+counter per patch (currently unused, reserved for a future
+`--build-number-override` Gradle property if a hotfix ever needs a
+monotonic code on the same semver).
+
+Pre-release suffixes are preserved in `versionName` for traceability but
+stripped from `versionCode` so two tags sharing the same `X.Y.Z` core
+cannot be uploaded to the same Play track without an explicit bump.
+
+Derivation lives inline in
+[`build_aab.yml`](../../.github/workflows/build_aab.yml) under
+`Derive version name + code from tag`. Artifacts are suffixed
+`-UNSIGNED-DRY-RUN` until Story 10.7/10.8 wires a real upload-keystore
+secret (Poka-yoke — see that story for the signing cutover).
 
 ## SDK targets
 
