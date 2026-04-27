@@ -22,5 +22,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeTermsOfServiceLink => 'Terms of Service';
 
   @override
+  String get welcomeLinkConnector => ' & ';
+
+  @override
   String get welcomeContinueButton => 'Continue';
 }

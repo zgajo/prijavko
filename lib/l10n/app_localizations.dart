@@ -122,6 +122,12 @@ abstract class AppLocalizations {
   /// **'Terms of Service'**
   String get welcomeTermsOfServiceLink;
 
+  /// Connector between Privacy Policy and Terms of Service links
+  ///
+  /// In en, this message translates to:
+  /// **' & '**
+  String get welcomeLinkConnector;
+
   /// Primary CTA on welcome screen, navigates to camera permission
   ///
   /// In en, this message translates to:

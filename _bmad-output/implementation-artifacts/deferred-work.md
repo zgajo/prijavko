@@ -48,3 +48,7 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 - `FakeFlutterSecureStorage` overrides only `read/write/delete`. Future tests calling `containsKey/readAll/deleteAll` will throw `MissingPluginException`; extend when needed.
 - `integration_test/app_test.dart` `dioProvider` override is dead code today — no widget consumes `dioProvider` until first network-call screen (Story 1.7). Re-validate when WelcomeScreen or LoginScreen actually triggers the path.
 - `SecurityService` corrupt stored AES-GCM key handling: Jidoka by AC9.4 WHY ("crashes visibly at launch"). Re-evaluate if real-world corrupt-state reports come in.
+
+## Deferred from: code review of story-1-5-welcome-and-sensitive-data-disclosure (2026-04-27)
+
+- Generated `app_localizations*.dart` committed to `lib/l10n/` — spec AC2.5 intended generated l10n files NOT committed, but modern Flutter with `generate: true` outputs to `lib/l10n/` not `.dart_tool/flutter_gen/`. Pragmatically correct to commit since they're in `lib/` and the import path is `package:prijavko/l10n/app_localizations.dart`. Revisit if Flutter changes output location back to `.dart_tool/`.

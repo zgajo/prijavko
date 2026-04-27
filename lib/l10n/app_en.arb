@@ -8,6 +8,8 @@
   "@welcomePrivacyPolicyLink": { "description": "Tappable text linking to prijavko.hr/privacy" },
   "welcomeTermsOfServiceLink": "Terms of Service",
   "@welcomeTermsOfServiceLink": { "description": "Tappable text linking to prijavko.hr/terms" },
+  "welcomeLinkConnector": " & ",
+  "@welcomeLinkConnector": { "description": "Connector between Privacy Policy and Terms of Service links" },
   "welcomeContinueButton": "Continue",
   "@welcomeContinueButton": { "description": "Primary CTA on welcome screen, navigates to camera permission" }
 }

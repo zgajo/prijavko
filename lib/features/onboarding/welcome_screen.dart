@@ -129,9 +129,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               ),
                             ),
                             TextSpan(
-                              // i18n-ignore: structural connector between two
-                              // localized link labels; not user-facing copy
-                              text: ' & ',
+                              text: l10n.welcomeLinkConnector,
                               style: theme.textTheme.bodyLarge,
                             ),
                             WidgetSpan(

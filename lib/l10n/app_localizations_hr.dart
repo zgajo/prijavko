@@ -22,5 +22,8 @@ class AppLocalizationsHr extends AppLocalizations {
   String get welcomeTermsOfServiceLink => 'Uvjeti korištenja';
 
   @override
+  String get welcomeLinkConnector => ' i ';
+
+  @override
   String get welcomeContinueButton => 'Nastavi';
 }

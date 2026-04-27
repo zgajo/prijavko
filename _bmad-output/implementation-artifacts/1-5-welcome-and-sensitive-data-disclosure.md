@@ -1,6 +1,6 @@
 # Story 1.5: Welcome & Sensitive-Data Disclosure
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -287,6 +287,11 @@ Tests verify the welcome screen renders correctly, navigates on "Nastavi" tap, a
   - [x] Subtask 7.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
   - [x] Subtask 7.4 — i18n literal-string guard on `lib/features/onboarding/`.
   - [x] Subtask 7.5 — PII grep guard on `lib/features/onboarding/`.
+
+### Review Findings
+
+- [x] [Review][Patch] Hard-coded `' & '` connector in `build()` violates AC5.10 zero-literal-strings contract [welcome_screen.dart:132-134] — extracted to ARB key `welcomeLinkConnector` (EN: ` & `, HR: ` i `)
+- [x] [Review][Defer] Generated `app_localizations*.dart` committed to `lib/l10n/` — spec AC2.5 intended generated l10n files NOT committed, but modern Flutter with `generate: true` outputs to `lib/l10n/` not `.dart_tool/`. Pragmatically correct. — deferred, spec-reality gap
 
 ---
 
