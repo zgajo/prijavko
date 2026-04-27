@@ -93,8 +93,8 @@ final class _DefaultConsentService implements ConsentService {
 
   @override
   Future<bool> isPrivacyOptionsRequired() async {
-    final status =
-        await ConsentInformation.instance.getPrivacyOptionsRequirementStatus();
+    final status = await ConsentInformation.instance
+        .getPrivacyOptionsRequirementStatus();
     return status == PrivacyOptionsRequirementStatus.required;
   }
 

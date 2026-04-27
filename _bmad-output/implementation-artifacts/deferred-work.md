@@ -27,6 +27,12 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 - `Tokens.color` is a single-field nested class wrapping just `primarySeed`. Speculative scaffolding — AC1.1 mandates the namespace structure; future seed additions land here.
 - Theme builder does not set `splashFactory` or `visualDensity` explicitly. Defensive future-proofing not required by AC2.5; revisit if Flutter SDK changes adaptive-density defaults.
 
+## Deferred from: code review of story-1-4-ump-cmp-eu-consent-surface (2026-04-27)
+
+- Settings list tile "Privola za oglase" is not wired in this story — Settings UI lands in Story 1.9. `ConsentService.showPrivacyOptionsForm()` and `isPrivacyOptionsRequired()` are exposed and ready for Story 1.9 to consume.
+- Real-SDK integration test (UMP form on Android emulator with `DebugGeography.debugGeographyEea`) deferred to Story 10.1 canary test — requires emulator with Play Services and a valid AdMob test device ID; CI-fragile at this stage.
+- Architecture doc line 673 still lists `lib/features/onboarding/consent_screen.dart`. Update to `lib/core/consent/consent_gate.dart` in a small follow-up PR or Story 1.5.
+
 ## Deferred from: code review of story-1-3-security-primitives-dio-and-cert-pinning (2026-04-27)
 
 - `EncryptedStorage` methods before `init` throw `LateInitializationError` from `late _currentDirectory`. PersistCookieJar always calls init first today; harden when a second caller appears.

@@ -9,14 +9,17 @@ void main() {
       expect(state, isA<ConsentState>());
     });
 
-    test('ConsentObtained is const-constructible with requestNonPersonalizedAdsOnly', () {
-      const state = ConsentObtained(requestNonPersonalizedAdsOnly: true);
-      expect(state, isA<ConsentState>());
-      expect(state.requestNonPersonalizedAdsOnly, isTrue);
+    test(
+      'ConsentObtained is const-constructible with requestNonPersonalizedAdsOnly',
+      () {
+        const state = ConsentObtained(requestNonPersonalizedAdsOnly: true);
+        expect(state, isA<ConsentState>());
+        expect(state.requestNonPersonalizedAdsOnly, isTrue);
 
-      const state2 = ConsentObtained(requestNonPersonalizedAdsOnly: false);
-      expect(state2.requestNonPersonalizedAdsOnly, isFalse);
-    });
+        const state2 = ConsentObtained(requestNonPersonalizedAdsOnly: false);
+        expect(state2.requestNonPersonalizedAdsOnly, isFalse);
+      },
+    );
 
     test('ConsentNotRequired is const-constructible', () {
       const state = ConsentNotRequired();
@@ -43,13 +46,19 @@ void main() {
       expect(label, equals('loading'));
     });
 
-    test('ConsentFailureReason has exactly network, internalError, invalidPublisherHash', () {
-      expect(ConsentFailureReason.values, containsAll([
-        ConsentFailureReason.network,
-        ConsentFailureReason.internalError,
-        ConsentFailureReason.invalidPublisherHash,
-      ]));
-      expect(ConsentFailureReason.values.length, equals(3));
-    });
+    test(
+      'ConsentFailureReason has exactly network, internalError, invalidPublisherHash',
+      () {
+        expect(
+          ConsentFailureReason.values,
+          containsAll([
+            ConsentFailureReason.network,
+            ConsentFailureReason.internalError,
+            ConsentFailureReason.invalidPublisherHash,
+          ]),
+        );
+        expect(ConsentFailureReason.values.length, equals(3));
+      },
+    );
   });
 }

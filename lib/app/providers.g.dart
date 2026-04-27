@@ -41,7 +41,7 @@ final cookieJarDirectoryProvider = Provider<String>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CookieJarDirectoryRef = ProviderRef<String>;
-String _$dioHash() => r'1efa4fe54a5168520241bde8fd2994909973e294';
+String _$dioHash() => r'39e756dc12b42a19c446fbf4beb6fa0328710c16';
 
 /// See also [dio].
 @ProviderFor(dio)

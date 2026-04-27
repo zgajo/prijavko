@@ -39,9 +39,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:prijavko/app/providers.dart';
+// Story 1.4: consent providers
+import 'package:prijavko/core/consent/consent_providers.dart';
+import 'package:prijavko/core/consent/consent_state.dart';
 import 'package:prijavko/main.dart';
 
 import '../test/fakes/evisitor_fake_adapter.dart';
+import '../test/fakes/fake_consent_service.dart';
 import '../test/fakes/fake_security_service.dart';
 
 // Threshold inlined rather than `--dart-define`d: a guard rail that can
@@ -73,6 +77,13 @@ void main() {
           dioProvider.overrideWithValue(
             Dio()..httpClientAdapter = EvisitorFakeAdapter(),
           ),
+          // Story 1.4 — bypass real UMP SDK in integration tests.
+          // WHY: ConsentNotRequired is the deterministic, no-side-effect path.
+          // ConsentObtained implies a user who dismissed a form, which is
+          // overspecified for cold-start probe coverage.
+          consentServiceProvider.overrideWithValue(
+            FakeConsentService(scriptedState: const ConsentNotRequired()),
+          ),
         ],
         child: const MainApp(),
       ),
@@ -91,6 +102,11 @@ void main() {
     // glyphs but does not throw would still find the buttons but render
     // empty Text, and that path needs to fail loud.
     expect(find.text('Preview'), findsAtLeastNWidgets(1));
+
+    // Story 1.4 — ConsentGate proceeds when consent resolves (AC9.5).
+    // Verifies the gate surfaces the design-system preview after consent
+    // is marked NotRequired (no form shown, child rendered immediately).
+    expect(find.text('Design system'), findsOneWidget);
   });
 
   testWidgets('mount-to-first-frame stays under 2.5s (AC10 / NFR-P8 guard)', (
@@ -104,6 +120,13 @@ void main() {
           cookieJarDirectoryProvider.overrideWithValue(cookieJarDir.path),
           dioProvider.overrideWithValue(
             Dio()..httpClientAdapter = EvisitorFakeAdapter(),
+          ),
+          // Story 1.4 — bypass real UMP SDK in integration tests (NFR-P8 probe).
+          // ConsentGate's first frame is the loading scaffold; the 2.5s budget
+          // is for the first frame, NOT consent resolution. The probe must not
+          // await gather() — hence FakeConsentService resolves synchronously.
+          consentServiceProvider.overrideWithValue(
+            FakeConsentService(scriptedState: const ConsentNotRequired()),
           ),
         ],
         child: const MainApp(),

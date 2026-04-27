@@ -11,8 +11,8 @@ class FakeConsentService implements ConsentService {
   FakeConsentService({
     required ConsentState scriptedState,
     bool privacyOptionsRequired = false,
-  })  : _scriptedState = scriptedState,
-        _privacyOptionsRequired = privacyOptionsRequired;
+  }) : _scriptedState = scriptedState,
+       _privacyOptionsRequired = privacyOptionsRequired;
 
   final ConsentState _scriptedState;
   final bool _privacyOptionsRequired;
