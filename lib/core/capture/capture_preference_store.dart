@@ -8,6 +8,7 @@
 // WHY versioned key: mirrors CredentialStore pattern. If the enum shape ever
 // changes (adding a third variant), a new key prefix forces a clean migration
 // rather than silently mis-reading a stale integer.
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
