@@ -160,11 +160,11 @@ Tests live under `test/design/` and are run by the existing `test.yml` GitHub Ac
 - [x] Task 2 — Scaffold `lib/design/` directory + `tokens.dart` (AC: #1)
   - [x] Subtask 2.1 — Create `lib/design/tokens.dart` with the `Tokens` namespace + `Tokens.color`, `Tokens.space`, `Tokens.radius`, `Tokens.size` nested classes per AC1.
   - [x] Subtask 2.2 — Each class gets `const <Name>._();` to block instantiation; top-of-file `// WHY:` comment explains the "pure const, no Flutter theming logic" scope boundary per `.claude/rules/design-system.md §1`.
-- [ ] Task 3 — `lib/design/extensions.dart` — `SemanticColors` `ThemeExtension` (AC: #3)
-  - [ ] Subtask 3.1 — Declare `class SemanticColors extends ThemeExtension<SemanticColors>` with the 8 required-named-parameter `Color` fields.
-  - [ ] Subtask 3.2 — Implement `copyWith(…)` and `lerp(ThemeExtension<SemanticColors>? other, double t)` using `Color.lerp` per field.
-  - [ ] Subtask 3.3 — Add `SemanticColors.light()` and `SemanticColors.dark()` factory constructors with the exact hex values from UX spec §Color System. For any dark value whose UX-spec description is tonal (e.g. "surface container high" not pinned to hex), derive once from `ColorScheme.fromSeed(Tokens.color.primarySeed, brightness: .dark)`, pin the result, and add a `// DERIVED FROM fromSeed:` inline comment recording the pinned tone for future auditability.
-  - [ ] Subtask 3.4 — Add the `SemanticColorsContext` extension on `BuildContext` returning `Theme.of(this).extension<SemanticColors>()!` with a `// WHY:` comment stating the non-null assertion is intentional Poka-yoke.
+- [x] Task 3 — `lib/design/extensions.dart` — `SemanticColors` `ThemeExtension` (AC: #3)
+  - [x] Subtask 3.1 — Declare `class SemanticColors extends ThemeExtension<SemanticColors>` with the 8 required-named-parameter `Color` fields.
+  - [x] Subtask 3.2 — Implement `copyWith(…)` and `lerp(ThemeExtension<SemanticColors>? other, double t)` using `Color.lerp` per field.
+  - [x] Subtask 3.3 — Add `SemanticColors.light()` and `SemanticColors.dark()` factory constructors with the exact hex values from UX spec §Color System. For any dark value whose UX-spec description is tonal (e.g. "surface container high" not pinned to hex), derive once from `ColorScheme.fromSeed(Tokens.color.primarySeed, brightness: .dark)`, pin the result, and add a `// DERIVED FROM fromSeed:` inline comment recording the pinned tone for future auditability.
+  - [x] Subtask 3.4 — Add the `SemanticColorsContext` extension on `BuildContext` returning `Theme.of(this).extension<SemanticColors>()!` with a `// WHY:` comment stating the non-null assertion is intentional Poka-yoke.
 - [ ] Task 4 — `lib/design/theme.dart` — light/dark builders (AC: #2)
   - [ ] Subtask 4.1 — Implement `ThemeData buildLightTheme()` and `buildDarkTheme()` with `useMaterial3: true`, `colorScheme: ColorScheme.fromSeed(…)`, `textTheme: GoogleFonts.manropeTextTheme(base).copyWith(<12 styles>)`, `extensions: <ThemeExtension<dynamic>>[SemanticColors.<brightness>()]`.
   - [ ] Subtask 4.2 — Fill the component theme slots per AC2.5: `filledButtonTheme`, `outlinedButtonTheme`, `textButtonTheme`, `cardTheme`, `bottomSheetTheme`, `inputDecorationTheme`.
@@ -312,6 +312,7 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 | ---- | ---- | ----- |
 | 2026-04-27 | Task 1 | Added `google_fonts: ^8.0.2` (resolved `8.0.2`) and `material_symbols_icons: ^4.2928.1` (resolved `4.2928.1`) under `dependencies`. Bundled Manrope 400/500/600/700/800 + OFL.txt under `assets/google_fonts/Manrope/`. Registered the asset folder in `pubspec.yaml > flutter.assets`. Set `GoogleFonts.config.allowRuntimeFetching = false` in `main()`. AC8.1 source URL deviation noted in Completion Notes. |
 | 2026-04-27 | Task 2 | Created `lib/design/tokens.dart` with `Tokens` namespace + `TokensColor`/`TokensSpace`/`TokensRadius`/`TokensSize`. Added `test/design/tokens_test.dart` (4 groups, 4 tests — 4dp grid invariant, radii, button height, seed). Nested classes are public to satisfy `library_private_types_in_public_api` lint under CI's `--fatal-infos` gate; private unnamed constructors still block instantiation (Poka-yoke). |
+| 2026-04-27 | Task 3 | Created `lib/design/extensions.dart` with `SemanticColors extends ThemeExtension<SemanticColors>` (8 required-named-parameter `Color` fields), `SemanticColors.light()` / `SemanticColors.dark()` factories with hex values pinned from UX spec §Color System, full `copyWith` + `lerp`, and the `SemanticColorsContext` `BuildContext` extension. Added `test/design/semantic_colors_test.dart` (5 tests — extension resolves under both themes, light ≠ dark warning/success/closureAccent, `copyWith` preserves untouched fields, `lerp` honours t=0/t=1 endpoints). |
 
 ### File List
 
@@ -327,3 +328,5 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 - `docs/design/fonts-licensing.md` — added.
 - `lib/design/tokens.dart` — added.
 - `test/design/tokens_test.dart` — added.
+- `lib/design/extensions.dart` — added.
+- `test/design/semantic_colors_test.dart` — added.
