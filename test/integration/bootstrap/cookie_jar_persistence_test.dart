@@ -35,15 +35,13 @@ void main() {
         persistSession: true,
         ignoreExpires: false,
       );
-      await jar1.saveFromResponse(
-        Uri.parse('https://www.evisitor.hr/Resources/'),
-        [
-          Cookie('authentication', 'session-token')
-            ..path = '/Resources/'
-            ..secure = true
-            ..httpOnly = true,
-        ],
-      );
+      await jar1
+          .saveFromResponse(Uri.parse('https://www.evisitor.hr/Resources/'), [
+            Cookie('authentication', 'session-token')
+              ..path = '/Resources/'
+              ..secure = true
+              ..httpOnly = true,
+          ]);
 
       // Instance #2 — read from same dir + same key (cross-process-restart sim)
       final storage2 = EncryptedStorage(
