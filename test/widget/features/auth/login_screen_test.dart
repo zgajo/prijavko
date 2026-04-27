@@ -311,7 +311,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Lockout banner is visible.
-      expect(find.textContaining('Previše neuspješnih pokušaja'), findsOneWidget);
+      expect(
+        find.textContaining('Previše neuspješnih pokušaja'),
+        findsOneWidget,
+      );
 
       // WHY runAsync: `DateTime.now()` is wall-clock; the periodic timer's
       // exit condition needs real time to elapse past `retryAfter`. FakeAsync

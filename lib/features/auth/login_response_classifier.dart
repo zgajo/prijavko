@@ -94,9 +94,7 @@ LoginFailure _classifyMapBody(
 
   // Ordered regex matching per AC4.3.
   if (_lockedPattern.hasMatch(systemMessage)) {
-    return AccountLockedOut(
-      retryAfter: DateTime.now().add(lockoutDuration),
-    );
+    return AccountLockedOut(retryAfter: DateTime.now().add(lockoutDuration));
   }
 
   if (_apiKeyPattern.hasMatch(systemMessage)) {
