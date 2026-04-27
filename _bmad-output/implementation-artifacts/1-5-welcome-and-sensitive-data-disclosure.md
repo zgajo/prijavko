@@ -1,6 +1,6 @@
 # Story 1.5: Welcome & Sensitive-Data Disclosure
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -244,35 +244,35 @@ Tests verify the welcome screen renders correctly, navigates on "Nastavi" tap, a
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Add dependencies and enable l10n codegen (AC: #1)
-  - [ ] Subtask 1.1 — Add `go_router`, `url_launcher`, `flutter_localizations`, `intl` to `pubspec.yaml` with annotated comments.
-  - [ ] Subtask 1.2 — Add `generate: true` under `flutter:` section.
-  - [ ] Subtask 1.3 — `flutter pub get`. Record exact resolved versions in Change Log. Verify no transitive conflicts.
+- [x] Task 1 — Add dependencies and enable l10n codegen (AC: #1)
+  - [x] Subtask 1.1 — Add `go_router`, `url_launcher`, `flutter_localizations`, `intl` to `pubspec.yaml` with annotated comments.
+  - [x] Subtask 1.2 — Add `generate: true` under `flutter:` section.
+  - [x] Subtask 1.3 — `flutter pub get`. Record exact resolved versions in Change Log. Verify no transitive conflicts.
 
-- [ ] Task 2 — l10n infrastructure (AC: #2)
-  - [ ] Subtask 2.1 — Create `l10n.yaml` in project root per AC2.1.
-  - [ ] Subtask 2.2 — Create `lib/l10n/app_en.arb` with 5 welcome screen keys per AC2.2.
-  - [ ] Subtask 2.3 — Create `lib/l10n/app_hr.arb` with Croatian translations per AC2.3. Full diacritics (č/ć/š/ž/đ).
-  - [ ] Subtask 2.4 — Run `flutter gen-l10n`. Verify generated files exist. Confirm `AppLocalizations` import path: `package:flutter_gen/gen_l10n/app_localizations.dart`.
+- [x] Task 2 — l10n infrastructure (AC: #2)
+  - [x] Subtask 2.1 — Create `l10n.yaml` in project root per AC2.1.
+  - [x] Subtask 2.2 — Create `lib/l10n/app_en.arb` with 5 welcome screen keys per AC2.2.
+  - [x] Subtask 2.3 — Create `lib/l10n/app_hr.arb` with Croatian translations per AC2.3. Full diacritics (č/ć/š/ž/đ).
+  - [x] Subtask 2.4 — Run `flutter gen-l10n`. Verified generated files exist in `lib/l10n/`. Import path: `package:prijavko/l10n/app_localizations.dart` (modern Flutter generates to lib/ not .dart_tool/flutter_gen/ when generate:true is set).
 
-- [ ] Task 3 — App restructure: app.dart + router.dart (AC: #3, #4)
-  - [ ] Subtask 3.1 — Create `lib/app/router.dart` with `@Riverpod(keepAlive: true)` `routerProvider`. Define `/onboarding` route → `WelcomeScreen`, with nested `/onboarding/camera-permission` placeholder.
-  - [ ] Subtask 3.2 — Run `dart run build_runner build --delete-conflicting-outputs`. Commit `router.g.dart`.
-  - [ ] Subtask 3.3 — Create `lib/app/app.dart` with `PrijavkoApp` — `MaterialApp.router` + `ConsentGate` in `builder:` + localization delegates.
-  - [ ] Subtask 3.4 — Remove the `TODO(story-1.5):` comment from `lib/app/providers.dart`.
+- [x] Task 3 — App restructure: app.dart + router.dart (AC: #3, #4)
+  - [x] Subtask 3.1 — Create `lib/app/router.dart` with `@Riverpod(keepAlive: true)` `routerProvider`. Define `/onboarding` route → `WelcomeScreen`, with nested `/onboarding/camera-permission` placeholder.
+  - [x] Subtask 3.2 — Run `dart run build_runner build --delete-conflicting-outputs`. `router.g.dart` generated and committed.
+  - [x] Subtask 3.3 — Create `lib/app/app.dart` with `PrijavkoApp` — `MaterialApp.router` + `ConsentGate` in `builder:` + localization delegates.
+  - [x] Subtask 3.4 — Remove the `TODO(story-1.5):` comment from `lib/app/providers.dart`.
 
-- [ ] Task 4 — WelcomeScreen (AC: #5)
-  - [ ] Subtask 4.1 — Create `lib/features/onboarding/welcome_screen.dart` as `ConsumerStatefulWidget` with the layout described in AC5.2.
-  - [ ] Subtask 4.2 — Wire headline, body, inline links (with `TapGestureRecognizer`), and "Nastavi" button — all text from `AppLocalizations`.
-  - [ ] Subtask 4.3 — Implement `url_launcher` calls for privacy policy (`https://prijavko.hr/privacy`) and terms of service (`https://prijavko.hr/terms`).
-  - [ ] Subtask 4.4 — Dispose `TapGestureRecognizer` instances in `dispose()`.
-  - [ ] Subtask 4.5 — Verify `Semantics` labels present on links (TalkBack readability).
+- [x] Task 4 — WelcomeScreen (AC: #5)
+  - [x] Subtask 4.1 — Create `lib/features/onboarding/welcome_screen.dart` as `ConsumerStatefulWidget` with the layout described in AC5.2.
+  - [x] Subtask 4.2 — Wire headline, body, inline links (with `TapGestureRecognizer`), and "Nastavi" button — all text from `AppLocalizations`.
+  - [x] Subtask 4.3 — Implement `url_launcher` calls for privacy policy (`https://prijavko.hr/privacy`) and terms of service (`https://prijavko.hr/terms`).
+  - [x] Subtask 4.4 — Dispose `TapGestureRecognizer` instances in `dispose()`.
+  - [x] Subtask 4.5 — `Semantics(label:, link: true)` wrappers present on both link spans.
 
-- [ ] Task 5 — Rewire main.dart (AC: #6)
-  - [ ] Subtask 5.1 — Replace `MainApp` with `PrijavkoApp` in `runApp()`.
-  - [ ] Subtask 5.2 — Remove `_DesignSystemPreview`, `_PreviewButtons`, `_SemanticSwatch`, `_ClosureAccentStrip`, `MainApp` classes and their imports.
-  - [ ] Subtask 5.3 — Clean up unused imports (consent_gate, design tokens/extensions that were only used by the preview).
-  - [ ] Subtask 5.4 — Keep `applyMainAppFontConfig()` — it's tested by `offline_fonts_test.dart`.
+- [x] Task 5 — Rewire main.dart (AC: #6)
+  - [x] Subtask 5.1 — Replace `MainApp` with `PrijavkoApp` in `runApp()`.
+  - [x] Subtask 5.2 — Remove `_DesignSystemPreview`, `_PreviewButtons`, `_SemanticSwatch`, `_ClosureAccentStrip`, `MainApp` classes and their imports.
+  - [x] Subtask 5.3 — Clean up unused imports (consent_gate, design tokens/extensions that were only used by the preview).
+  - [x] Subtask 5.4 — Keep `applyMainAppFontConfig()` — it's tested by `offline_fonts_test.dart`.
 
 - [ ] Task 6 — Tests (AC: #7)
   - [ ] Subtask 6.1 — Create `test/widget/features/onboarding/welcome_screen_test.dart` per AC7.1.
@@ -475,10 +475,41 @@ From `deferred-work.md`:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-5 (Cursor Agent, 2026-04-27)
 
 ### Debug Log References
 
+- go_router: spec targeted ^17.2.2 but go_router 17.x requires Riverpod 3.x which conflicts with flutter_riverpod 2.6.x. Resolved at 14.8.1 (highest compatible stable). Annotated in pubspec.yaml.
+- AppLocalizations generated to `lib/l10n/` (not `.dart_tool/flutter_gen/`). Modern Flutter with `generate: true` in pubspec produces files in-tree. Import: `package:prijavko/l10n/app_localizations.dart`.
+- dart format auto-corrected trailing whitespace in `welcome_screen.dart` and `app_smoke_test.dart`. Both clean after reformat.
+
 ### Completion Notes List
 
+- **Task 1**: Added go_router ^14.8.1, url_launcher ^6.3.2, flutter_localizations (sdk), intl: any + generate: true. Resolved: go_router 14.8.1, url_launcher 6.3.2, intl 0.20.2. No transitive conflicts.
+- **Task 2**: l10n.yaml in project root, app_en.arb + app_hr.arb with 5 keys each. `flutter gen-l10n` ran clean. All 5 AppLocalizations getters (welcomeHeadline, welcomeBody, welcomePrivacyPolicyLink, welcomeTermsOfServiceLink, welcomeContinueButton) generated successfully.
+- **Task 3**: router.dart with @Riverpod(keepAlive: true) routerProvider. build_runner generated router.g.dart. app.dart PrijavkoApp: MaterialApp.router + ConsentGate in builder: + localizationsDelegates + supportedLocales. TODO(story-1.5) removed from providers.dart.
+- **Task 4**: WelcomeScreen as ConsumerStatefulWidget. TapGestureRecognizers created in initState, disposed in dispose(). WidgetSpan + Semantics(link: true) wrappers on both link spans. context.go('/onboarding/camera-permission') on FilledButton. All strings via AppLocalizations. No Icons.*, no hardcoded colors, no ad widget.
+- **Task 5**: main.dart stripped to essentials: PrijavkoApp in runApp(), applyMainAppFontConfig() preserved, all 5 preview classes removed, unused imports (consent_gate, icons, tokens, extensions) cleaned. app_smoke_test.dart and integration_test/app_test.dart updated to PrijavkoApp + welcome screen assertions. All 94 tests pass. dart analyze clean (--fatal-warnings --fatal-infos). dart format clean.
+
 ### File List
+
+- `pubspec.yaml` — added go_router, url_launcher, flutter_localizations, intl; generate: true
+- `pubspec.lock` — regenerated
+- `l10n.yaml` — new; gen-l10n configuration
+- `lib/l10n/app_en.arb` — new; English ARB template (5 keys)
+- `lib/l10n/app_hr.arb` — new; Croatian primary translations (5 keys)
+- `lib/l10n/app_localizations.dart` — generated; AppLocalizations base class
+- `lib/l10n/app_localizations_en.dart` — generated; English delegate
+- `lib/l10n/app_localizations_hr.dart` — generated; Croatian delegate
+- `lib/app/router.dart` — new; GoRouter routerProvider (@Riverpod keepAlive)
+- `lib/app/router.g.dart` — generated; committed
+- `lib/app/app.dart` — new; PrijavkoApp (MaterialApp.router + ConsentGate builder)
+- `lib/app/providers.dart` — removed TODO(story-1.5) comment
+- `lib/features/onboarding/welcome_screen.dart` — new; WelcomeScreen (ConsumerStatefulWidget)
+- `lib/main.dart` — replaced MainApp → PrijavkoApp; removed all preview classes and their imports
+- `test/app_smoke_test.dart` — updated for PrijavkoApp + welcome screen assertions
+- `integration_test/app_test.dart` — updated MainApp → PrijavkoApp; updated content assertions
+
+### Change Log
+
+- 2026-04-27: Tasks 1–5 implemented. Added go_router 14.8.1, url_launcher 6.3.2, flutter_localizations, intl 0.20.2. Created l10n infrastructure (l10n.yaml, app_en.arb, app_hr.arb). Created router.dart, app.dart, welcome_screen.dart. Rewired main.dart (MainApp → PrijavkoApp, removed _DesignSystemPreview and all preview classes). Updated smoke test and integration test. 94 tests pass, analyzer clean, formatter clean.

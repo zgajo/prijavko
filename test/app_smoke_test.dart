@@ -1,8 +1,7 @@
-// Story 1.2 AC4 — smoke test that MainApp pumps the design-system
-// preview without throwing. Replaces the Story 1.1 `Hello World!`
-// fixture now that the real MaterialApp shape (light/dark themes,
-// SemanticColors extension, Material Symbols rounded) is wired in.
-// Re-targets when WelcomeScreen lands in Story 1.5.
+// Story 1.5: updated from MainApp + design-system preview to PrijavkoApp +
+// WelcomeScreen. The ConsentGate is now inside app.dart's builder callback
+// (MaterialApp.router has no home: param). FakeConsentService(ConsentNotRequired)
+// bypasses the real UMP SDK so the gate passes through immediately.
 //
 // Story 1.4: wrapped in ProviderScope because ConsentGate is a
 // ConsumerStatefulWidget. consentServiceProvider is overridden with
@@ -12,36 +11,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:prijavko/app/app.dart';
+import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/core/consent/consent_providers.dart';
 import 'package:prijavko/core/consent/consent_state.dart';
-import 'package:prijavko/main.dart';
 
 import 'fakes/fake_consent_service.dart';
+import 'fakes/fake_security_service.dart';
 
 void main() {
-  testWidgets('MainApp pumps without errors and renders the preview', (
+  testWidgets('PrijavkoApp pumps without errors and renders WelcomeScreen', (
     tester,
   ) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          // Required because securityServiceProvider throws by design when
+          // not overridden (Poka-yoke guard in providers.dart).
+          securityServiceProvider.overrideWithValue(FakeSecurityService()),
+          cookieJarDirectoryProvider.overrideWithValue('/tmp/test_cookies'),
           consentServiceProvider.overrideWithValue(
             FakeConsentService(scriptedState: const ConsentNotRequired()),
           ),
         ],
-        child: const MainApp(),
+        child: const PrijavkoApp(),
       ),
     );
     await tester.pumpAndSettle();
 
     // No ErrorWidget in the tree — tree build didn't throw.
     expect(find.byType(ErrorWidget), findsNothing);
-    // The preview surface lands a FilledButton, an OutlinedButton, and
-    // at least one Material Symbol Icon. If any token wiring or font
-    // asset were broken, the build would either throw or render Tofu
-    // and the test would fail loud.
-    expect(find.byType(FilledButton), findsOneWidget);
-    expect(find.byType(OutlinedButton), findsOneWidget);
-    expect(find.byType(Icon), findsAtLeastNWidgets(1));
+    // Welcome screen headline is visible — confirms routing + localization work.
+    // Croatian is the device locale in test; falls back to English if not.
+    expect(find.textContaining('Prijavko'), findsAtLeastNWidgets(1));
   });
 }

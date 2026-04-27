@@ -1,0 +1,8 @@
+{
+  "@@locale": "hr",
+  "welcomeHeadline": "Dobrodošli u Prijavko",
+  "welcomeBody": "Prijavko skenira putovnice i šalje podatke gostiju u eVisitor. Vaši podaci nikada ne napuštaju telefon osim prema eVisitoru. Nakon slanja, čuvaju se 3 dana kao sigurnosna kopija, a zatim se brišu.",
+  "welcomePrivacyPolicyLink": "Pravila privatnosti",
+  "welcomeTermsOfServiceLink": "Uvjeti korištenja",
+  "welcomeContinueButton": "Nastavi"
+}

@@ -1,0 +1,13 @@
+{
+  "@@locale": "en",
+  "welcomeHeadline": "Welcome to Prijavko",
+  "@welcomeHeadline": { "description": "Welcome screen headline" },
+  "welcomeBody": "Prijavko scans passports and sends guest data to eVisitor. Your data never leaves your phone except to eVisitor. After submission, it is kept 3 days as a safety buffer, then deleted.",
+  "@welcomeBody": { "description": "Welcome screen body explaining data handling" },
+  "welcomePrivacyPolicyLink": "Privacy Policy",
+  "@welcomePrivacyPolicyLink": { "description": "Tappable text linking to prijavko.hr/privacy" },
+  "welcomeTermsOfServiceLink": "Terms of Service",
+  "@welcomeTermsOfServiceLink": { "description": "Tappable text linking to prijavko.hr/terms" },
+  "welcomeContinueButton": "Continue",
+  "@welcomeContinueButton": { "description": "Primary CTA on welcome screen, navigates to camera permission" }
+}
