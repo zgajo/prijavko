@@ -49,4 +49,3 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
     };
   }
 }
-

@@ -30,9 +30,8 @@ class PrijavkoApp extends ConsumerWidget {
       //   (b) consentControllerProvider resolves via ancestor ProviderScope,
       //   (c) the Router/Navigator doesn't build until consent resolves —
       //       no wasted route evaluation during the ~50ms consent RPC.
-      builder: (context, child) => ConsentGate(
-        child: BootGate(child: child ?? const SizedBox.shrink()),
-      ),
+      builder: (context, child) =>
+          ConsentGate(child: BootGate(child: child ?? const SizedBox.shrink())),
     );
   }
 }

@@ -26,7 +26,7 @@
 // strings. The loading surface is sub-50ms transient on cold start.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:prijavko/app/router.dart';
 import 'package:prijavko/core/bootstrap/boot_loading_scaffold.dart';
 import 'package:prijavko/core/bootstrap/session_bootstrap.dart';
 import 'package:prijavko/core/bootstrap/session_bootstrap_provider.dart';
@@ -52,18 +52,25 @@ class _BootGateState extends ConsumerState<BootGate> {
       // must crash visibly, not silently fall back to first-run onboarding.
       error: (e, st) => throw e,
       data: (decision) {
-        _navigateOnce(context, decision);
+        _navigateOnce(decision);
         return widget.child;
       },
     );
   }
 
-  void _navigateOnce(BuildContext context, SessionBootstrap decision) {
+  void _navigateOnce(SessionBootstrap decision) {
     if (_navigated) return;
     _navigated = true;
 
+    // WHY ref.read(routerProvider) instead of context.goNamed():
+    // BootGate is placed in MaterialApp.router's builder callback. That
+    // builder's BuildContext is OUTSIDE the InheritedGoRouter scope (the router
+    // is a child, not an ancestor). context.goNamed() would fail the
+    // `inherited != null` assertion. Using the GoRouter instance directly via
+    // the provider bypasses the context lookup entirely.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final router = ref.read(routerProvider);
 
       switch (decision) {
         case BootFreshFirstRun():
@@ -71,11 +78,11 @@ class _BootGateState extends ConsumerState<BootGate> {
           // lands the user on WelcomeScreen. No goNamed call needed.
           break;
         case BootSessionLive():
-          context.goNamed('home');
+          router.goNamed('home');
         case BootCookiesMissing():
           // Route to home; Epic 2 Story 2.7's CredentialBanner handles recovery
           // on the Home screen.
-          context.goNamed('home');
+          router.goNamed('home');
         case BootCredentialsMissing():
           // TODO(story-2.8): route to goNamed('credentials-missing-recovery')
           // once Story 2.8's recovery screen exists and Story 3.1 makes
