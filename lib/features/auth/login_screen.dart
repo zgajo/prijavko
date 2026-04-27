@@ -91,13 +91,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _onFieldChanged() {
     // AC5.1: `LoginIdle.error` is "cleared when fields change". Notifier
     // ignores the call when the current state has no error.
-    ref.read(loginNotifierProvider.notifier).clearError();
+    ref.read(loginProvider.notifier).clearError();
     setState(() {});
   }
 
   Future<void> _maybeSubmit() async {
     final result = await ref
-        .read(loginNotifierProvider.notifier)
+        .read(loginProvider.notifier)
         .submit(
           username: _usernameController.text,
           password: _passwordController.text,
@@ -128,7 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   bool get _canSubmit {
-    final state = ref.read(loginNotifierProvider);
+    final state = ref.read(loginProvider);
     if (state is LoginSubmitting || state is LoginLockedOut) return false;
     if (_usernameController.text.isEmpty) return false;
     if (_passwordController.text.isEmpty) return false;
@@ -140,7 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final state = ref.watch(loginNotifierProvider);
+    final state = ref.watch(loginProvider);
     final isDisabled = state is LoginSubmitting || state is LoginLockedOut;
 
     return Scaffold(

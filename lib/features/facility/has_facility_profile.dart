@@ -4,7 +4,6 @@
 // profile can exist in the database, so this provider always returns false.
 // Returning false collapses BootCredentialsMissing into BootFreshFirstRun
 // for v1.0 — the only reachable branch today.
-import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'has_facility_profile.g.dart';

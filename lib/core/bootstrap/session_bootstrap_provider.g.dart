@@ -6,22 +6,44 @@ part of 'session_bootstrap_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$sessionBootstrapHash() => r'266a12c7fd03de88015c4ff73b3ccf03154e52f1';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [sessionBootstrap].
 @ProviderFor(sessionBootstrap)
-final sessionBootstrapProvider = FutureProvider<SessionBootstrap>.internal(
-  sessionBootstrap,
-  name: r'sessionBootstrapProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$sessionBootstrapHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const sessionBootstrapProvider = SessionBootstrapProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef SessionBootstrapRef = FutureProviderRef<SessionBootstrap>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class SessionBootstrapProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<SessionBootstrap>,
+          SessionBootstrap,
+          FutureOr<SessionBootstrap>
+        >
+    with $FutureModifier<SessionBootstrap>, $FutureProvider<SessionBootstrap> {
+  const SessionBootstrapProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sessionBootstrapProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionBootstrapHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<SessionBootstrap> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<SessionBootstrap> create(Ref ref) {
+    return sessionBootstrap(ref);
+  }
+}
+
+String _$sessionBootstrapHash() => r'2d2f59a97713ad5cbb65a73f37791e3ba2a8dcc8';

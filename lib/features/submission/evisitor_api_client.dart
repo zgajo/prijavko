@@ -8,7 +8,6 @@
 import 'dart:io' show SocketException;
 
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/core/env/evisitor_api_key.dart';
 import 'package:prijavko/core/env/evisitor_env.dart';

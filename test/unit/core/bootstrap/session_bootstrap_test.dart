@@ -26,6 +26,9 @@ ProviderContainer _makeContainer({
   bool hasFacility = false,
 }) {
   final container = ProviderContainer(
+    // Riverpod 3 retries async provider failures by default. Bootstrap must
+    // fail fast in tests so StorageError surfaces deterministically.
+    retry: (retryCount, error) => null,
     overrides: [
       credentialStoreProvider.overrideWithValue(credentialStore),
       cookieJarProvider.overrideWithValue(jar),
@@ -189,6 +192,9 @@ void main() {
         // startup crash, not a fifth UI state. Uses a store that throws (not
         // wraps in Err) to simulate an unexpected Keystore failure.
         final container = ProviderContainer(
+          // Keep the error-path test deterministic under Riverpod 3 by
+          // disabling automatic retries for this container.
+          retry: (retryCount, error) => null,
           overrides: [
             credentialStoreProvider.overrideWith(
               (_) => _ThrowingCredentialStore(),

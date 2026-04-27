@@ -4,7 +4,6 @@
 // leaving the device. `CredentialStore` is the single entry point — no
 // feature may read credentials from any other surface.
 import 'package:flutter/services.dart' show PlatformException;
-import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:prijavko/core/errors/app_error.dart';
 import 'package:prijavko/core/result/result.dart';

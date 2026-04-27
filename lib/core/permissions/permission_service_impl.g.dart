@@ -6,23 +6,52 @@ part of 'permission_service_impl.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$permissionServiceHash() => r'70e4728dc61624364539869d8e7e64bfe065990d';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [permissionService].
 @ProviderFor(permissionService)
-final permissionServiceProvider =
-    AutoDisposeProvider<PermissionService>.internal(
-      permissionService,
-      name: r'permissionServiceProvider',
-      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$permissionServiceHash,
-      dependencies: null,
-      allTransitiveDependencies: null,
-    );
+const permissionServiceProvider = PermissionServiceProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef PermissionServiceRef = AutoDisposeProviderRef<PermissionService>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class PermissionServiceProvider
+    extends
+        $FunctionalProvider<
+          PermissionService,
+          PermissionService,
+          PermissionService
+        >
+    with $Provider<PermissionService> {
+  const PermissionServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'permissionServiceProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$permissionServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<PermissionService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  PermissionService create(Ref ref) {
+    return permissionService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PermissionService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PermissionService>(value),
+    );
+  }
+}
+
+String _$permissionServiceHash() => r'70e4728dc61624364539869d8e7e64bfe065990d';

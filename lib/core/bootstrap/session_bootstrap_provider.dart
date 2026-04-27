@@ -1,5 +1,4 @@
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/core/bootstrap/session_bootstrap.dart';
 import 'package:prijavko/core/result/result.dart';

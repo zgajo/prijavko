@@ -6,22 +6,47 @@ part of 'credential_store.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$credentialStoreHash() => r'9c03a7431f8f2ae3c77e3fb80ae8832eb2bd0980';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [credentialStore].
 @ProviderFor(credentialStore)
-final credentialStoreProvider = Provider<CredentialStore>.internal(
-  credentialStore,
-  name: r'credentialStoreProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$credentialStoreHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+const credentialStoreProvider = CredentialStoreProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef CredentialStoreRef = ProviderRef<CredentialStore>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class CredentialStoreProvider
+    extends
+        $FunctionalProvider<CredentialStore, CredentialStore, CredentialStore>
+    with $Provider<CredentialStore> {
+  const CredentialStoreProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'credentialStoreProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$credentialStoreHash();
+
+  @$internal
+  @override
+  $ProviderElement<CredentialStore> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CredentialStore create(Ref ref) {
+    return credentialStore(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CredentialStore value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CredentialStore>(value),
+    );
+  }
+}
+
+String _$credentialStoreHash() => r'9c03a7431f8f2ae3c77e3fb80ae8832eb2bd0980';

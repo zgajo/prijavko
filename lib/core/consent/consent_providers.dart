@@ -2,7 +2,6 @@
 // because core/consent/ is feature-adjacent infrastructure. Keeping it
 // self-contained mirrors core/security/ and improves testability — tests
 // override consentServiceProvider without touching the app-level provider file.
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prijavko/core/consent/consent_error.dart';
 import 'package:prijavko/core/consent/consent_service.dart';
 import 'package:prijavko/core/consent/consent_state.dart';

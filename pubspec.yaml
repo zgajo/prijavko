@@ -25,9 +25,9 @@ dependencies:
   material_symbols_icons: ^4.2928.1
 
   # Story 1.3 AC8 — Riverpod state management; @Riverpod(keepAlive: true) codegen only.
-  flutter_riverpod: ^2.6.1
+  flutter_riverpod: ^3.0.3
   # Story 1.3 AC8 — @riverpod and @Riverpod(keepAlive: true) annotation types.
-  riverpod_annotation: ^2.6.1
+  riverpod_annotation: ^3.0.3
 
   # Story 1.3 AC8 — Single auditable Dio instance routed through dioProvider.
   dio: ^5.9.2
@@ -63,9 +63,7 @@ dependencies:
   google_mobile_ads: ^8.0.0
 
   # Story 1.5 — declarative routing; auth redirect wired in Story 2.x.
-  # NOTE: spec targeted ^17.2.2 but go_router 17.x requires Riverpod 3.x;
-  # 14.8.1 is the highest stable compatible with flutter_riverpod 2.6.x.
-  go_router: ^14.8.1
+  go_router: ^17.0.0
 
   # Story 1.6 — runtime camera permission request; re-request from Settings in Story 1.9.
   permission_handler: ^12.0.1
@@ -93,7 +91,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   # Story 1.3 AC8 — build_runner codegen target for @riverpod annotations.
-  riverpod_generator: ^2.6.1
+  riverpod_generator: ^3.0.3
   # Story 1.3 AC8 — Runs Riverpod (and future Freezed/Drift) codegen.
   # IMPORTANT: build_runner runs in dev only — generated *.g.dart files are committed.
   # CI (test.yml, integration_fake.yml) MUST NOT run build_runner.
