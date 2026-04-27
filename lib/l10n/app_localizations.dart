@@ -169,6 +169,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get cameraPermissionOpenSettingsButton;
+
+  /// Login screen headline
+  ///
+  /// In en, this message translates to:
+  /// **'eVisitor Sign-In'**
+  String get loginHeadline;
+
+  /// Login screen rationale beneath the headline
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in once with your eVisitor credentials. Subsequent sessions will sign in automatically.'**
+  String get loginBody;
+
+  /// Label for the username TextField
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get loginUsernameLabel;
+
+  /// Label for the password TextField
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get loginPasswordLabel;
+
+  /// Tooltip for the password visibility toggle when password is hidden
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get loginPasswordToggleShow;
+
+  /// Tooltip for the password visibility toggle when password is visible
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get loginPasswordToggleHide;
+
+  /// Reassurance line beneath the password field; includes lock emoji per UX spec §Login screen
+  ///
+  /// In en, this message translates to:
+  /// **'🔒 Credentials are stored encrypted in Android Keystore.'**
+  String get loginReassurance;
+
+  /// Primary CTA on login screen
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginSubmitButton;
+
+  /// Hint appended to invalid-credentials errors per NFR-L3
+  ///
+  /// In en, this message translates to:
+  /// **'Check your username and password.'**
+  String get loginCredentialsHint;
+
+  /// Error displayed when login request fails due to network unreachability
+  ///
+  /// In en, this message translates to:
+  /// **'No internet. Try again.'**
+  String get loginNetworkError;
+
+  /// Error displayed on 5xx server response from eVisitor
+  ///
+  /// In en, this message translates to:
+  /// **'eVisitor is unavailable. Try again later.'**
+  String get loginServerError;
+
+  /// Error displayed when login response shape is unrecognizable; will trigger forced-update flow in Story 9.4
+  ///
+  /// In en, this message translates to:
+  /// **'Update prijavko from Play Store and try again.'**
+  String get loginContractBreakError;
+
+  /// Lockout banner shown when login is blocked by client-side circuit breaker (or server-reported lockout)
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts — wait 6 minutes.'**
+  String get loginLockoutMessage;
+
+  /// Plural countdown beneath the lockout message
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds, plural, =1 {1 second remaining} other {{seconds} seconds remaining}}'**
+  String loginLockoutCountdownSeconds(int seconds);
 }
 
 class _AppLocalizationsDelegate

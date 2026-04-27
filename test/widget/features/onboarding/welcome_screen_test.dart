@@ -23,6 +23,12 @@ import 'package:prijavko/l10n/app_localizations.dart';
 // Using a constant avoids brittle magic strings in multiple assertions.
 const _cameraPermissionPlaceholder = 'camera-permission-stub';
 
+// WHY: golden pixel comparisons are platform-dependent (macOS vs Linux font
+// rendering). CI sets SKIP_GOLDENS=true; local dev runs them normally.
+final _skipGoldens = const bool.fromEnvironment('SKIP_GOLDENS')
+    ? 'Platform-dependent golden rendering — run locally with --update-goldens'
+    : null;
+
 /// Creates a self-contained test app that renders WelcomeScreen as the
 /// initial route, with a stub camera-permission route for navigation tests.
 ///
@@ -188,7 +194,7 @@ void main() {
       );
     });
 
-    group('golden tests', () {
+    group('golden tests', skip: _skipGoldens, () {
       // WHY goldens: catching visual regressions in layout, color, and
       // typography that unit assertions cannot express (e.g. spacing drift,
       // link underline color, theme colour mismatch). Baseline images are

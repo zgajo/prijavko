@@ -25,6 +25,12 @@ import '../../../fakes/fake_permission_service.dart';
 // Stub text for the login placeholder route — asserted after navigation.
 const _loginStub = 'login-stub';
 
+// WHY: golden pixel comparisons are platform-dependent (macOS vs Linux font
+// rendering). CI sets SKIP_GOLDENS=true; local dev runs them normally.
+final _skipGoldens = const bool.fromEnvironment('SKIP_GOLDENS')
+    ? 'Platform-dependent golden rendering — run locally with --update-goldens'
+    : null;
+
 /// Creates a self-contained test app rooted at the camera-permission screen,
 /// with provider overrides for PermissionService and CapturePreferenceStore.
 Widget _makeTestApp({
@@ -237,7 +243,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    group('golden tests', () {
+    group('golden tests', skip: _skipGoldens, () {
       testWidgets('dark theme — camera_permission_dark.png', (tester) async {
         await tester.pumpWidget(makeApp(themeMode: ThemeMode.dark));
         await tester.pumpAndSettle();
