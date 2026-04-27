@@ -169,10 +169,10 @@ Tests live under `test/design/` and are run by the existing `test.yml` GitHub Ac
   - [x] Subtask 4.1 — Implement `ThemeData buildLightTheme()` and `buildDarkTheme()` with `useMaterial3: true`, `colorScheme: ColorScheme.fromSeed(…)`, `textTheme: GoogleFonts.manropeTextTheme(base).copyWith(<12 styles>)`, `extensions: <ThemeExtension<dynamic>>[SemanticColors.<brightness>()]`.
   - [x] Subtask 4.2 — Fill the component theme slots per AC2.5: `filledButtonTheme`, `outlinedButtonTheme`, `textButtonTheme`, `cardTheme`, `bottomSheetTheme`, `inputDecorationTheme`.
   - [x] Subtask 4.3 — Top-of-file `// WHY:` comment explains the "no per-widget theme overrides; always edit this file" rule and the `.claude/rules/design-system.md §2` dark-mode-first design contract.
-- [ ] Task 5 — `lib/design/icons.dart` + CI guard (AC: #5)
-  - [ ] Subtask 5.1 — Create `lib/design/icons.dart` with a top-of-file `// WHY:` paragraph pinning the rounded variant as house style, followed by `export 'package:material_symbols_icons/symbols.dart' show Symbols;` (adjust the `show` clause to match the package's actual public API; confirm at install time).
-  - [ ] Subtask 5.2 — Add `.github/workflows/icons_guard.yml` (or extend `pii_guard.yml` — state the choice in the commit message) with the `Icon\s*\(\s*Icons\.` regex + self-test. Mirror `pii_guard.yml`'s structure: `rc=$?` capture, explicit `case` branch handling, `echo "::error::…"` on no-SCAN_DIRS.
-  - [ ] Subtask 5.3 — Add `docs/ci/icons-guard-regex.md` with passing + failing example lines, matching the template `docs/ci/pii-guard-regex.md` established in Story 1.1.
+- [x] Task 5 — `lib/design/icons.dart` + CI guard (AC: #5)
+  - [x] Subtask 5.1 — Create `lib/design/icons.dart` with a top-of-file `// WHY:` paragraph pinning the rounded variant as house style, followed by `export 'package:material_symbols_icons/symbols.dart' show Symbols;` (adjust the `show` clause to match the package's actual public API; confirm at install time).
+  - [x] Subtask 5.2 — Add `.github/workflows/icons_guard.yml` (or extend `pii_guard.yml` — state the choice in the commit message) with the `Icon\s*\(\s*Icons\.` regex + self-test. Mirror `pii_guard.yml`'s structure: `rc=$?` capture, explicit `case` branch handling, `echo "::error::…"` on no-SCAN_DIRS.
+  - [x] Subtask 5.3 — Add `docs/ci/icons-guard-regex.md` with passing + failing example lines, matching the template `docs/ci/pii-guard-regex.md` established in Story 1.1.
 - [ ] Task 6 — Wire `MaterialApp` + `_DesignSystemPreview` (AC: #4)
   - [ ] Subtask 6.1 — Rewrite `lib/main.dart` to the AC4.1 `MaterialApp` shape.
   - [ ] Subtask 6.2 — Define `_DesignSystemPreview` (private stateless widget in `main.dart`) with the AC4.3 content; TODO comment referencing story 1.5.
@@ -314,6 +314,7 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 | 2026-04-27 | Task 2 | Created `lib/design/tokens.dart` with `Tokens` namespace + `TokensColor`/`TokensSpace`/`TokensRadius`/`TokensSize`. Added `test/design/tokens_test.dart` (4 groups, 4 tests — 4dp grid invariant, radii, button height, seed). Nested classes are public to satisfy `library_private_types_in_public_api` lint under CI's `--fatal-infos` gate; private unnamed constructors still block instantiation (Poka-yoke). |
 | 2026-04-27 | Task 3 | Created `lib/design/extensions.dart` with `SemanticColors extends ThemeExtension<SemanticColors>` (8 required-named-parameter `Color` fields), `SemanticColors.light()` / `SemanticColors.dark()` factories with hex values pinned from UX spec §Color System, full `copyWith` + `lerp`, and the `SemanticColorsContext` `BuildContext` extension. Added `test/design/semantic_colors_test.dart` (5 tests — extension resolves under both themes, light ≠ dark warning/success/closureAccent, `copyWith` preserves untouched fields, `lerp` honours t=0/t=1 endpoints). |
 | 2026-04-27 | Task 4 | Created `lib/design/theme.dart` with `buildLightTheme()` / `buildDarkTheme()` over a private `_buildTheme(brightness)` factory: `useMaterial3: true`, `ColorScheme.fromSeed(seed: Tokens.color.primarySeed)`, Manrope via `GoogleFonts.manropeTextTheme` mapped to all 12 Material 3 typescale slots per figma-code-contract §2, `SemanticColors` registered as a `ThemeExtension`, component theme slots filled (`filledButtonTheme` 56dp + 12dp radius, `outlinedButtonTheme` 48dp + 1.5px outline, `textButtonTheme` shape, `cardTheme` 16dp + zero margin, `bottomSheetTheme` 24dp top, `inputDecorationTheme` rounded outline + token-driven padding). Added `test/design/theme_test.dart` (9 assertions × 2 brightness modes = 18 tests — useMaterial3, FilledButton 56dp + radius, OutlinedButton 48dp, Card 16dp, BottomSheet 24dp top, ColorScheme brightness round-trip, SemanticColors registered, typescale slot weights). |
+| 2026-04-27 | Task 5 | Created `lib/design/icons.dart` re-exporting `Symbols` from `material_symbols_icons` with a top-of-file `// WHY:` block pinning the rounded variant. Added `.github/workflows/icons_guard.yml` (separate workflow, not piggy-backed on `pii_guard.yml`) firing on `Icon\s*\(\s*Icons\.` with the same `rc=$?` exit-code dispatch and `::error::` on no-SCAN_DIRS as `pii_guard.yml`. Added `docs/ci/icons-guard-regex.md` with the passing/failing example template that matches `pii-guard-regex.md`. Added `test/design/icons_test.dart` asserting `Symbols.check_rounded` resolves to `MaterialSymbolsRounded` font family + `material_symbols_icons` font package — would fail loudly if the asset bundle were misconfigured. Local rehearsal of the icons guard regex against the working tree returned `rc=1` (no match → green). |
 
 ### File List
 
@@ -333,3 +334,7 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 - `test/design/semantic_colors_test.dart` — added.
 - `lib/design/theme.dart` — added.
 - `test/design/theme_test.dart` — added.
+- `lib/design/icons.dart` — added.
+- `.github/workflows/icons_guard.yml` — added.
+- `docs/ci/icons-guard-regex.md` — added.
+- `test/design/icons_test.dart` — added.
