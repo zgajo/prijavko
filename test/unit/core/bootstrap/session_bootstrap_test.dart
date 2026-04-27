@@ -40,7 +40,7 @@ ProviderContainer _makeContainer({
 Future<CookieJar> _jarWith(List<Cookie> cookies) async {
   final jar = CookieJar();
   await jar.saveFromResponse(
-    Uri.parse('https://www.evisitor.hr/eVisitorRhetos_API/'),
+    Uri.parse('https://www.evisitor.hr/Resources/'),
     cookies,
   );
   return jar;
@@ -48,7 +48,7 @@ Future<CookieJar> _jarWith(List<Cookie> cookies) async {
 
 Cookie _authCookie({String? path, DateTime? expires}) {
   final c = Cookie('authentication', 'fake-session-token')
-    ..path = path ?? '/eVisitorRhetos_API/'
+    ..path = path ?? '/Resources/'
     ..secure = true
     ..httpOnly = true;
   if (expires != null) c.expires = expires;
@@ -109,10 +109,10 @@ void main() {
         // Verifies that 'affinity' and 'language' don't count as session cookies.
         final jar = await _jarWith([
           Cookie('ARRAffinity', 'affinity-value')
-            ..path = '/eVisitorRhetos_API/'
+            ..path = '/Resources/'
             ..secure = true,
           Cookie('language', 'hr')
-            ..path = '/eVisitorRhetos_API/'
+            ..path = '/Resources/'
             ..secure = true,
         ]);
         final container = _makeContainer(credentialStore: store, jar: jar);
@@ -140,8 +140,8 @@ void main() {
     test(
       'credentials present, authentication cookie in wrong path → BootCookiesMissing',
       () async {
-        // Verifies the URL passed to loadForRequest matches eVisitor's base URL.
-        // A cookie scoped to /foo/ would not be returned for /eVisitorRhetos_API/.
+        // Verifies the URL passed to loadForRequest matches eVisitor's cookie
+        // scope. A cookie scoped to /foo/ would not be returned for /Resources/.
         final store = FakeCredentialStore()
           ..savedCredentials = const Credentials(
             username: 'user',
@@ -169,7 +169,7 @@ void main() {
           );
         final jar = CookieJar(); // plain CookieJar respects expiry on load
         await jar.saveFromResponse(
-          Uri.parse('https://www.evisitor.hr/eVisitorRhetos_API/'),
+          Uri.parse('https://www.evisitor.hr/Resources/'),
           [
             _authCookie(
               expires: DateTime.now().subtract(const Duration(days: 1)),

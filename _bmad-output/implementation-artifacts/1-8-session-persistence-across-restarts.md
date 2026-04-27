@@ -1,6 +1,6 @@
 # Story 1.8: Session Persistence Across Restarts
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -318,6 +318,16 @@ No new user-facing strings. `BootGate`'s `_BootLoadingScaffold` is a `CircularPr
   - [x] Subtask 7.4 — i18n literal-string guard — clean per AC10.5.
   - [x] Subtask 7.5 — PII / credential log grep guard — zero matches per AC10.4.
   - [ ] Subtask 7.6 — Manual smoke deferred to user (requires emulator).
+
+### Review Findings
+
+- [x] [Review][Patch] Cookie viability check uses API base URL instead of the `/Resources/` cookie path contract [lib/core/bootstrap/session_bootstrap_provider.dart:45]
+- [x] [Review][Patch] Cookie-path contract is untested because bootstrap tests seed/load `authentication` under `/eVisitorRhetos_API/` [test/unit/core/bootstrap/session_bootstrap_test.dart:43]
+- [x] [Review][Patch] Cookie persistence integration test validates `/eVisitorRhetos_API/` path rather than the `/Resources/` path contract [test/integration/bootstrap/cookie_jar_persistence_test.dart:39]
+- [x] [Review][Patch] `BootGate` bootstrap error path rethrows without preserving stack trace (`throw e`) [lib/core/bootstrap/boot_gate.dart:53]
+- [x] [Review][Patch] Bootstrap provider comments still contain a `Credentials` identifier despite AC10.4 guard [lib/core/bootstrap/session_bootstrap_provider.dart:24]
+- [x] [Review][Patch] Resume invariant test uses messenger channel simulation instead of the specified lifecycle API [test/widget/core/bootstrap/boot_gate_resume_test.dart:78]
+- [x] [Review][Patch] Session viability treats empty `authentication` cookie values as valid [lib/core/bootstrap/session_bootstrap_provider.dart:49]
 
 ---
 

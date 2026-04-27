@@ -36,10 +36,10 @@ void main() {
         ignoreExpires: false,
       );
       await jar1.saveFromResponse(
-        Uri.parse('https://www.evisitor.hr/eVisitorRhetos_API/'),
+        Uri.parse('https://www.evisitor.hr/Resources/'),
         [
           Cookie('authentication', 'session-token')
-            ..path = '/eVisitorRhetos_API/'
+            ..path = '/Resources/'
             ..secure = true
             ..httpOnly = true,
         ],
@@ -56,7 +56,7 @@ void main() {
         ignoreExpires: false,
       );
       final cookies = await jar2.loadForRequest(
-        Uri.parse('https://www.evisitor.hr/eVisitorRhetos_API/'),
+        Uri.parse('https://www.evisitor.hr/Resources/'),
       );
 
       expect(cookies.map((c) => c.name).toList(), contains('authentication'));

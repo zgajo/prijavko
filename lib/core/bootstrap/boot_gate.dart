@@ -50,7 +50,7 @@ class _BootGateState extends ConsumerState<BootGate> {
       loading: () => const BootLoadingScaffold(),
       // Jidoka — never swallow bootstrap errors. A Keystore failure at startup
       // must crash visibly, not silently fall back to first-run onboarding.
-      error: (e, st) => throw e,
+      error: (e, st) => Error.throwWithStackTrace(e, st),
       data: (decision) {
         _navigateOnce(decision);
         return widget.child;

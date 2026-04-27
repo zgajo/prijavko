@@ -20,19 +20,20 @@ Future<SessionBootstrap> sessionBootstrap(Ref ref) async {
   final jar = ref.watch(cookieJarProvider);
 
   // WHY `is Ok` without type params: bootstrap only needs to know whether
-  // loading succeeded (boolean), not the actual credential values. Using the
-  // raw `Ok` check avoids referencing the Credentials type in bootstrap code
-  // (PII discipline — AC10.4).
+  // loading succeeded (boolean), not the secret payload. Using the raw `Ok`
+  // check keeps this file free of credential-model identifiers (PII discipline
+  // — AC10.4).
   final credentialsResult = await credentialStore.loadCredentials();
   final hasCredentials = credentialsResult is Ok;
   final hasFacilityProfile = await ref.watch(hasFacilityProfileProvider.future);
-  final hasViableCookies = await _hasViableSessionCookies(jar);
 
   if (!hasCredentials) {
     return hasFacilityProfile
         ? const BootCredentialsMissing()
         : const BootFreshFirstRun();
   }
+
+  final hasViableCookies = await _hasViableSessionCookies(jar);
   return hasViableCookies
       ? const BootSessionLive()
       : const BootCookiesMissing();
@@ -42,9 +43,13 @@ Future<bool> _hasViableSessionCookies(CookieJar jar) async {
   // WHY this exact URL: PersistCookieJar's domain matching is keyed on
   // host + path. The eVisitor login endpoint sets cookies with Path=/Resources/
   // — matching anything under that path returns the auth cookies.
-  final cookies = await jar.loadForRequest(Uri.parse(evisitorBaseUrl()));
+  final baseUrl = Uri.parse(evisitorBaseUrl());
+  final cookieScopeUrl = baseUrl.replace(path: '/Resources/');
+  final cookies = await jar.loadForRequest(cookieScopeUrl);
   // The 'authentication' cookie is the load-bearing one — 'affinity' and
   // 'language' do not carry session identity. If 'authentication' is absent
   // (or expired and pruned by ignoreExpires=false), session is not viable.
-  return cookies.any((Cookie c) => c.name == 'authentication');
+  return cookies.any(
+    (Cookie c) => c.name == 'authentication' && c.value.trim().isNotEmpty,
+  );
 }

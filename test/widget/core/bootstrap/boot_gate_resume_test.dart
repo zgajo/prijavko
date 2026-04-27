@@ -4,7 +4,6 @@
 // catches that regression before it ships.
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -75,18 +74,10 @@ void main() {
       expect(find.text('HomeScreen'), findsOneWidget);
 
       // Simulate pause → resume lifecycle events.
-      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-        'flutter/lifecycle',
-        const StringCodec().encodeMessage(AppLifecycleState.paused.toString()),
-        (_) {},
-      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       await tester.pump();
 
-      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-        'flutter/lifecycle',
-        const StringCodec().encodeMessage(AppLifecycleState.resumed.toString()),
-        (_) {},
-      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
 
       // keepAlive + no WidgetsBindingObserver invalidation → provider resolves
