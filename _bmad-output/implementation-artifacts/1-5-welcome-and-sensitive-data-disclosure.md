@@ -1,6 +1,6 @@
 # Story 1.5: Welcome & Sensitive-Data Disclosure
 
-Status: in-progress
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -274,19 +274,19 @@ Tests verify the welcome screen renders correctly, navigates on "Nastavi" tap, a
   - [x] Subtask 5.3 — Clean up unused imports (consent_gate, design tokens/extensions that were only used by the preview).
   - [x] Subtask 5.4 — Keep `applyMainAppFontConfig()` — it's tested by `offline_fonts_test.dart`.
 
-- [ ] Task 6 — Tests (AC: #7)
-  - [ ] Subtask 6.1 — Create `test/widget/features/onboarding/welcome_screen_test.dart` per AC7.1.
-  - [ ] Subtask 6.2 — Update `test/app_smoke_test.dart` for new app structure per AC7.2.
-  - [ ] Subtask 6.3 — Update `integration_test/app_test.dart` per AC7.3.
-  - [ ] Subtask 6.4 — Add golden tests for dark + light variants per AC7.4 (generate baselines with `--update-goldens`).
-  - [ ] Subtask 6.5 — Run all tests and verify green.
+- [x] Task 6 — Tests (AC: #7)
+  - [x] Subtask 6.1 — Create `test/widget/features/onboarding/welcome_screen_test.dart` per AC7.1.
+  - [x] Subtask 6.2 — Update `test/app_smoke_test.dart` for new app structure per AC7.2.
+  - [x] Subtask 6.3 — Update `integration_test/app_test.dart` per AC7.3.
+  - [x] Subtask 6.4 — Add golden tests for dark + light variants per AC7.4 (generate baselines with `--update-goldens`).
+  - [x] Subtask 6.5 — Run all tests and verify green.
 
-- [ ] Task 7 — Validation gate (AC: #8)
-  - [ ] Subtask 7.1 — `flutter test` — all tests green.
-  - [ ] Subtask 7.2 — `dart analyze --fatal-warnings --fatal-infos` — clean.
-  - [ ] Subtask 7.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
-  - [ ] Subtask 7.4 — i18n literal-string guard on `lib/features/onboarding/`.
-  - [ ] Subtask 7.5 — PII grep guard on `lib/features/onboarding/`.
+- [x] Task 7 — Validation gate (AC: #8)
+  - [x] Subtask 7.1 — `flutter test` — all tests green.
+  - [x] Subtask 7.2 — `dart analyze --fatal-warnings --fatal-infos` — clean.
+  - [x] Subtask 7.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
+  - [x] Subtask 7.4 — i18n literal-string guard on `lib/features/onboarding/`.
+  - [x] Subtask 7.5 — PII grep guard on `lib/features/onboarding/`.
 
 ---
 
@@ -490,6 +490,8 @@ claude-sonnet-4-5 (Cursor Agent, 2026-04-27)
 - **Task 3**: router.dart with @Riverpod(keepAlive: true) routerProvider. build_runner generated router.g.dart. app.dart PrijavkoApp: MaterialApp.router + ConsentGate in builder: + localizationsDelegates + supportedLocales. TODO(story-1.5) removed from providers.dart.
 - **Task 4**: WelcomeScreen as ConsumerStatefulWidget. TapGestureRecognizers created in initState, disposed in dispose(). WidgetSpan + Semantics(link: true) wrappers on both link spans. context.go('/onboarding/camera-permission') on FilledButton. All strings via AppLocalizations. No Icons.*, no hardcoded colors, no ad widget.
 - **Task 5**: main.dart stripped to essentials: PrijavkoApp in runApp(), applyMainAppFontConfig() preserved, all 5 preview classes removed, unused imports (consent_gate, icons, tokens, extensions) cleaned. app_smoke_test.dart and integration_test/app_test.dart updated to PrijavkoApp + welcome screen assertions. All 94 tests pass. dart analyze clean (--fatal-warnings --fatal-infos). dart format clean.
+- **Task 6**: welcome_screen_test.dart created with 12 widget tests covering: Croatian headline/body/links render, Nastavi FilledButton renders + navigates to camera-permission, no AppBar, dark/light theme render without errors, Semantics(link: true) on both link spans. Golden tests for dark + light baselines generated with --update-goldens. 106 total tests pass.
+- **Task 7**: All validation gates passed — flutter test (106 green), dart analyze (0 issues), dart format (clean), i18n literal guard (empty), PII guard (only docstring comment, no runtime PII).
 
 ### File List
 
@@ -509,7 +511,11 @@ claude-sonnet-4-5 (Cursor Agent, 2026-04-27)
 - `lib/main.dart` — replaced MainApp → PrijavkoApp; removed all preview classes and their imports
 - `test/app_smoke_test.dart` — updated for PrijavkoApp + welcome screen assertions
 - `integration_test/app_test.dart` — updated MainApp → PrijavkoApp; updated content assertions
+- `test/widget/features/onboarding/welcome_screen_test.dart` — new; 12 widget tests (AC7.1) + 2 golden tests (AC7.4)
+- `test/widget/features/onboarding/goldens/welcome_dark.png` — generated golden baseline (dark theme)
+- `test/widget/features/onboarding/goldens/welcome_light.png` — generated golden baseline (light theme)
 
 ### Change Log
 
 - 2026-04-27: Tasks 1–5 implemented. Added go_router 14.8.1, url_launcher 6.3.2, flutter_localizations, intl 0.20.2. Created l10n infrastructure (l10n.yaml, app_en.arb, app_hr.arb). Created router.dart, app.dart, welcome_screen.dart. Rewired main.dart (MainApp → PrijavkoApp, removed _DesignSystemPreview and all preview classes). Updated smoke test and integration test. 94 tests pass, analyzer clean, formatter clean.
+- 2026-04-27: Tasks 6–7 implemented. Created welcome_screen_test.dart (12 widget tests + 2 golden tests). Generated golden baselines for dark/light themes. 106 total tests pass, dart analyze clean, dart format clean, i18n guard clean, PII guard clean. Story status → review.
