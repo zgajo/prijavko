@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prijavko/app/router.dart';
+import 'package:prijavko/core/bootstrap/boot_gate.dart';
 import 'package:prijavko/core/consent/consent_gate.dart';
 import 'package:prijavko/design/theme.dart';
 import 'package:prijavko/l10n/app_localizations.dart';
@@ -29,8 +30,9 @@ class PrijavkoApp extends ConsumerWidget {
       //   (b) consentControllerProvider resolves via ancestor ProviderScope,
       //   (c) the Router/Navigator doesn't build until consent resolves —
       //       no wasted route evaluation during the ~50ms consent RPC.
-      builder: (context, child) =>
-          ConsentGate(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => ConsentGate(
+        child: BootGate(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }
