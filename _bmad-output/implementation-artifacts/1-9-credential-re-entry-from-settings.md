@@ -1,6 +1,6 @@
 # Story 1.9: Credential Re-Entry from Settings
 
-Status: in-progress
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -500,8 +500,8 @@ _Code review on 2026-04-27 — 3 reviewer layers (Blind Hunter, Edge Case Hunter
 - [x] [Review][Patch] AC6.2 banner test missing `surfaceContainerHigh` decoration assertion — added `find.byWidgetPredicate` decoration check [`test/widget/features/auth/login_screen_replace_mode_test.dart`]
 - [x] [Review][Patch] No test exercises shallow-stack/deep-link entry — added `success-path falls back to /home when stack is shallow` test [`test/widget/features/auth/login_screen_replace_mode_test.dart`]
 - [x] [Review][Patch] `'Home — Epic 3'` literal duplicated — extracted `_placeholderHomeText` const [`lib/app/router.dart`]
-- [ ] [Review][Patch] Tests use literal Croatian strings instead of `l10n.<key>` getters — **skipped (judgment)**: project-wide convention uses literal copy in widget tests; auditor cited spec but applying narrowly to Story 1.9 would be inconsistent. Revisit in retro.
-- [ ] [Review][Patch] AC6.2 lockout test doesn't drive 3 attempts or compare against non-replace baseline — **skipped (judgment)**: current test uses scripted `FakeLoginLockedOut`, "3 attempts" is production behaviour the fake shortcuts; non-replace lockout is already covered in `login_screen_test.dart`.
+- [x] [Review][Patch] Tests use literal Croatian strings instead of `l10n.<key>` getters — **decision: keep literal copy**. Project-wide convention (Story 1.5–1.8 widget tests) uses literal Croatian strings; applying `l10n.<key>` lookups narrowly to Story 1.9 would be *Mura* (unevenness). Raise in Epic 1 retro for project-wide call.
+- [x] [Review][Patch] AC6.2 lockout test doesn't drive 3 attempts or compare against non-replace baseline — **decision: existing coverage is sufficient**. The replace-mode lockout test uses scripted `FakeLoginLockedOut` (correct unit-test shortcut for production's 3-attempt budget); non-replace lockout drives the full path in `login_screen_test.dart`'s `LoginScreen tap submit with locked-out…` test. Re-asserting the same widget tree across modes adds no signal.
 - [x] [Review][Patch] Success-path test doesn't assert popped `bool` payload nor `saveCredentials` call — **partial**: added `saveCredentials` assertion (`username: 'host42'`, `password: 'new-pass'`); popped-bool payload assertion not added (current stub-Settings design doesn't capture pop result; covered end-to-end by `settings_screen_test.dart` SnackBar test).
 - [x] [Review][Patch] `WindowSecureFlag` MethodChannel mock state can bleed across test files — extracted to `test/helpers/window_secure_flag_mock.dart` [3 test files refactored]
 - [x] [Review][Patch] No test asserts `clearError()` fires on field change in replace mode — added `typing in either field clears inline error after a failed re-entry` test [`test/widget/features/auth/login_screen_replace_mode_test.dart`]
