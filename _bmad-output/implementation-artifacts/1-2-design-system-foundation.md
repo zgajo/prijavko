@@ -1,6 +1,6 @@
 # Story 1.2: Design System Foundation
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -179,15 +179,15 @@ Tests live under `test/design/` and are run by the existing `test.yml` GitHub Ac
   - [ ] Subtask 6.3 — **Manual verification deferred to user.** Agent cannot run `flutter run` against an emulator/device from this environment. User should execute `flutter run -d <device>` and attach screenshots in dark + light modes to the PR description before merge. Smoke test (`test/app_smoke_test.dart`) and integration test (`integration_test/app_test.dart`) were updated to assert the new preview surface (FilledButton + OutlinedButton present), so a regression in preview wiring fails in CI even without the manual screenshots.
 - [x] Task 7 — Create `lib/widgets/` directory convention marker (AC: #9)
   - [x] Subtask 7.1 — Create `lib/widgets/README.md` (preferred over `.gitkeep`) that states "Custom widgets land in this folder, one file per widget, per `.claude/rules/design-system.md §4`. Each file begins with a `// WHY:` paragraph."
-- [ ] Task 8 — Widget tests (AC: #6)
-  - [ ] Subtask 8.1 — `test/design/theme_test.dart` — 56dp min-height, 16dp card radius, `colorScheme` present, both themes.
-  - [ ] Subtask 8.2 — `test/design/semantic_colors_test.dart` — extension resolves under both themes; light ≠ dark warning.
-  - [ ] Subtask 8.3 — `test/design/tokens_test.dart` — 4dp grid invariant, `const` constants exist.
-  - [ ] Subtask 8.4 — `test/design/icons_test.dart` — `Icon(Symbols.<rounded-check>)` resolves a font family; fails loudly on misconfigured asset.
-  - [ ] Subtask 8.5 — Run `flutter test` locally → all green. Run `dart analyze --fatal-warnings --fatal-infos` and `dart format --set-exit-if-changed lib/ test/ integration_test/` → clean.
-- [ ] Task 9 — Verify offline-font pipeline (AC: #8)
-  - [ ] Subtask 9.1 — With `GoogleFonts.config.allowRuntimeFetching = false`, confirm `flutter test` + `flutter run` succeed without a network connection (toggle airplane mode on the test device; run the preview). If any glyph renders as Tofu, the asset pipeline is broken — fix before moving on.
-  - [ ] Subtask 9.2 — Record the airplane-mode verification + screenshot in the PR description.
+- [x] Task 8 — Widget tests (AC: #6)
+  - [x] Subtask 8.1 — `test/design/theme_test.dart` — 56dp min-height, 16dp card radius, `colorScheme` present, both themes. (landed in Task 4 commit; expanded to 18 tests covering useMaterial3, FilledButton 56dp + radius, OutlinedButton 48dp, BottomSheet 24dp top, ColorScheme brightness, SemanticColors registered, typescale weights — both modes.)
+  - [x] Subtask 8.2 — `test/design/semantic_colors_test.dart` — extension resolves under both themes; light ≠ dark warning. (landed in Task 3 commit; 5 tests including `copyWith` preservation and `lerp` endpoints.)
+  - [x] Subtask 8.3 — `test/design/tokens_test.dart` — 4dp grid invariant, `const` constants exist. (landed in Task 2 commit.)
+  - [x] Subtask 8.4 — `test/design/icons_test.dart` — `Icon(Symbols.<rounded-check>)` resolves a font family; fails loudly on misconfigured asset. (landed in Task 5 commit; asserts `MaterialSymbolsRounded` + `material_symbols_icons` font package.)
+  - [x] Subtask 8.5 — `flutter test` locally → 36/36 green. `dart analyze --fatal-warnings --fatal-infos` clean. `dart format --set-exit-if-changed lib test integration_test` clean. PII guard regex + icons guard regex both return `rc=1` (no match → green) against the working tree.
+- [x] Task 9 — Verify offline-font pipeline (AC: #8)
+  - [x] Subtask 9.1 — With `GoogleFonts.config.allowRuntimeFetching = false`, `flutter test` succeeds (38/38 green) without a network connection — the new `test/design/offline_fonts_test.dart` exercises every `GoogleFonts.manrope*` slot under the no-fetching policy, so a missing/renamed asset would throw at the first font lookup. **`flutter run` device verification + airplane-mode visual check is deferred to the user** (agent cannot drive an emulator/device from this environment). If any glyph renders as Tofu on device, the asset pipeline is broken — fix before merge.
+  - [ ] Subtask 9.2 — **Deferred to user.** Record the airplane-mode verification + screenshot in the PR description before merging.
 
 ## Dev Notes
 
@@ -306,6 +306,10 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 
 - **Task 1 — Deviation from AC8.1.** Upstream `github.com/sharanda/manrope` returns HTTP 404 (the maintainer took the repo down). Probed alternatives: `google/fonts/ofl/manrope` ships only the variable font (`Manrope[wght].ttf`), not the 5 weight-named static TTFs the `google_fonts` package's local-asset detection requires; Fontsource ships only `woff/woff2`. User supplied the 5 static TTFs (`Regular/Medium/SemiBold/Bold/ExtraBold`) plus `OFL.txt` from a cached Manrope distribution. The shipped files match Google Fonts' canonical OFL terms; SHA-256 fingerprints are pinned in `docs/design/fonts-licensing.md` for future regression bisects. Story remains spec-faithful aside from the source-URL substitution.
 
+- **Task 2 — `library_private_types_in_public_api` lint adjustment.** AC1's "nested classes as namespaces" pattern with private wrapper types (e.g. `_ColorTokens`) trips Dart's `library_private_types_in_public_api` info diagnostic, which is fatal under the project's `dart analyze --fatal-warnings --fatal-infos` CI gate. Resolution: promoted the wrapper classes to public (`TokensColor`, `TokensSpace`, `TokensRadius`, `TokensSize`) while keeping the private unnamed constructors so instantiation remains impossible — the namespace pattern (`Tokens.color.primarySeed`) is preserved exactly, only the wrapper-class names are reachable.
+
+- **Tasks 6 + 9 — manual verification deferred.** The agent cannot drive an emulator or physical device from this environment, so subtasks 6.3 (`flutter run` + light/dark screenshots) and 9.2 (airplane-mode run + screenshot) are deferred to the user before merge. The automated guards (`offline_fonts_test.dart`, retargeted smoke + integration tests asserting the preview surface) make a regression in token wiring or asset bundling fail loudly in CI even without the manual screenshots.
+
 ### Change Log
 
 | Date | Task | Notes |
@@ -317,6 +321,8 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 | 2026-04-27 | Task 5 | Created `lib/design/icons.dart` re-exporting `Symbols` from `material_symbols_icons` with a top-of-file `// WHY:` block pinning the rounded variant. Added `.github/workflows/icons_guard.yml` (separate workflow, not piggy-backed on `pii_guard.yml`) firing on `Icon\s*\(\s*Icons\.` with the same `rc=$?` exit-code dispatch and `::error::` on no-SCAN_DIRS as `pii_guard.yml`. Added `docs/ci/icons-guard-regex.md` with the passing/failing example template that matches `pii-guard-regex.md`. Added `test/design/icons_test.dart` asserting `Symbols.check_rounded` resolves to `MaterialSymbolsRounded` font family + `material_symbols_icons` font package — would fail loudly if the asset bundle were misconfigured. Local rehearsal of the icons guard regex against the working tree returned `rc=1` (no match → green). |
 | 2026-04-27 | Task 6 | Rewrote `lib/main.dart` with `MaterialApp(theme: buildLightTheme(), darkTheme: buildDarkTheme(), themeMode: ThemeMode.system, home: const _DesignSystemPreview())` and added the throwaway `_DesignSystemPreview` widget — `Text('prijavko')` in `headlineLarge`, `FilledButton` (smoke-tests 56dp + 12dp + Manrope load + Material Symbols rounded), `OutlinedButton` (smoke-tests 48dp + 1.5px outline), wrapping `Card` (smoke-tests 16dp), and three `_SemanticSwatch` Containers tied to `context.semanticColors.warningContainer`/`success`/`closureAccent`. `// i18n-ignore:` audit-trail comments mark every preview literal so Story 1.5's CI grep guard knows to skip them. Updated `test/app_smoke_test.dart` (was Story 1.1's `Hello World!` placeholder) and `integration_test/app_test.dart` to assert the new preview surface (FilledButton + OutlinedButton found). Subtask 6.3 (`flutter run` device verification + dark/light screenshots in PR description) is deferred to the user — agent cannot drive an emulator from this environment. |
 | 2026-04-27 | Task 7 | Created `lib/widgets/README.md` documenting the "one file per widget, `// WHY:` paragraph at top, custom widgets only when a Material 3 primitive cannot express the requirement" convention from `.claude/rules/design-system.md §1, §4`. README enumerates the v1 custom widget roster (CredentialBanner, FacilityPickerSheet, MRZViewfinder, CaptureConfirmation, GuestStatusGlyph, QueueRow/QueueHero, ClosureSummary, TypedConfirmationDialog, AdBanner) and the stories that own each — JIT marker so the folder is visible from day one without empty-file rot. |
+| 2026-04-27 | Task 8 | Final test sweep — `flutter test` 36/36 green, `dart analyze --fatal-warnings --fatal-infos` clean, `dart format --set-exit-if-changed lib test integration_test` clean. Both CI guards (PII regex, icons regex) rehearsed locally and return `rc=1` (no match → green). Subtasks 8.1–8.4 landed alongside Tasks 2–5 via red-green-refactor; subtask 8.5 = this validation gate. |
+| 2026-04-27 | Task 9 | Added `test/design/offline_fonts_test.dart` exercising every `GoogleFonts.manrope*` typescale slot under `allowRuntimeFetching = false` so a missing/renamed Manrope asset triggers a loud throw at first font lookup (Poka-yoke for AC8.3). Combined with `flutter test`'s default no-network policy, this gives an automated offline-pipeline guard. `flutter test` 38/38 green. **Subtask 9.2 (airplane-mode device run + PR screenshot) is deferred to the user.** |
 
 ### File List
 
@@ -343,3 +349,4 @@ claude-opus-4-7 (Claude Opus 4.7, 1M context)
 - `docs/ci/icons-guard-regex.md` — added.
 - `test/design/icons_test.dart` — added.
 - `lib/widgets/README.md` — added.
+- `test/design/offline_fonts_test.dart` — added.
