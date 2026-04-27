@@ -2,6 +2,14 @@
 
 Tracks items flagged during reviews that are real but not actionable in the story that surfaced them. Each entry links back to the source review.
 
+## Deferred from: code review of story-1-9-credential-re-entry-from-settings (2026-04-27)
+
+- Story shipped as one squashed commit instead of one-commit-per-task. Already pushed to origin; cannot be retroactively split without rewriting published history. Raise in Epic 1 retro to reinforce the rule for Epic 2+.
+- `FakeCredentialStore.savedCredentials` is a public mutable field with no way to script a `Result.Err<_, StorageError>` return from `loadCredentials()`. Consequently the `Err` branch of `_hydrateUsernameFromKeystore` (graceful tolerance on Keystore failure) has no test coverage. Revisit when next test extends the fake.
+- `LoginNotifier` is `autoDispose`, so back-gesture from `LoginScreen(replaceMode: true)` during a lockout disposes the lockout state. Re-entering the tile resets the prijavko-side circuit breaker even though the eVisitor-side 5-min lockout still holds. Pre-existing Story 1.7 tech debt; Epic 2 Story 2.5 owns the durable circuit breaker.
+- `Icon(Symbols.info_rounded, size: 20)` in the replace banner uses a hardcoded sizing literal. Matches Story 1.9 spec AC2.4 example verbatim, but design-system rules §1 forbid hardcoded sizing. Update the spec example to use a token (e.g., `TokensSpace.s20` if introduced) and re-flow the call site.
+- `test/app_smoke_test.dart` overrides `cookieJarProvider` with the in-memory `CookieJar()` rather than `PersistCookieJar`. BootGate logic that currently doesn't depend on persistence semantics gets the in-memory variant; future bootstrap changes will silently bypass persistence in this test. Migrate to the temp-dir `PersistCookieJar` pattern used in `login_screen_replace_mode_test.dart` when next touched.
+
 ## Deferred from: code review of story-1-1-project-bootstrap-and-ci-foundation (2026-04-24)
 
 - PII grep regex bypassable by local-var assignment, alt log facades (`log.info`, `developer.log`, `Fimber`, `Talker`), and multiline-split interpolation. Grep is line-anchored and facade-enumerated. Complete fix requires PII wrapper types with `toString()` overrides (NFR-S7 type-level half, Epic 2+).

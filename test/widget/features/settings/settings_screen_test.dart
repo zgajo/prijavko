@@ -11,7 +11,6 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +26,7 @@ import 'package:prijavko/l10n/app_localizations.dart';
 import '../../../fakes/evisitor_fake_adapter.dart';
 import '../../../fakes/fake_credential_store.dart';
 import '../../../fakes/fake_security_service.dart';
+import '../../../helpers/window_secure_flag_mock.dart';
 
 Widget _makeTestApp({
   required EvisitorFakeAdapter fakeAdapter,
@@ -82,24 +82,8 @@ Widget _makeTestApp({
 }
 
 void main() {
-  // Mock the WindowSecureFlag MethodChannel: LoginScreen (replace-credentials
-  // sub-route) calls FLAG_SECURE on init. Without the mock, tests navigating
-  // into that route throw MissingPluginException.
-  setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('hr.prijavko.window_secure'),
-          (call) async => null,
-        );
-  });
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('hr.prijavko.window_secure'),
-          null,
-        );
-  });
+  setUp(setUpWindowSecureFlagMock);
+  tearDown(tearDownWindowSecureFlagMock);
 
   group('SettingsScreen', () {
     late EvisitorFakeAdapter fakeAdapter;

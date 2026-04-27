@@ -1,6 +1,6 @@
 # Story 1.9: Credential Re-Entry from Settings
 
-Status: review
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -486,3 +486,32 @@ claude-sonnet-4-6 (Claude Sonnet 4.6)
 - `test/app_smoke_test.dart`
 - `_bmad-output/implementation-artifacts/deferred-work.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+
+### Review Findings
+
+_Code review on 2026-04-27 — 3 reviewer layers (Blind Hunter, Edge Case Hunter, Acceptance Auditor). 13 patch / 5 deferred / 8 dismissed (1 decision-needed resolved → patch: remove `prefilledUsername`). Batch-applied 2026-04-28: 11 fixed, 2 skipped (judgment-required), 1 partial. Test count 204 → 206 (+2 new); all gates green._
+
+**Patch**
+
+- [x] [Review][Patch] Remove dead `prefilledUsername` ctor parameter (JIT — Story 2.8 reintroduces with its actual contract) [`lib/features/auth/login_screen.dart`]
+- [x] [Review][Patch] `_hydrateUsernameFromKeystore` clobbers user-typed username and steals focus when Keystore read is slow — added `userIsInteracting` guard [`lib/features/auth/login_screen.dart`]
+- [x] [Review][Patch] Double-tap on Settings tile pushes duplicate `replace-credentials` routes — converted to `ConsumerStatefulWidget` with `_navigating` flag [`lib/features/settings/settings_screen.dart`]
+- [x] [Review][Patch] `context.pop(true)` lands on blank when route entered via deep link — added `canPop()` fallback to `goNamed('home')` [`lib/features/auth/login_screen.dart`]
+- [x] [Review][Patch] AC6.2 banner test missing `surfaceContainerHigh` decoration assertion — added `find.byWidgetPredicate` decoration check [`test/widget/features/auth/login_screen_replace_mode_test.dart`]
+- [x] [Review][Patch] No test exercises shallow-stack/deep-link entry — added `success-path falls back to /home when stack is shallow` test [`test/widget/features/auth/login_screen_replace_mode_test.dart`]
+- [x] [Review][Patch] `'Home — Epic 3'` literal duplicated — extracted `_placeholderHomeText` const [`lib/app/router.dart`]
+- [ ] [Review][Patch] Tests use literal Croatian strings instead of `l10n.<key>` getters — **skipped (judgment)**: project-wide convention uses literal copy in widget tests; auditor cited spec but applying narrowly to Story 1.9 would be inconsistent. Revisit in retro.
+- [ ] [Review][Patch] AC6.2 lockout test doesn't drive 3 attempts or compare against non-replace baseline — **skipped (judgment)**: current test uses scripted `FakeLoginLockedOut`, "3 attempts" is production behaviour the fake shortcuts; non-replace lockout is already covered in `login_screen_test.dart`.
+- [x] [Review][Patch] Success-path test doesn't assert popped `bool` payload nor `saveCredentials` call — **partial**: added `saveCredentials` assertion (`username: 'host42'`, `password: 'new-pass'`); popped-bool payload assertion not added (current stub-Settings design doesn't capture pop result; covered end-to-end by `settings_screen_test.dart` SnackBar test).
+- [x] [Review][Patch] `WindowSecureFlag` MethodChannel mock state can bleed across test files — extracted to `test/helpers/window_secure_flag_mock.dart` [3 test files refactored]
+- [x] [Review][Patch] No test asserts `clearError()` fires on field change in replace mode — added `typing in either field clears inline error after a failed re-entry` test [`test/widget/features/auth/login_screen_replace_mode_test.dart`]
+- [x] [Review][Patch] `controller?.text, isEmpty` matcher passes when controller is `null` — `controller, isNotNull` then `controller!.text, isEmpty` in 3 sites [`test/widget/features/auth/login_screen_test.dart`, `test/widget/features/auth/login_screen_replace_mode_test.dart`]
+- [x] [Review][Patch] Banner `Icon` not wrapped in `ExcludeSemantics` — wrapped [`lib/features/auth/login_screen.dart`]
+
+**Deferred**
+
+- [x] [Review][Defer] Story shipped as one squashed commit instead of one-commit-per-task — already pushed; cannot be retroactively split without rewriting published history. Raise in epic 1 retro.
+- [x] [Review][Defer] `FakeCredentialStore.savedCredentials` cannot simulate `Err`/`StorageError` branch (no test for `_hydrateUsernameFromKeystore` failure path) — existing test-fake design; out of scope for Story 1.9.
+- [x] [Review][Defer] LoginLockedOut state lost on back-gesture from replace mode — pre-existing Story 1.7 tech debt; Epic 2 Story 2.5 owns the circuit breaker.
+- [x] [Review][Defer] Banner icon `size: 20` hardcoded — matches spec example AC2.4 verbatim but violates design-system rules §1; raise in Epic 1 retro to update spec example.
+- [x] [Review][Defer] `app_smoke_test` overrides `cookieJarProvider` with in-memory `CookieJar()` not `PersistCookieJar` — test-scaffolding hygiene; not load-bearing today.

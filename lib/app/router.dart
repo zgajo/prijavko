@@ -11,6 +11,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'router.g.dart';
 
+// i18n-ignore: placeholder; the /home route is replaced wholesale by Story 5.5.
+const _placeholderHomeText = 'Home — Epic 3';
+
 // WHY keepAlive: GoRouter holds the navigation stack and browser-history state
 // for the entire app lifetime. Disposing would silently lose the back-stack on
 // any provider container invalidation — a subtle, hard-to-reproduce nav bug.
@@ -48,7 +51,7 @@ GoRouter router(Ref ref) {
         //   from Story 5.5 onwards (UX spec §AppBar).
         builder: (context, state) => Scaffold(
           appBar: AppBar(
-            title: const Text('Home — Epic 3'), // i18n-ignore: placeholder
+            title: const Text(_placeholderHomeText),
             actions: [
               IconButton(
                 icon: const Icon(Symbols.settings_rounded),
@@ -57,9 +60,7 @@ GoRouter router(Ref ref) {
               ),
             ],
           ),
-          body: const Center(
-            child: Text('Home — Epic 3'),
-          ), // i18n-ignore: placeholder
+          body: const Center(child: Text(_placeholderHomeText)),
         ),
       ),
       GoRoute(

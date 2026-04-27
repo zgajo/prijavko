@@ -1,8 +1,11 @@
-// WHY ConsumerWidget (not ConsumerStatefulWidget): no lifecycle controllers,
-// no streams to subscribe — the single async action lives in the tile's onTap
-// callback. ConsumerWidget is the project default for all screens. Promote to
-// ConsumerStatefulWidget when a future story (2.9 auth-state row, 5.8 Replace
-// OIB) introduces lifecycle concerns such as a Drift stream subscription.
+// WHY ConsumerStatefulWidget: the credential re-entry tile owns an in-flight
+// `_navigating` flag to debounce double-taps. Without the flag, two rapid taps
+// on slow Android hardware push two `replace-credentials` routes on top of
+// each other — the second `pop(true)` returns to the first LoginScreen instead
+// of /settings, and the SnackBar fires on the wrong screen. ConsumerWidget
+// closures recreate per build so a stack-local bool would not persist.
+// Promote further (e.g., to a Notifier) when Story 2.9 / 5.8 / 8.1 add
+// additional async tiles that need the same debounce.
 //
 // WHY no FLAG_SECURE: the Settings list contains no PII or credential text.
 // The replace-credentials sub-route (LoginScreen) sets FLAG_SECURE on its own.
@@ -16,11 +19,38 @@ import 'package:prijavko/design/icons.dart';
 import 'package:prijavko/design/tokens.dart';
 import 'package:prijavko/l10n/app_localizations.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _navigating = false;
+
+  Future<void> _onReplaceCredentialsTap() async {
+    if (_navigating) return;
+    _navigating = true;
+    try {
+      final updated = await context.pushNamed<bool>('replace-credentials');
+      if (!mounted) return;
+      if (updated == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).settingsCredentialsUpdatedSnackbar,
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) _navigating = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -32,19 +62,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Symbols.lock_reset_rounded),
             title: Text(l10n.settingsReplaceCredentialsLabel),
             trailing: const Icon(Symbols.chevron_right_rounded),
-            onTap: () async {
-              final updated = await context.pushNamed<bool>(
-                'replace-credentials',
-              );
-              if (!context.mounted) return;
-              if (updated == true) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.settingsCredentialsUpdatedSnackbar),
-                  ),
-                );
-              }
-            },
+            onTap: _onReplaceCredentialsTap,
           ),
         ],
       ),

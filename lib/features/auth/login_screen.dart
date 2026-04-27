@@ -18,18 +18,9 @@ import 'package:prijavko/features/settings/credential_store.dart';
 import 'package:prijavko/l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({
-    super.key,
-    this.replaceMode = false,
-    // WHY reserved: Story 2.8 (credentials-missing recovery) may pass a
-    // known-good username directly rather than loading from the Keystore.
-    // Story 1.9 does not pass it, but accepting the parameter here closes
-    // the Story 1.7 deferred extension point.
-    this.prefilledUsername,
-  });
+  const LoginScreen({super.key, this.replaceMode = false});
 
   final bool replaceMode;
-  final String? prefilledUsername;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -61,18 +52,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _hydrateUsernameFromKeystore() async {
     final result = await ref.read(credentialStoreProvider).loadCredentials();
     if (!mounted) return;
-    if (result is Ok<Credentials, StorageError>) {
-      _usernameController.text = result.value.username;
-      // WHY focus password (not username): username is pre-filled and
-      // immutable in this flow's mental model — the host is *changing
-      // password*, not username. Auto-focusing password matches the
-      // typical "your username, new password" UX pattern (banking apps,
-      // 2FA flows). The user can still edit username; we just do not
-      // assume they want to.
-      _passwordFocus.requestFocus();
+    if (result is! Ok<Credentials, StorageError>) {
+      // Err path is silently tolerated — the user re-types the username.
+      // The next saveCredentials() will overwrite either way.
+      return;
     }
-    // Err path is silently tolerated — the user re-types the username.
-    // The next saveCredentials() will overwrite either way.
+    // WHY guard: cold Android Keystore reads can take 100ms+. If the user has
+    // already started typing or focused either field, overwriting the input
+    // and ripping focus to password is a Poka-yoke violation — keystrokes
+    // disappear, focus jumps, host blames the app. Skip the hydration.
+    final userIsInteracting =
+        _usernameController.text.isNotEmpty ||
+        _usernameFocus.hasFocus ||
+        _passwordController.text.isNotEmpty ||
+        _passwordFocus.hasFocus;
+    if (userIsInteracting) return;
+
+    _usernameController.text = result.value.username;
+    // WHY focus password (not username): username is pre-filled and
+    // immutable in this flow's mental model — the host is *changing
+    // password*, not username. Auto-focusing password matches the
+    // typical "your username, new password" UX pattern (banking apps,
+    // 2FA flows). The user can still edit username; we just do not
+    // assume they want to.
+    _passwordFocus.requestFocus();
   }
 
   @override
@@ -104,11 +107,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (result is Ok) {
       if (widget.replaceMode) {
-        // WHY pop(true): back-stack already has /settings underneath. pop is
-        // go_router's documented idiom for "return result to parent"; using
-        // goNamed here would push a duplicate /settings route on every
+        // WHY pop(true) when canPop: back-stack already has /settings
+        // underneath. pop is go_router's documented idiom for "return result
+        // to parent"; goNamed would push a duplicate /settings on every
         // successful re-entry — a slow stack leak.
-        context.pop(true);
+        // WHY canPop fallback to /home: a deep link directly to
+        // /settings/replace-credentials lands with a shallow stack — pop
+        // would either no-op or eject the host to the launcher. goNamed
+        // /home is the safe terminal for replace-mode success.
+        if (context.canPop()) {
+          context.pop(true);
+        } else {
+          context.goNamed('home');
+        }
       } else {
         context.goNamed('home');
       }
@@ -169,7 +180,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Symbols.info_rounded, size: 20),
+                              // WHY ExcludeSemantics: the banner is decorative.
+                              // Without exclusion, TalkBack reads "info" before
+                              // the banner text, doubling the cognitive load.
+                              const ExcludeSemantics(
+                                child: Icon(Symbols.info_rounded, size: 20),
+                              ),
                               const SizedBox(width: TokensSpace.s12),
                               Expanded(
                                 child: Text(
