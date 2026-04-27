@@ -42,11 +42,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:prijavko/app/app.dart';
 import 'package:prijavko/app/providers.dart';
 // Story 1.4: consent providers
 import 'package:prijavko/core/consent/consent_providers.dart';
 import 'package:prijavko/core/consent/consent_state.dart';
-import 'package:prijavko/main.dart';
 
 import '../test/fakes/evisitor_fake_adapter.dart';
 import '../test/fakes/fake_consent_service.dart';
@@ -89,28 +89,16 @@ void main() {
             FakeConsentService(scriptedState: const ConsentNotRequired()),
           ),
         ],
-        child: const MainApp(),
+        child: const PrijavkoApp(),
       ),
     );
     await tester.pumpAndSettle();
 
-    // Story 1.2 swapped the `Hello World!` placeholder for the design-system
-    // preview surface. The preview lands a FilledButton, an OutlinedButton,
-    // and a Material Symbols Icon — if any token wiring is broken, this
-    // probe goes red on the same emulator that protects the cold-start NFR.
-    expect(find.byType(FilledButton), findsOneWidget);
-    expect(find.byType(OutlinedButton), findsOneWidget);
-    // The preview button labels are 'Preview'. Asserting on rendered text
-    // (in addition to widget types) restores the strength of the original
-    // `Hello World!` content probe — a font-load failure that swallows
-    // glyphs but does not throw would still find the buttons but render
-    // empty Text, and that path needs to fail loud.
-    expect(find.text('Preview'), findsAtLeastNWidgets(1));
-
-    // Story 1.4 — ConsentGate proceeds when consent resolves (AC9.5).
-    // Verifies the gate surfaces the design-system preview after consent
-    // is marked NotRequired (no form shown, child rendered immediately).
-    expect(find.text('Design system'), findsOneWidget);
+    // Story 1.5 — WelcomeScreen replaced the design-system preview.
+    // ConsentGate (ConsentNotRequired) passes through immediately and the
+    // router navigates to /onboarding → WelcomeScreen. Asserting on
+    // 'Prijavko' text confirms routing + localization pipeline is healthy.
+    expect(find.textContaining('Prijavko'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('mount-to-first-frame stays under 2.5s (AC10 / NFR-P8 guard)', (
@@ -133,7 +121,7 @@ void main() {
             FakeConsentService(scriptedState: const ConsentNotRequired()),
           ),
         ],
-        child: const MainApp(),
+        child: const PrijavkoApp(),
       ),
     );
     // `waitUntilFirstFrameRasterized` is a per-binding one-shot Completer.

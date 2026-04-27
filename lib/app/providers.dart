@@ -1,4 +1,3 @@
-// TODO(story-1.5): app.dart (MaterialApp.router + ProviderScope) lands here.
 import 'dart:io' show HttpClient, X509Certificate;
 
 import 'package:cookie_jar/cookie_jar.dart';

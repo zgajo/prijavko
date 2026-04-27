@@ -62,6 +62,20 @@ dependencies:
   # and is used instead. API delta documented in consent_service.dart.
   google_mobile_ads: ^8.0.0
 
+  # Story 1.5 — declarative routing; auth redirect wired in Story 2.x.
+  # NOTE: spec targeted ^17.2.2 but go_router 17.x requires Riverpod 3.x;
+  # 14.8.1 is the highest stable compatible with flutter_riverpod 2.6.x.
+  go_router: ^14.8.1
+
+  # Story 1.5 — Privacy Policy and ToS deep links from Welcome screen.
+  url_launcher: ^6.3.2
+
+  # Story 1.5 — resolved by flutter_localizations; drives AppLocalizations codegen.
+  intl: any
+
+  flutter_localizations:
+    sdk: flutter
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -81,6 +95,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   # Story 1.2 AC8.1 — Manrope shipped as bundled assets (not Google Fonts CDN).
   # The `google_fonts` package auto-detects files in this folder by name —
   # filenames must match `Manrope-{Regular,Medium,SemiBold,Bold,ExtraBold}.ttf`
