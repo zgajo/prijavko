@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:prijavko/features/auth/login_screen.dart';
 import 'package:prijavko/features/onboarding/camera_permission_screen.dart';
 import 'package:prijavko/features/onboarding/welcome_screen.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -32,12 +33,17 @@ GoRouter router(Ref ref) {
           GoRoute(
             path: 'login',
             name: 'login',
-            // TODO(story-1.7): replace placeholder with LoginScreen
-            // i18n-ignore: placeholder scaffold; replaced in Story 1.7
-            builder: (context, state) =>
-                const Scaffold(body: Center(child: Text('Login — Story 1.7'))),
+            builder: (context, state) => const LoginScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/home',
+        name: 'home',
+        // TODO(story-3.x): replace placeholder with HomeScreen + AdBanner + queue
+        // i18n-ignore: placeholder scaffold; replaced in Epic 3
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: Text('Home — Epic 3'))),
       ),
     ],
     // TODO(story-2.3): add redirect callback reading authNotifierProvider

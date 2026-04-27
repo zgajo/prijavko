@@ -4,9 +4,13 @@
 // leaving the device. `CredentialStore` is the single entry point — no
 // feature may read credentials from any other surface.
 import 'package:flutter/services.dart' show PlatformException;
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:prijavko/core/errors/app_error.dart';
 import 'package:prijavko/core/result/result.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'credential_store.g.dart';
 
 // Key versioning (`_v1`) allows future key migration without data loss.
 // When adding a v2 key, migrate from v1 to v2 on first read, then delete v1.
@@ -86,3 +90,9 @@ class CredentialStore {
     }
   }
 }
+
+// WHY keepAlive: CredentialStore wraps flutter_secure_storage which is
+// stateless (no init/dispose). keepAlive avoids reconstructing the instance
+// on every read — negligible cost but consistent with dioProvider's pattern.
+@Riverpod(keepAlive: true)
+CredentialStore credentialStore(Ref ref) => CredentialStore();

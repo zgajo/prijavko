@@ -11,5 +11,19 @@
   "cameraPermissionAllowButton": "Dopusti pristup",
   "cameraPermissionSkipButton": "Preskoči — ručni unos",
   "cameraPermissionPermanentlyDeniedMessage": "Pristup kameri trajno odbijen. Otvorite postavke uređaja za dopuštenje.",
-  "cameraPermissionOpenSettingsButton": "Postavke"
+  "cameraPermissionOpenSettingsButton": "Postavke",
+  "loginHeadline": "Prijava u eVisitor",
+  "loginBody": "Prijavite se jednom s eVisitor podacima. Sljedeće sesije se prijavljuju automatski.",
+  "loginUsernameLabel": "Korisničko ime",
+  "loginPasswordLabel": "Lozinka",
+  "loginPasswordToggleShow": "Prikaži lozinku",
+  "loginPasswordToggleHide": "Sakrij lozinku",
+  "loginReassurance": "\uD83D\uDD12 Podaci se čuvaju šifrirano u Android Keystore-u",
+  "loginSubmitButton": "Prijavi se",
+  "loginCredentialsHint": "Provjerite korisničko ime i lozinku.",
+  "loginNetworkError": "Nema interneta. Pokušajte ponovno.",
+  "loginServerError": "eVisitor je nedostupan. Pokušajte kasnije.",
+  "loginContractBreakError": "Ažurirajte prijavko iz Play Store-a i pokušajte ponovno.",
+  "loginLockoutMessage": "Previše neuspješnih pokušaja — pričekajte 6 minuta.",
+  "loginLockoutCountdownSeconds": "{seconds, plural, =1 {Još 1 sekunda} few {Još {seconds} sekunde} other {Još {seconds} sekundi}}"
 }

@@ -46,4 +46,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cameraPermissionOpenSettingsButton => 'Settings';
+
+  @override
+  String get loginHeadline => 'eVisitor Sign-In';
+
+  @override
+  String get loginBody =>
+      'Sign in once with your eVisitor credentials. Subsequent sessions will sign in automatically.';
+
+  @override
+  String get loginUsernameLabel => 'Username';
+
+  @override
+  String get loginPasswordLabel => 'Password';
+
+  @override
+  String get loginPasswordToggleShow => 'Show password';
+
+  @override
+  String get loginPasswordToggleHide => 'Hide password';
+
+  @override
+  String get loginReassurance =>
+      '🔒 Credentials are stored encrypted in Android Keystore.';
+
+  @override
+  String get loginSubmitButton => 'Sign in';
+
+  @override
+  String get loginCredentialsHint => 'Check your username and password.';
+
+  @override
+  String get loginNetworkError => 'No internet. Try again.';
+
+  @override
+  String get loginServerError => 'eVisitor is unavailable. Try again later.';
+
+  @override
+  String get loginContractBreakError =>
+      'Update prijavko from Play Store and try again.';
+
+  @override
+  String get loginLockoutMessage =>
+      'Too many failed attempts — wait 6 minutes.';
+
+  @override
+  String loginLockoutCountdownSeconds(int seconds) {
+    final intl.NumberFormat secondsNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String secondsString = secondsNumberFormat.format(seconds);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$secondsString seconds remaining',
+      one: '1 second remaining',
+    );
+    return '$_temp0';
+  }
 }

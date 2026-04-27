@@ -46,4 +46,64 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get cameraPermissionOpenSettingsButton => 'Postavke';
+
+  @override
+  String get loginHeadline => 'Prijava u eVisitor';
+
+  @override
+  String get loginBody =>
+      'Prijavite se jednom s eVisitor podacima. Sljedeće sesije se prijavljuju automatski.';
+
+  @override
+  String get loginUsernameLabel => 'Korisničko ime';
+
+  @override
+  String get loginPasswordLabel => 'Lozinka';
+
+  @override
+  String get loginPasswordToggleShow => 'Prikaži lozinku';
+
+  @override
+  String get loginPasswordToggleHide => 'Sakrij lozinku';
+
+  @override
+  String get loginReassurance =>
+      '🔒 Podaci se čuvaju šifrirano u Android Keystore-u';
+
+  @override
+  String get loginSubmitButton => 'Prijavi se';
+
+  @override
+  String get loginCredentialsHint => 'Provjerite korisničko ime i lozinku.';
+
+  @override
+  String get loginNetworkError => 'Nema interneta. Pokušajte ponovno.';
+
+  @override
+  String get loginServerError => 'eVisitor je nedostupan. Pokušajte kasnije.';
+
+  @override
+  String get loginContractBreakError =>
+      'Ažurirajte prijavko iz Play Store-a i pokušajte ponovno.';
+
+  @override
+  String get loginLockoutMessage =>
+      'Previše neuspješnih pokušaja — pričekajte 6 minuta.';
+
+  @override
+  String loginLockoutCountdownSeconds(int seconds) {
+    final intl.NumberFormat secondsNumberFormat = intl.NumberFormat.compact(
+      locale: localeName,
+    );
+    final String secondsString = secondsNumberFormat.format(seconds);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: 'Još $secondsString sekundi',
+      few: 'Još $secondsString sekunde',
+      one: 'Još 1 sekunda',
+    );
+    return '$_temp0';
+  }
 }
