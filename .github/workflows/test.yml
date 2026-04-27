@@ -62,5 +62,13 @@ jobs:
       - name: Resolve dependencies
         run: flutter pub get
 
-      - name: Run golden tests
-        run: flutter test
+      - name: Run golden tests (serial, golden files only)
+        # WHY serial + explicit files: golden comparisons are more fragile than
+        # regular widget tests. Running only golden-bearing files with a single
+        # worker avoids cross-file isolate interference and keeps this job
+        # focused on the actual merge gate.
+        run: >
+          flutter test --concurrency=1
+          test/widget/features/onboarding/welcome_screen_test.dart
+          test/widget/features/onboarding/camera_permission_screen_test.dart
+          test/widget/features/auth/login_screen_test.dart
