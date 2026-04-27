@@ -12,15 +12,44 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   # Story 1.2 AC7.1 — Manrope text theme via the canonical Flutter package.
   # Manrope TTFs are bundled under assets/google_fonts/Manrope/ (AC8); the
   # package auto-detects local assets and skips the HTTP fetch we explicitly
   # forbid in lib/main.dart with `GoogleFonts.config.allowRuntimeFetching = false`.
   google_fonts: ^8.0.2
+
   # Story 1.2 AC5 — Material Symbols (rounded variant) is the project icon set.
   # `lib/design/icons.dart` re-exports `Symbols` so callers cannot accidentally
   # pull `Icons.*` (Material Icons) — a CI guard (icons_guard.yml) blocks that.
   material_symbols_icons: ^4.2928.1
+
+  # Story 1.3 AC8 — Riverpod state management; @Riverpod(keepAlive: true) codegen only.
+  flutter_riverpod: ^2.6.1
+  # Story 1.3 AC8 — @riverpod and @Riverpod(keepAlive: true) annotation types.
+  riverpod_annotation: ^2.6.1
+
+  # Story 1.3 AC8 — Single auditable Dio instance routed through dioProvider.
+  dio: ^5.9.2
+  # Story 1.3 AC8 — CookieManager interceptor for persistent session cookies.
+  dio_cookie_manager: ^3.4.0
+  # Story 1.3 AC4 — PersistCookieJar + Storage interface for encrypted cookie jar.
+  cookie_jar: ^4.0.9
+
+  # Story 1.3 AC9 — getApplicationDocumentsDirectory() for cookie jar path.
+  path_provider: ^2.1.5
+
+  # Story 1.3 AC7 — Android Keystore-backed credential storage (username/password/apiKey).
+  flutter_secure_storage: ^10.0.0
+
+  # Story 1.3 AC2 — AES-256-GCM encryption; delegates to Android Keystore hardware crypto.
+  cryptography_flutter: ^2.3.4
+
+  # Story 1.3 AC1 — Synchronous SHA-256 for badCertificateCallback (dart:crypto has no SHA-256).
+  crypto: ^3.0.7
+  # Story 1.3 AC2 — Low-level AES-GCM primitives (SecretBox, AesGcm, etc.);
+  # explicit dep required because cryptography_flutter does not re-export it.
+  cryptography: ^2.9.0
 
 dev_dependencies:
   flutter_test:
@@ -32,6 +61,12 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Story 1.3 AC8 — build_runner codegen target for @riverpod annotations.
+  riverpod_generator: ^2.6.1
+  # Story 1.3 AC8 — Runs Riverpod (and future Freezed/Drift) codegen.
+  # IMPORTANT: build_runner runs in dev only — generated *.g.dart files are committed.
+  # CI (test.yml, integration_fake.yml) MUST NOT run build_runner.
+  build_runner: ^2.4.13
 
 flutter:
   uses-material-design: true
