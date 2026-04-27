@@ -12,6 +12,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Story 1.2 AC7.1 — Manrope text theme via the canonical Flutter package.
+  # Manrope TTFs are bundled under assets/google_fonts/Manrope/ (AC8); the
+  # package auto-detects local assets and skips the HTTP fetch we explicitly
+  # forbid in lib/main.dart with `GoogleFonts.config.allowRuntimeFetching = false`.
+  google_fonts: ^8.0.2
+  # Story 1.2 AC5 — Material Symbols (rounded variant) is the project icon set.
+  # `lib/design/icons.dart` re-exports `Symbols` so callers cannot accidentally
+  # pull `Icons.*` (Material Icons) — a CI guard (icons_guard.yml) blocks that.
+  material_symbols_icons: ^4.2928.1
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +35,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Story 1.2 AC8.1 — Manrope shipped as bundled assets (not Google Fonts CDN).
+  # The `google_fonts` package auto-detects files in this folder by name —
+  # filenames must match `Manrope-{Regular,Medium,SemiBold,Bold,ExtraBold}.ttf`
+  # exactly. OFL.txt ships alongside per SIL OFL 1.1 §4.
+  assets:
+    - assets/google_fonts/Manrope/
