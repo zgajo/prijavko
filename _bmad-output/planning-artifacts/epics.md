@@ -767,16 +767,31 @@ So that every UI surface, every interceptor, and every error path reads from one
 
 **Given** the auth feature directory is scaffolded
 **When** `lib/features/auth/auth_state.dart` is reviewed
-**Then** it declares a Dart 3 `sealed class AuthState` with exactly six final subclasses: `Initial`, `Unauthenticated`, `Authenticating`, `Authenticated({required bool facilitiesLoaded})`, `Reauth`, `LockedOut({required DateTime retryAfter})`, `AuthFailure({required AuthFailureReason reason})`
+**Then** it declares a Dart 3 `sealed class AuthState` with exactly seven final subclasses: `Initial`, `Unauthenticated`, `Authenticating`, `Authenticated({required bool facilitiesLoaded})`, `Reauth`, `LockedOut({required DateTime retryAfter})`, `AuthFailure({required AuthFailureReason reason})`
 **And** `auth_failure_reason.dart` declares an enum with `sessionDead | credentialsInvalid | lockedOut | network | contractBreak`
 **And** the sealed class enforces exhaustive `switch` at every consumer — a new variant triggers compile errors at every call site
 
 **Given** the `AuthNotifier` class is implemented
 **When** `lib/features/auth/auth_notifier.dart` is reviewed
 **Then** it extends Riverpod 3 `Notifier<AuthState>` and is exposed via `authNotifierProvider`
-**And** the `build()` method reads the handoff from Story 1.8 (credentials + cookie jar presence) and returns `Initial`, `Authenticated(facilitiesLoaded: false)`, `Reauth`, or `AuthFailure(credentialsInvalid)` accordingly
+**And** the `build()` method consumes `sessionBootstrapProvider` (Story 1.8) and resolves the initial `AuthState` via the exhaustive transition table below
 **And** it exposes public methods `handleAuthFailure(EvisitorErrorClass)`, `reauthenticate()`, `login(username, password)`, and `logout()`
 **And** `handleAuthFailure` is initially a stub that transitions state based on a hand-coded switch (real classifier wiring arrives in Story 2.3)
+
+**Given** the `SessionBootstrap → AuthState` handoff must be exhaustive — Story 1.8 ships four `SessionBootstrap` variants and Story 2.1 must cover all of them, with no implicit defaults (per Epic 1 retro §6 #2)
+**When** `AuthNotifier.build()` resolves the bootstrap future
+**Then** the mapping is implemented as an exhaustive `switch` over the sealed `SessionBootstrap`:
+
+| `SessionBootstrap` variant (Story 1.8) | `AuthState` (Story 2.1) | Rationale |
+|---|---|---|
+| `BootFreshFirstRun` | `Unauthenticated` | No credentials, no facility cache → onboarding flow drives login |
+| `BootSessionLive` | `Authenticated(facilitiesLoaded: false)` | Credentials + cookies both viable; facilities load lazily |
+| `BootCookiesMissing` | `Reauth` | Credentials viable, cookies expired/undecryptable → silent re-auth (Story 2.4) |
+| `BootCredentialsMissing` | `AuthFailure(reason: credentialsInvalid)` | Facility profile exists but Keystore is empty → recovery flow (Story 2.8) |
+
+**And** `Initial` is reserved exclusively for the synchronous pre-bootstrap window (sessionBootstrap future is `AsyncLoading`) and is never produced by the switch — once the future resolves, one of the four mapped variants is emitted
+**And** the switch is exhaustive — adding a fifth `SessionBootstrap` variant later breaks compilation in `auth_notifier.dart`, forcing a deliberate update (Poka-yoke)
+**And** a unit test in `auth_notifier_bootstrap_test.dart` exercises every `SessionBootstrap` variant and asserts the resulting `AuthState` against the table above; a single missing case fails CI
 
 **Given** state transitions must never skip or corrupt the FSM
 **When** unit tests for `AuthNotifier` run
@@ -801,7 +816,11 @@ So that the UI surfaces the right recovery affordance and my failed submission n
 **Given** the error-classification layer exists
 **When** `lib/core/errors/evisitor_error_class.dart` is reviewed
 **Then** it declares `enum EvisitorErrorClass { sessionDead, lockedOut, credentialsInvalid, throttled, network, serverError, contractBreak, validationError }`
-**And** `lib/core/errors/evisitor_error_classifier.dart` exposes a pure function `EvisitorErrorClass classify(DioException error)` with zero side effects
+**And** `lib/core/errors/classifier_input.dart` declares a Dart 3 `sealed class ClassifierInput` with exactly two final subclasses:
+  - `DioFailure({required DioException exception})` — the request threw (non-2xx response, timeout, connection error, cancellation)
+  - `SuccessEnvelope({required Response<dynamic> response, required Uri requestUri})` — HTTP 200 carrying a `{UserMessage, SystemMessage}` error envelope (the Rhetos issue #182 case Story 1.7 documented; status code alone is insufficient per CLAUDE.md eVisitor quirks)
+**And** `lib/core/errors/evisitor_error_classifier.dart` exposes a single pure function `EvisitorErrorClass classify(ClassifierInput input)` with zero side effects — one entry point, not two; the unified ADT forces every call site (`AuthInterceptor` from Story 2.3, eVisitor response post-processing in `EvisitorApiClient`) to construct the correct variant and removes the "did you remember to inspect the 200 body?" footgun (per Epic 1 retro §6 #4)
+**And** the existing `LoginResponseClassifier.classifyLoginResponse` (Story 1.7) is removed; its six documented response shapes become test cases against `classify(ClassifierInput)` and the `// TODO(story-2.2):` migration marker in 1.7 is closed
 
 **Given** the classifier is called with HTTP 401
 **When** processed
@@ -815,7 +834,7 @@ So that the UI surfaces the right recovery affordance and my failed submission n
 **When** processed
 **Then** the function returns `sessionDead` — this is the Rhetos issue #182 case that the naïve Dio interceptor would miss
 
-**Given** the classifier is called on a non-Login endpoint with HTTP 200 + error envelope `{UserMessage, SystemMessage}`
+**Given** the classifier is called via `SuccessEnvelope` on a non-Login endpoint with HTTP 200 + error envelope `{UserMessage, SystemMessage}`
 **When** processed
 **Then** the function returns `sessionDead` if `SystemMessage` matches any session-dead regex, else `validationError`
 
@@ -945,6 +964,20 @@ So that I never accidentally trigger the Rhetos 5-fail server-side lockout from 
 **Then** the next login/reauth call is allowed
 **And** `consecutiveFailures` is reset to 0
 **And** the state transitions to `Unauthenticated` (or `Reauth` if triggered from an existing session context)
+
+**Given** lockout state must survive process death — Story 1.7's lockout timer was `autoDispose` and lost on back-gesture / force-quit, which Epic 1 retro §6 #3 flagged as the gap Story 2.5 must close (otherwise a host force-quits and the lockout vanishes, defeating the whole circuit-breaker)
+**When** `AuthNotifier` transitions into `LockedOut(retryAfter: ...)`
+**Then** `retryAfter` is persisted as `lockedOutUntil: DateTime?` (UTC, ISO-8601) to `flutter_secure_storage` (Android Keystore-backed) via a dedicated `LockoutStore` interface that mirrors the `CredentialStore` seam pattern from Story 1.3 (abstract interface + concrete + `FakeLockoutStore` with constructor-injected error-script function per retro action T6)
+**And** `consecutiveFailures` is persisted in the same `LockoutStore` write so a force-quit between failure 2 and failure 3 does not reset the counter
+**And** the `LockoutStore` write is the **last** step of the state transition — if it fails, the transition is aborted and `AuthNotifier` emits `AuthFailure(network)` (Jidoka — never enter `LockedOut` without durable backing)
+
+**Given** the app is force-quit while in `LockedOut` and re-launched before `retryAfter`
+**When** `AuthNotifier.build()` runs during cold start
+**Then** it reads `LockoutStore.load()` **before** consuming `sessionBootstrapProvider`
+**And** if `lockedOutUntil != null && DateTime.now().isBefore(lockedOutUntil!)`, the initial state is `LockedOut(retryAfter: lockedOutUntil!)` — overriding any `SessionBootstrap → AuthState` mapping from Story 2.1
+**And** if `lockedOutUntil != null && DateTime.now().isAfter(lockedOutUntil!)`, `LockoutStore.clear()` is called and the bootstrap mapping proceeds normally
+**And** an integration test simulates: 3 failed logins → `AuthNotifier` reaches `LockedOut` → force-kill app → cold start within the cooldown window → asserts `LockedOut` with the original `retryAfter` and disabled login inputs
+**And** a second integration test simulates the same flow but cold-starts **after** `retryAfter` and asserts `Unauthenticated` plus a cleared `LockoutStore`
 
 **Given** the client-side threshold must stay strictly more conservative than Rhetos server-side
 **When** a unit test compares the breaker budget to the documented Rhetos policy
