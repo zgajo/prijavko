@@ -106,4 +106,23 @@ class AppLocalizationsHr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get settingsTitle => 'Postavke';
+
+  @override
+  String get settingsButtonTooltip => 'Postavke';
+
+  @override
+  String get settingsReplaceCredentialsLabel => 'Zamijeni podatke za prijavu';
+
+  @override
+  String get settingsCredentialsUpdatedSnackbar => 'Podaci ažurirani.';
+
+  @override
+  String get replaceCredentialsBanner =>
+      'Zamjena podataka — stari objekti i nedoslani gosti ostaju.';
+
+  @override
+  String get replaceCredentialsSubmitButton => 'Spremi nove podatke';
 }

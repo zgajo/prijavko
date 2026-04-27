@@ -1,6 +1,6 @@
 # Story 1.9: Credential Re-Entry from Settings
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -223,40 +223,40 @@ Add to **both** `lib/l10n/app_hr.arb` and `lib/l10n/app_en.arb`. Run `flutter ge
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Settings screen skeleton + new routes (AC: #1, #4)
-  - [ ] Subtask 1.1 — Create `lib/features/settings/settings_screen.dart` per AC1.1–1.6.
-  - [ ] Subtask 1.2 — Add `/settings` (top-level, name: `'settings'`) and nested `replace-credentials` routes to `lib/app/router.dart` per AC2.1, AC4.2.
-  - [ ] Subtask 1.3 — Add gear-icon `AppBar` action to `/home` placeholder per AC4.1; update the existing TODO comment per AC4.4.
-  - [ ] Subtask 1.4 — Verify no other call site references the placeholder `Scaffold` body — only `router.dart` owns it (`grep -n 'Home — Epic 3' lib/`).
+- [x] Task 1 — Settings screen skeleton + new routes (AC: #1, #4)
+  - [x] Subtask 1.1 — Create `lib/features/settings/settings_screen.dart` per AC1.1–1.6.
+  - [x] Subtask 1.2 — Add `/settings` (top-level, name: `'settings'`) and nested `replace-credentials` routes to `lib/app/router.dart` per AC2.1, AC4.2.
+  - [x] Subtask 1.3 — Add gear-icon `AppBar` action to `/home` placeholder per AC4.1; update the existing TODO comment per AC4.4.
+  - [x] Subtask 1.4 — Verify no other call site references the placeholder `Scaffold` body — only `router.dart` owns it (`grep -n 'Home — Epic 3' lib/`).
 
-- [ ] Task 2 — `LoginScreen` `replaceMode` extension (AC: #2)
-  - [ ] Subtask 2.1 — Add `final bool replaceMode;` and `final String? prefilledUsername;` constructor parameters with safe defaults per AC2.2. The `prefilledUsername` parameter is reserved for future (e.g. Story 2.8 credentials-missing recovery may pass a known-good username); Story 1.9 does not pass it but the ctor accepts it.
-  - [ ] Subtask 2.2 — Implement `_hydrateUsernameFromKeystore()` per AC2.3; gate behind `widget.replaceMode`.
-  - [ ] Subtask 2.3 — Render the replace banner above `loginHeadline` when `widget.replaceMode == true` per AC2.4.
-  - [ ] Subtask 2.4 — Branch the submit-button label between `loginSubmitButton` and `replaceCredentialsSubmitButton` per AC2.5.
-  - [ ] Subtask 2.5 — Branch `_maybeSubmit`'s success path: `context.pop(true)` in replace mode, `context.goNamed('home')` in default per AC2.7.
-  - [ ] Subtask 2.6 — Verify failure path is unchanged — `LoginNotifier._handleFailure` still routes to `LoginIdle(error)` / `LoginLockedOut(retryAfter)`; no Keystore write occurs (AC3 invariant).
+- [x] Task 2 — `LoginScreen` `replaceMode` extension (AC: #2)
+  - [x] Subtask 2.1 — Add `final bool replaceMode;` and `final String? prefilledUsername;` constructor parameters with safe defaults per AC2.2. The `prefilledUsername` parameter is reserved for future (e.g. Story 2.8 credentials-missing recovery may pass a known-good username); Story 1.9 does not pass it but the ctor accepts it.
+  - [x] Subtask 2.2 — Implement `_hydrateUsernameFromKeystore()` per AC2.3; gate behind `widget.replaceMode`.
+  - [x] Subtask 2.3 — Render the replace banner above `loginHeadline` when `widget.replaceMode == true` per AC2.4.
+  - [x] Subtask 2.4 — Branch the submit-button label between `loginSubmitButton` and `replaceCredentialsSubmitButton` per AC2.5.
+  - [x] Subtask 2.5 — Branch `_maybeSubmit`'s success path: `context.pop(true)` in replace mode, `context.goNamed('home')` in default per AC2.7.
+  - [x] Subtask 2.6 — Verify failure path is unchanged — `LoginNotifier._handleFailure` still routes to `LoginIdle(error)` / `LoginLockedOut(retryAfter)`; no Keystore write occurs (AC3 invariant).
 
-- [ ] Task 3 — l10n strings (AC: #7)
-  - [ ] Subtask 3.1 — Add the 6 new keys to `lib/l10n/app_en.arb` (with `@`-descriptor blocks).
-  - [ ] Subtask 3.2 — Add the 6 new keys to `lib/l10n/app_hr.arb` (Croatian copy verbatim).
-  - [ ] Subtask 3.3 — Run `flutter test` once to trigger l10n generation. Verify generated `lib/l10n/app_localizations*.dart` reflects the new getters.
+- [x] Task 3 — l10n strings (AC: #7)
+  - [x] Subtask 3.1 — Add the 6 new keys to `lib/l10n/app_en.arb` (with `@`-descriptor blocks).
+  - [x] Subtask 3.2 — Add the 6 new keys to `lib/l10n/app_hr.arb` (Croatian copy verbatim).
+  - [x] Subtask 3.3 — Run `flutter test` once to trigger l10n generation. Verify generated `lib/l10n/app_localizations*.dart` reflects the new getters.
 
-- [ ] Task 4 — Tests (AC: #6)
-  - [ ] Subtask 4.1 — `test/widget/features/settings/settings_screen_test.dart` — 4 cases per AC6.1. Reuse `_makeTestApp(...)` pattern from `test/widget/features/auth/login_screen_test.dart`; isolated `GoRouter` with `/settings`, `/settings/replace-credentials`, `/home`. Provider overrides: `credentialStoreProvider` (FakeCredentialStore), `dioProvider` (Dio + EvisitorFakeAdapter), `evisitorApiClientProvider`, `cookieJarDirectoryProvider`, `securityServiceProvider` (FakeSecurityService). Mock the `WindowSecureFlag` MethodChannel as in `login_screen_test.dart` lines 97–112.
-  - [ ] Subtask 4.2 — `test/widget/features/auth/login_screen_replace_mode_test.dart` — 7 cases per AC6.2. Same provider-override scaffolding as above.
-  - [ ] Subtask 4.3 — Update `test/widget/features/auth/login_screen_test.dart`'s "renders submit button" test with the regression assertion per AC6.3 (banner absent, pre-fill absent, default submit copy present in non-replace mode).
-  - [ ] Subtask 4.4 — Update `test/app_smoke_test.dart` per AC6.4 — 1 new test asserting gear-icon visibility on `/home` and Settings tile visibility after navigation.
-  - [ ] Subtask 4.5 — Run `flutter test` — all green; ~202 total (192 baseline + ~10 new); zero deletions.
+- [x] Task 4 — Tests (AC: #6)
+  - [x] Subtask 4.1 — `test/widget/features/settings/settings_screen_test.dart` — 4 cases per AC6.1. Reuse `_makeTestApp(...)` pattern from `test/widget/features/auth/login_screen_test.dart`; isolated `GoRouter` with `/settings`, `/settings/replace-credentials`, `/home`. Provider overrides: `credentialStoreProvider` (FakeCredentialStore), `dioProvider` (Dio + EvisitorFakeAdapter), `evisitorApiClientProvider`, `cookieJarDirectoryProvider`, `securityServiceProvider` (FakeSecurityService). Mock the `WindowSecureFlag` MethodChannel as in `login_screen_test.dart` lines 97–112.
+  - [x] Subtask 4.2 — `test/widget/features/auth/login_screen_replace_mode_test.dart` — 7 cases per AC6.2. Same provider-override scaffolding as above.
+  - [x] Subtask 4.3 — Update `test/widget/features/auth/login_screen_test.dart`'s "renders submit button" test with the regression assertion per AC6.3 (banner absent, pre-fill absent, default submit copy present in non-replace mode).
+  - [x] Subtask 4.4 — Update `test/app_smoke_test.dart` per AC6.4 — 1 new test asserting gear-icon visibility on `/home` and Settings tile visibility after navigation.
+  - [x] Subtask 4.5 — Run `flutter test` — all green; 204 total (192 baseline + 12 new); zero deletions.
 
-- [ ] Task 5 — Validation gate (AC: #8)
-  - [ ] Subtask 5.1 — `flutter test` — green.
-  - [ ] Subtask 5.2 — `dart analyze --fatal-warnings --fatal-infos` — clean.
-  - [ ] Subtask 5.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
-  - [ ] Subtask 5.4 — PII grep guard per AC8.4 — clean.
-  - [ ] Subtask 5.5 — i18n literal-string guard per AC8.5 — clean.
+- [x] Task 5 — Validation gate (AC: #8)
+  - [x] Subtask 5.1 — `flutter test` — green (204/204).
+  - [x] Subtask 5.2 — `dart analyze --fatal-warnings --fatal-infos` — clean.
+  - [x] Subtask 5.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
+  - [x] Subtask 5.4 — PII grep guard per AC8.4 — clean (only structural references; no value interpolation).
+  - [x] Subtask 5.5 — i18n literal-string guard per AC8.5 — clean (only comment lines hit).
   - [ ] Subtask 5.6 — Manual smoke against fake env per AC8.6 (deferred to user; emulator required).
-  - [ ] Subtask 5.7 — Update `_bmad-output/implementation-artifacts/deferred-work.md` per AC1.4 — re-defer the Story 1.4 ad-consent reopen tile to "future Settings expansion (1.9 ships only the credential re-entry tile per its AC)".
+  - [x] Subtask 5.7 — Update `_bmad-output/implementation-artifacts/deferred-work.md` per AC1.4 — re-defer the Story 1.4 ad-consent reopen tile to "future Settings expansion (1.9 ships only the credential re-entry tile per its AC)".
 
 ---
 
@@ -452,10 +452,37 @@ Option 2 is the JIT-correct pick *only* because the migration cost is two charac
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6 (Claude Sonnet 4.6)
 
 ### Debug Log References
 
+- `tester.pageBack()` failed in settings_screen_test "no SnackBar on back" — LoginScreen has no AppBar so there is no UI back button; fixed to `tester.binding.handlePopRoute()` which simulates the hardware system back gesture.
+- `prefer_const_constructors` infos on `Credentials(...)` constructor calls in 3 test files — fixed by adding `const` to all 6 sites; Freezed-generated const ctor supports this.
+- `dart format` reformatted `router.dart`, `login_screen.dart`, `login_screen_replace_mode_test.dart` — accepted; no logic change.
+
 ### Completion Notes List
 
+- Task 5.6 (manual smoke) deferred to user — emulator required; all automated gates passed.
+- 204 tests total (192 Story 1.8 baseline + 12 new: 4 settings_screen_test + 7 login_screen_replace_mode_test + 1 app_smoke_test).
+- `FakeCredentialStore.savedCredentials` assignment uses `const Credentials(...)` throughout test files per `prefer_const_constructors` lint.
+- `tester.binding.handlePopRoute()` is the correct Flutter test idiom for system-back simulation when no UI back button exists (full-screen onboarding layout).
+
 ### File List
+
+**Created:**
+- `lib/features/settings/settings_screen.dart`
+- `test/widget/features/settings/settings_screen_test.dart`
+- `test/widget/features/auth/login_screen_replace_mode_test.dart`
+
+**Modified:**
+- `lib/features/auth/login_screen.dart`
+- `lib/app/router.dart`
+- `lib/l10n/app_en.arb`
+- `lib/l10n/app_hr.arb`
+- `lib/l10n/app_localizations.dart`
+- `lib/l10n/app_localizations_en.dart`
+- `lib/l10n/app_localizations_hr.dart`
+- `test/widget/features/auth/login_screen_test.dart`
+- `test/app_smoke_test.dart`
+- `_bmad-output/implementation-artifacts/deferred-work.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

@@ -105,4 +105,23 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsButtonTooltip => 'Settings';
+
+  @override
+  String get settingsReplaceCredentialsLabel => 'Replace sign-in credentials';
+
+  @override
+  String get settingsCredentialsUpdatedSnackbar => 'Credentials updated.';
+
+  @override
+  String get replaceCredentialsBanner =>
+      'Replacing credentials — facilities and undelivered guests stay.';
+
+  @override
+  String get replaceCredentialsSubmitButton => 'Save new credentials';
 }

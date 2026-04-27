@@ -54,5 +54,17 @@
   "@loginLockoutCountdownSeconds": {
     "description": "Plural countdown beneath the lockout message",
     "placeholders": { "seconds": { "type": "int", "format": "compact" } }
-  }
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": { "description": "Settings screen AppBar title" },
+  "settingsButtonTooltip": "Settings",
+  "@settingsButtonTooltip": { "description": "Tooltip for the gear icon button on the Home AppBar" },
+  "settingsReplaceCredentialsLabel": "Replace sign-in credentials",
+  "@settingsReplaceCredentialsLabel": { "description": "Label for the credential re-entry tile on the Settings screen" },
+  "settingsCredentialsUpdatedSnackbar": "Credentials updated.",
+  "@settingsCredentialsUpdatedSnackbar": { "description": "SnackBar message shown on Settings screen after successful credential replacement" },
+  "replaceCredentialsBanner": "Replacing credentials — facilities and undelivered guests stay.",
+  "@replaceCredentialsBanner": { "description": "Informational banner shown on LoginScreen in replace mode; reassures the host that facility context and queue are preserved" },
+  "replaceCredentialsSubmitButton": "Save new credentials",
+  "@replaceCredentialsSubmitButton": { "description": "Submit button label on LoginScreen in replace mode; replaces the default 'Sign in' copy" }
 }

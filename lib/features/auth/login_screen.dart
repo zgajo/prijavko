@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:prijavko/core/errors/app_error.dart';
 import 'package:prijavko/core/result/result.dart';
 import 'package:prijavko/core/security/window_secure_flag.dart';
 import 'package:prijavko/design/icons.dart';
@@ -13,10 +14,22 @@ import 'package:prijavko/design/tokens.dart';
 import 'package:prijavko/features/auth/login_failure.dart';
 import 'package:prijavko/features/auth/login_notifier.dart';
 import 'package:prijavko/features/auth/login_state.dart';
+import 'package:prijavko/features/settings/credential_store.dart';
 import 'package:prijavko/l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({
+    super.key,
+    this.replaceMode = false,
+    // WHY reserved: Story 2.8 (credentials-missing recovery) may pass a
+    // known-good username directly rather than loading from the Keystore.
+    // Story 1.9 does not pass it, but accepting the parameter here closes
+    // the Story 1.7 deferred extension point.
+    this.prefilledUsername,
+  });
+
+  final bool replaceMode;
+  final String? prefilledUsername;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -40,6 +53,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Rebuild when text changes (to gate submit button).
     _usernameController.addListener(_onFieldChanged);
     _passwordController.addListener(_onFieldChanged);
+    if (widget.replaceMode) {
+      _hydrateUsernameFromKeystore();
+    }
+  }
+
+  Future<void> _hydrateUsernameFromKeystore() async {
+    final result = await ref.read(credentialStoreProvider).loadCredentials();
+    if (!mounted) return;
+    if (result is Ok<Credentials, StorageError>) {
+      _usernameController.text = result.value.username;
+      // WHY focus password (not username): username is pre-filled and
+      // immutable in this flow's mental model — the host is *changing
+      // password*, not username. Auto-focusing password matches the
+      // typical "your username, new password" UX pattern (banking apps,
+      // 2FA flows). The user can still edit username; we just do not
+      // assume they want to.
+      _passwordFocus.requestFocus();
+    }
+    // Err path is silently tolerated — the user re-types the username.
+    // The next saveCredentials() will overwrite either way.
   }
 
   @override
@@ -70,7 +103,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
 
     if (result is Ok) {
-      context.goNamed('home');
+      if (widget.replaceMode) {
+        // WHY pop(true): back-stack already has /settings underneath. pop is
+        // go_router's documented idiom for "return result to parent"; using
+        // goNamed here would push a duplicate /settings route on every
+        // successful re-entry — a slow stack leak.
+        context.pop(true);
+      } else {
+        context.goNamed('home');
+      }
     }
     // Err path: state already updated by notifier — UI rebuild handles it.
   }
@@ -106,6 +147,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: TokensSpace.s64),
+                      if (widget.replaceMode) ...[
+                        // WHY plain Container (not MaterialBanner): MaterialBanner
+                        // is reserved for transient system-level recovery messages
+                        // (Epic 2 Story 2.7 CredentialBanner). Re-entry is a
+                        // host-initiated flow, not a system event — a neutral
+                        // surfaceContainerHigh panel is the correct affordance.
+                        // WHY Symbols.info_rounded (not warning): this is
+                        // informational — facility/queue preservation is a
+                        // positive reassurance (UX-DR24 shape redundancy).
+                        Container(
+                          padding: const EdgeInsets.all(TokensSpace.s12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(
+                              TokensSpace.s12,
+                            ),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Symbols.info_rounded, size: 20),
+                              const SizedBox(width: TokensSpace.s12),
+                              Expanded(
+                                child: Text(
+                                  l10n.replaceCredentialsBanner,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: TokensSpace.s24),
+                      ],
                       Text(
                         l10n.loginHeadline,
                         style: theme.textTheme.displayMedium,
@@ -183,7 +259,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: colorScheme.onPrimary,
                         ),
                       )
-                    : Text(l10n.loginSubmitButton),
+                    // WHY different label in replace mode: "Prijavi se" implies
+                    // first-time login; "Spremi nove podatke" matches the host's
+                    // mental model of replacing, not signing in.
+                    : Text(
+                        widget.replaceMode
+                            ? l10n.replaceCredentialsSubmitButton
+                            : l10n.loginSubmitButton,
+                      ),
               ),
             ),
           ],

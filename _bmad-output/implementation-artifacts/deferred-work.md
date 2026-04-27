@@ -29,7 +29,7 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 
 ## Deferred from: code review of story-1-4-ump-cmp-eu-consent-surface (2026-04-27)
 
-- Settings list tile "Privola za oglase" is not wired in this story — Settings UI lands in Story 1.9. `ConsentService.showPrivacyOptionsForm()` and `isPrivacyOptionsRequired()` are exposed and ready for Story 1.9 to consume.
+- Settings list tile "Privola za oglase" (ad-consent reopen) — Story 1.9 ships the Settings shell with only the credential re-entry tile per its AC. The ad-consent reopen tile remains deferred to a future Settings expansion story (likely paired with Story 10.1 closed-beta launch when the ad surface goes live). `ConsentService.showPrivacyOptionsForm()` and `isPrivacyOptionsRequired()` are exposed and ready to consume at that point.
 - Real-SDK integration test (UMP form on Android emulator with `DebugGeography.debugGeographyEea`) deferred to Story 10.1 canary test — requires emulator with Play Services and a valid AdMob test device ID; CI-fragile at this stage.
 - Architecture doc line 673 still lists `lib/features/onboarding/consent_screen.dart`. Update to `lib/core/consent/consent_gate.dart` in a small follow-up PR or Story 1.5.
 - `FakeConsentService` missing `showPrivacyOptionsForm` scripting — cannot test error path for `reopenPrivacyOptions()`. Add `scriptedPrivacyFormResult` param when Story 1.9 wires the Settings tile.
@@ -57,11 +57,13 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 
 - `CapturePreferenceStore` not behind abstract interface — `FakeCapturePreferenceStore extends CapturePreferenceStore` (concrete). Any new method added silently falls through to real SharedPreferences in tests. Contrast with `PermissionService` (abstract) seam. Consider extracting interface if class gains additional methods.
 - AutoDispose providers (`capturePreferenceStoreProvider`, `permissionServiceProvider`) captured via `ref.read` before a long `await requestCamera()` gap. Safe while both providers are stateless value types; becomes fragile if either is converted to a stateful `Notifier`. Document or migrate to a `Notifier`-hosted action method.
-- `restricted`/`limited` Android permission status → `requestCamera()` returns `false` immediately with no OS dialog shown. User taps Allow, nothing appears, screen advances in manual-only mode with no explanation. Address in Story 1.9 or a dedicated settings-screen remediation.
+- `restricted`/`limited` Android permission status → `requestCamera()` returns `false` immediately with no OS dialog shown. User taps Allow, nothing appears, screen advances in manual-only mode with no explanation. Story 1.9 does NOT address this — Settings has no camera-permission row in v1.0. Re-deferred to "future Settings camera-permission status row" (likely Epic 4 Story 4.5 area when scan-screen permission UX revisits).
 - No test for `SharedPreferences.setString` write failure in `CapturePreferenceStore` — blocked on Result contract decision (see decision-needed finding in story 1.6). Add when Result wrapping is resolved.
-- `openAppSettings()` return value discarded in `PermissionServiceImpl.openSettings()`. `openAppSettings()` returns `bool` (success on device). When Story 1.9 wires the "open settings" action, change `openSettings()` return type to `Future<bool>` and update the interface.
+- `openAppSettings()` return value discarded in `PermissionServiceImpl.openSettings()`. `openAppSettings()` returns `bool` (success on device). Story 1.9 does not call `openAppSettings` — re-deferred. When a future story wires the "open settings" action, change `openSettings()` return type to `Future<bool>` and update the interface.
 
 ## Deferred from: code review of story-1-7-evisitor-login-and-live-credential-verification (2026-04-27)
+
+- **CLOSED by Story 1.9**: `LoginScreen` constructor extension point (`{prefilledUsername, replaceMode}`) — Story 1.9 adds both parameters to `LoginScreen`. `replaceMode` drives the replace-credentials flow; `prefilledUsername` is reserved for Story 2.8 (credentials-missing recovery may pass a known-good username).
 
 - CredentialStore non-atomic partial writes (`lib/features/settings/credential_store.dart:55-58`) — pre-existing Story 1.3 logic with a documented "partial state is tolerable; the next saveCredentials call overwrites" comment; not introduced by this change.
 - Lockout state lost on process death — spec defers persistent circuit breaker to Epic 2 Story 2.5. The `LoginNotifier`'s `Timer.periodic` is the documented interim; force-stop currently bypasses the prijavko-side 6-minute budget.

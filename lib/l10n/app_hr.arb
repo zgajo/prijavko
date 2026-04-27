@@ -25,5 +25,11 @@
   "loginServerError": "eVisitor je nedostupan. Pokušajte kasnije.",
   "loginContractBreakError": "Ažurirajte prijavko iz Play Store-a i pokušajte ponovno.",
   "loginLockoutMessage": "Previše neuspješnih pokušaja — pričekajte 6 minuta.",
-  "loginLockoutCountdownSeconds": "{seconds, plural, =1 {Još 1 sekunda} few {Još {seconds} sekunde} other {Još {seconds} sekundi}}"
+  "loginLockoutCountdownSeconds": "{seconds, plural, =1 {Još 1 sekunda} few {Još {seconds} sekunde} other {Još {seconds} sekundi}}",
+  "settingsTitle": "Postavke",
+  "settingsButtonTooltip": "Postavke",
+  "settingsReplaceCredentialsLabel": "Zamijeni podatke za prijavu",
+  "settingsCredentialsUpdatedSnackbar": "Podaci ažurirani.",
+  "replaceCredentialsBanner": "Zamjena podataka — stari objekti i nedoslani gosti ostaju.",
+  "replaceCredentialsSubmitButton": "Spremi nove podatke"
 }

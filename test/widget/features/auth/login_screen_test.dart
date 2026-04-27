@@ -154,6 +154,13 @@ void main() {
 
       final button = tester.widget<FilledButton>(find.byType(FilledButton));
       expect(button.onPressed, isNull);
+      // AC6.3 regression guard: default LoginScreen() has no replace banner and
+      // no pre-filled username — guards against a future replaceMode default flip.
+      expect(find.textContaining('Zamjena podataka'), findsNothing);
+      final usernameField = tester.widget<TextField>(
+        find.byType(TextField).first,
+      );
+      expect(usernameField.controller?.text, isEmpty);
     });
 
     testWidgets('submit enabled once both fields have text', (tester) async {
