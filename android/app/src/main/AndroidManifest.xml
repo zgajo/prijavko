@@ -39,6 +39,15 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Story 1.4 AC2 — AdMob App ID required by google_mobile_ads SDK to avoid
+             on-launch crash, even though MobileAds.initialize() does not run until
+             Story 10.1. Use Google's sample test App ID for now; replace with the
+             real AdMob App ID when the AdMob account is provisioned (Story 10.x). -->
+        <!-- TODO(story-10.1): replace sample App ID with real AdMob App ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
