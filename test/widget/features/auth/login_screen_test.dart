@@ -6,6 +6,8 @@
 //
 // WHY hr locale: Croatian is primary runtime locale.
 
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +38,8 @@ Widget _makeTestApp({
   Locale locale = const Locale('hr'),
   required EvisitorFakeAdapter fakeAdapter,
   required FakeCredentialStore fakeCredentialStore,
+  required String cookieJarDir,
+  Duration lockoutDuration = const Duration(minutes: 6),
 }) {
   final testRouter = GoRouter(
     initialLocation: '/onboarding/login',
@@ -63,12 +67,16 @@ Widget _makeTestApp({
 
   final dio = Dio(BaseOptions(baseUrl: 'http://localhost/'))
     ..httpClientAdapter = fakeAdapter;
-  final apiClient = EvisitorApiClient(dio)..isApiKeyAvailable = () => true;
+  final apiClient = EvisitorApiClient(
+    dio,
+    isApiKeyAvailable: () => true,
+    lockoutDuration: lockoutDuration,
+  );
 
   return ProviderScope(
     overrides: [
       securityServiceProvider.overrideWithValue(FakeSecurityService()),
-      cookieJarDirectoryProvider.overrideWithValue('/tmp/test_cookies'),
+      cookieJarDirectoryProvider.overrideWithValue(cookieJarDir),
       dioProvider.overrideWithValue(dio),
       evisitorApiClientProvider.overrideWithValue(apiClient),
       credentialStoreProvider.overrideWithValue(fakeCredentialStore),
@@ -106,18 +114,27 @@ void main() {
   group('LoginScreen', () {
     late EvisitorFakeAdapter fakeAdapter;
     late FakeCredentialStore fakeCredentialStore;
+    late Directory cookieDir;
 
     setUp(() {
       fakeAdapter = EvisitorFakeAdapter(
         scriptedLogin: const FakeLoginSuccess(),
       );
       fakeCredentialStore = FakeCredentialStore();
+      // WHY systemTemp: parallel test workers must not collide on a shared
+      // path; a hardcoded `/tmp/test_cookies` is also non-portable.
+      cookieDir = Directory.systemTemp.createTempSync('prijavko_test_cookies_');
+    });
+
+    tearDown(() {
+      if (cookieDir.existsSync()) cookieDir.deleteSync(recursive: true);
     });
 
     Widget makeApp({ThemeMode themeMode = ThemeMode.light}) => _makeTestApp(
       themeMode: themeMode,
       fakeAdapter: fakeAdapter,
       fakeCredentialStore: fakeCredentialStore,
+      cookieJarDir: cookieDir.path,
     );
 
     testWidgets('headline + body + reassurance render in Croatian', (
@@ -184,6 +201,7 @@ void main() {
           _makeTestApp(
             fakeAdapter: fakeAdapter,
             fakeCredentialStore: fakeCredentialStore,
+            cookieJarDir: cookieDir.path,
           ),
         );
         await tester.pumpAndSettle();
@@ -217,6 +235,7 @@ void main() {
           _makeTestApp(
             fakeAdapter: fakeAdapter,
             fakeCredentialStore: fakeCredentialStore,
+            cookieJarDir: cookieDir.path,
           ),
         );
         await tester.pumpAndSettle();
@@ -243,6 +262,7 @@ void main() {
           _makeTestApp(
             fakeAdapter: fakeAdapter,
             fakeCredentialStore: fakeCredentialStore,
+            cookieJarDir: cookieDir.path,
           ),
         );
         await tester.pumpAndSettle();
@@ -264,6 +284,114 @@ void main() {
       },
     );
 
+    testWidgets('lockout transitions back to LoginIdle after retryAfter', (
+      tester,
+    ) async {
+      // AC10.3: with retryAfter set 2s in the future, real-wait past expiry
+      // and pump the periodic timer to assert the form is re-enabled.
+      fakeAdapter = EvisitorFakeAdapter(
+        scriptedLogin: const FakeLoginLockedOut(),
+      );
+
+      await tester.pumpWidget(
+        _makeTestApp(
+          fakeAdapter: fakeAdapter,
+          fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
+          lockoutDuration: const Duration(seconds: 2),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'user');
+      await tester.enterText(find.byType(TextField).last, 'pass');
+      await tester.pump();
+
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+
+      // Lockout banner is visible.
+      expect(find.textContaining('Previše neuspješnih pokušaja'), findsOneWidget);
+
+      // WHY runAsync: `DateTime.now()` is wall-clock; the periodic timer's
+      // exit condition needs real time to elapse past `retryAfter`. FakeAsync
+      // (the default) would block `Future.delayed` indefinitely.
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 2500));
+      });
+      // Pump 1s of test-scheduler time — the periodic Timer fires, checks
+      // wall-clock against retryAfter (already past), transitions to LoginIdle.
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.textContaining('Previše neuspješnih pokušaja'), findsNothing);
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNotNull);
+    });
+
+    testWidgets('server-error path renders Croatian server message', (
+      tester,
+    ) async {
+      // AC10.3: adapter returns 500, assert loginServerError copy is shown.
+      fakeAdapter = EvisitorFakeAdapter(
+        scriptedLogin: const FakeLoginServerError(),
+      );
+
+      await tester.pumpWidget(
+        _makeTestApp(
+          fakeAdapter: fakeAdapter,
+          fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'user');
+      await tester.enterText(find.byType(TextField).last, 'pass');
+      await tester.pump();
+
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('eVisitor je nedostupan'), findsOneWidget);
+    });
+
+    testWidgets('inline error clears when fields change', (tester) async {
+      // AC5.1: LoginIdle.error is "cleared when fields change".
+      fakeAdapter = EvisitorFakeAdapter(
+        scriptedLogin: const FakeLoginCredentialsInvalid(),
+      );
+
+      await tester.pumpWidget(
+        _makeTestApp(
+          fakeAdapter: fakeAdapter,
+          fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).first, 'user');
+      await tester.enterText(find.byType(TextField).last, 'wrong');
+      await tester.pump();
+      await tester.tap(find.byType(FilledButton));
+      await tester.pumpAndSettle();
+
+      // Error visible after failed submit.
+      expect(
+        find.textContaining('Provjerite korisničko ime i lozinku.'),
+        findsOneWidget,
+      );
+
+      // User edits the password field — error must clear.
+      await tester.enterText(find.byType(TextField).last, 'wrong2');
+      await tester.pump();
+
+      expect(
+        find.textContaining('Provjerite korisničko ime i lozinku.'),
+        findsNothing,
+      );
+    });
+
     testWidgets('lockout countdown ticks down', (tester) async {
       fakeAdapter = EvisitorFakeAdapter(
         scriptedLogin: const FakeLoginLockedOut(),
@@ -273,6 +401,7 @@ void main() {
         _makeTestApp(
           fakeAdapter: fakeAdapter,
           fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
         ),
       );
       await tester.pumpAndSettle();
@@ -318,6 +447,7 @@ void main() {
         _makeTestApp(
           fakeAdapter: fakeAdapter,
           fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
         ),
       );
       await tester.pumpAndSettle();
@@ -348,6 +478,7 @@ void main() {
         _makeTestApp(
           fakeAdapter: fakeAdapter,
           fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
         ),
       );
       await tester.pumpAndSettle();
@@ -372,6 +503,7 @@ void main() {
         _makeTestApp(
           fakeAdapter: fakeAdapter,
           fakeCredentialStore: fakeCredentialStore,
+          cookieJarDir: cookieDir.path,
         ),
       );
       await tester.pumpAndSettle();
@@ -446,6 +578,7 @@ void main() {
             themeMode: ThemeMode.dark,
             fakeAdapter: fakeAdapter,
             fakeCredentialStore: fakeCredentialStore,
+            cookieJarDir: cookieDir.path,
           ),
         );
         await tester.pumpAndSettle();
@@ -475,6 +608,7 @@ void main() {
             themeMode: ThemeMode.dark,
             fakeAdapter: fakeAdapter,
             fakeCredentialStore: fakeCredentialStore,
+            cookieJarDir: cookieDir.path,
           ),
         );
         await tester.pumpAndSettle();

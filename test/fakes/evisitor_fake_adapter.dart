@@ -38,6 +38,13 @@ final class FakeLoginLockedOut extends FakeLoginScript {
   const FakeLoginLockedOut();
 }
 
+/// 5xx server-error path. AC10.3 widget test asserts the Croatian
+/// `loginServerError` copy is rendered when the adapter returns 500.
+final class FakeLoginServerError extends FakeLoginScript {
+  const FakeLoginServerError({this.statusCode = 500});
+  final int statusCode;
+}
+
 final class FakeLoginContractBreak extends FakeLoginScript {
   const FakeLoginContractBreak({this.userMessage});
   final String? userMessage;
@@ -112,12 +119,25 @@ class EvisitorFakeAdapter implements HttpClientAdapter {
       FakeLoginContractBreak(:final userMessage) => _contractBreakResponse(
         userMessage,
       ),
+      FakeLoginServerError(:final statusCode) => _serverErrorResponse(
+        statusCode,
+      ),
       FakeLoginNetworkError() => throw DioException(
         type: DioExceptionType.connectionError,
         message: 'connection reset by peer',
         requestOptions: options,
       ),
     };
+  }
+
+  ResponseBody _serverErrorResponse(int statusCode) {
+    return ResponseBody.fromString(
+      '',
+      statusCode,
+      headers: {
+        'content-type': ['text/plain'],
+      },
+    );
   }
 
   ResponseBody _successResponse() {

@@ -14,7 +14,7 @@ on:
 
 jobs:
   test:
-    name: flutter test
+    name: flutter test (linux, no goldens)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,6 +37,30 @@ jobs:
 
       - name: Run unit + widget tests
         # WHY SKIP_GOLDENS: golden image comparisons are platform-dependent
-        # (macOS vs Linux font rendering ~1.8% pixel diff). Goldens are
-        # validated locally with --update-goldens; CI skips them via skip:.
+        # (macOS vs Linux font rendering ~1.8% pixel diff). The `goldens` job
+        # below runs them on macOS so AC11.1 ("all tests green including
+        # goldens") holds without blocking the fast Linux job.
         run: flutter test --dart-define=SKIP_GOLDENS=true
+
+  goldens:
+    name: golden tests (macos)
+    # WHY macos-latest: golden baselines were generated on macOS; running them
+    # on the same platform avoids the ~1.8% font-rendering pixel diff seen on
+    # Linux. Keeps the merge gate honest without blocking the fast Linux job.
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.38.7'
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Run golden tests
+        run: flutter test

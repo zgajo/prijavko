@@ -9,7 +9,6 @@ import 'dart:io' show SocketException;
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
-import 'package:meta/meta.dart' show visibleForTesting;
 import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/core/env/evisitor_api_key.dart';
 import 'package:prijavko/core/env/evisitor_env.dart';
@@ -21,12 +20,24 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'evisitor_api_client.g.dart';
 
 class EvisitorApiClient {
-  EvisitorApiClient(this._dio);
+  EvisitorApiClient(
+    this._dio, {
+    bool Function()? isApiKeyAvailable,
+    this.lockoutDuration = const Duration(minutes: 6),
+  }) : isApiKeyAvailable = isApiKeyAvailable ?? _defaultApiKeyAvailable;
   final Dio _dio;
 
-  /// Override in tests to simulate missing apikey in non-fake env.
-  @visibleForTesting
-  bool Function() isApiKeyAvailable = () =>
+  /// Constructor-injected so tests pass an override; production code receives
+  /// the closure that consults `evisitorEnv` and `evisitorApiKey`. Final by
+  /// design — a mutable public field allowed any caller to flip the check.
+  final bool Function() isApiKeyAvailable;
+
+  /// Prijavko-side lockout budget (architecture §Circuit breaker — 6 min,
+  /// stricter than Rhetos' 5 min). Tests inject a short value to exercise the
+  /// LoginIdle-after-expiry transition without a real wait.
+  final Duration lockoutDuration;
+
+  static bool _defaultApiKeyAvailable() =>
       evisitorEnv == EvisitorEnv.fake || evisitorApiKey.isNotEmpty;
 
   /// POST /Resources/AspNetFormsAuth/Authentication/Login
@@ -56,21 +67,35 @@ class EvisitorApiClient {
         },
       );
 
-      final failure = classifyLoginResponse(response: response);
+      final failure = classifyLoginResponse(
+        response: response,
+        lockoutDuration: lockoutDuration,
+      );
       if (failure != null) return Err(failure);
       return const Ok(null);
     } on DioException catch (e) {
-      return Err(_classifyDioException(e));
+      return Err(_classifyDioException(e, lockoutDuration));
     }
   }
 }
 
-LoginFailure _classifyDioException(DioException e) {
+LoginFailure _classifyDioException(DioException e, Duration lockoutDuration) {
   // Connection-level failures → NetworkUnreachable.
   if (e.type == DioExceptionType.connectionTimeout ||
       e.type == DioExceptionType.connectionError ||
       e.type == DioExceptionType.receiveTimeout ||
       e.type == DioExceptionType.sendTimeout) {
+    return const NetworkUnreachable();
+  }
+
+  // WHY map cancel + badCertificate to NetworkUnreachable: cancel happens on
+  // legitimate dispose-mid-flight (back button during submit) — surfacing
+  // "Update prijavko from Play Store" is wrong. badCertificate is a pinning
+  // failure — a security signal — but until Story 2.2 introduces a dedicated
+  // certificate-pin variant, treating it as a connection failure prevents the
+  // forced-update copy from being shown for a transient TLS rejection.
+  if (e.type == DioExceptionType.cancel ||
+      e.type == DioExceptionType.badCertificate) {
     return const NetworkUnreachable();
   }
 
@@ -81,7 +106,10 @@ LoginFailure _classifyDioException(DioException e) {
 
   // Server responded but Dio threw (e.g. badResponse on non-2xx).
   if (e.response != null) {
-    final failure = classifyLoginResponse(response: e.response!);
+    final failure = classifyLoginResponse(
+      response: e.response!,
+      lockoutDuration: lockoutDuration,
+    );
     if (failure != null) return failure;
   }
 

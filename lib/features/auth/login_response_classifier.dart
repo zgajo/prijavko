@@ -28,7 +28,14 @@ final _apiKeyPattern = RegExp(
 ///
 /// Decision tree is exhaustive and ordered per AC4.2 — status code first,
 /// then body shape, then SystemMessage regex matching.
-LoginFailure? classifyLoginResponse({required Response<dynamic> response}) {
+///
+/// [lockoutDuration] is the prijavko-side budget (default 6 minutes per
+/// architecture §Circuit breaker). Tests inject a short value (e.g. 2 seconds)
+/// to exercise the LoginIdle-after-expiry transition without a real wait.
+LoginFailure? classifyLoginResponse({
+  required Response<dynamic> response,
+  Duration lockoutDuration = const Duration(minutes: 6),
+}) {
   final status = response.statusCode ?? -1;
   final body = response.data;
 
@@ -49,7 +56,7 @@ LoginFailure? classifyLoginResponse({required Response<dynamic> response}) {
 
   // 200 or 400 + body is Map → inspect SystemMessage
   if ((status == 200 || status == 400) && body is Map) {
-    return _classifyMapBody(body);
+    return _classifyMapBody(body, lockoutDuration);
   }
 
   // 401 or 403 → CredentialsInvalid (standard rejection on Login endpoint)
@@ -66,9 +73,19 @@ LoginFailure? classifyLoginResponse({required Response<dynamic> response}) {
   );
 }
 
-LoginFailure _classifyMapBody(Map<dynamic, dynamic> body) {
-  final systemMessage = body['SystemMessage'] as String?;
-  final userMessage = body['UserMessage'] as String?;
+LoginFailure _classifyMapBody(
+  Map<dynamic, dynamic> body,
+  Duration lockoutDuration,
+) {
+  // WHY defensive cast: a malformed server response with a non-String
+  // SystemMessage/UserMessage (e.g. nested object, number) would throw a
+  // TypeError outside the caller's try/catch and bypass the Result contract.
+  // Treat non-String values as absent — fall through to the "no SystemMessage"
+  // safe default per AC4.3 last row.
+  final rawSystemMessage = body['SystemMessage'];
+  final rawUserMessage = body['UserMessage'];
+  final systemMessage = rawSystemMessage is String ? rawSystemMessage : null;
+  final userMessage = rawUserMessage is String ? rawUserMessage : null;
 
   if (systemMessage == null || systemMessage.isEmpty) {
     // Empty Map or Map without SystemMessage — safe default per AC4.3 last row.
@@ -78,7 +95,7 @@ LoginFailure _classifyMapBody(Map<dynamic, dynamic> body) {
   // Ordered regex matching per AC4.3.
   if (_lockedPattern.hasMatch(systemMessage)) {
     return AccountLockedOut(
-      retryAfter: DateTime.now().add(const Duration(minutes: 6)),
+      retryAfter: DateTime.now().add(lockoutDuration),
     );
   }
 

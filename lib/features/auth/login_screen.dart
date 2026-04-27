@@ -22,8 +22,7 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen>
-    with WidgetsBindingObserver {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameFocus = FocusNode();
@@ -33,7 +32,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    // WHY no paused→disable lifecycle hook: FLAG_SECURE is per-window and does
+    // not propagate to subsequent screens. Clearing it on `paused` while the
+    // LoginScreen is still mounted lets a later recents thumbnail capture the
+    // password field. Keep the flag active for the whole screen lifecycle.
     WindowSecureFlag.enable();
     // Rebuild when text changes (to gate submit button).
     _usernameController.addListener(_onFieldChanged);
@@ -42,7 +44,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     WindowSecureFlag.disable();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -51,19 +52,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // WHY: clear FLAG_SECURE when backgrounded so subsequent non-credential
-    // screens are not blocked from screenshot. Re-enable on resume while this
-    // screen is still mounted.
-    if (state == AppLifecycleState.paused) {
-      WindowSecureFlag.disable();
-    } else if (state == AppLifecycleState.resumed) {
-      WindowSecureFlag.enable();
-    }
+  void _onFieldChanged() {
+    // AC5.1: `LoginIdle.error` is "cleared when fields change". Notifier
+    // ignores the call when the current state has no error.
+    ref.read(loginNotifierProvider.notifier).clearError();
+    setState(() {});
   }
-
-  void _onFieldChanged() => setState(() {});
 
   Future<void> _maybeSubmit() async {
     final result = await ref

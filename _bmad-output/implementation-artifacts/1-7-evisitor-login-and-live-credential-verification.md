@@ -1,6 +1,6 @@
 # Story 1.7: eVisitor Login & Live Credential Verification
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -899,3 +899,40 @@ Claude Opus 4.6 (1M context)
 - `test/fakes/evisitor_fake_adapter.dart` — login routing (replaces 200/empty placeholder)
 - `android/app/src/main/kotlin/hr/prijavko/prijavko/MainActivity.kt` — FLAG_SECURE MethodChannel handler
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — story status → in-progress
+
+## Review Findings (2026-04-27)
+
+### Decision-needed
+
+_(All three resolved on 2026-04-27 → converted to Patch items below.)_
+
+- [x] [Review][Decision→Patch] FLAG_SECURE cleared on `paused` may leak credentials in recents → resolved: keep FLAG_SECURE active during `paused` (drop the `paused→disable` branch).
+- [x] [Review][Decision→Patch] CI skips golden tests via `SKIP_GOLDENS=true` → resolved: add a macOS-runner CI job that runs goldens.
+- [x] [Review][Decision→Patch] `DioExceptionType.cancel` and `badCertificate` fall to `ContractBreak` → resolved: map both to `NetworkUnreachable` now; Story 2.2 refines.
+
+### Patch
+
+- [x] [Review][Patch] State stuck in `LoginSubmitting` when credential save fails [`lib/features/auth/login_notifier.dart:71-77`] — `_handleSuccess` returns `Err(ContractBreak)` if `saveCredentials` fails but never updates `state`. Spinner shows forever, button never re-enables. Set `state = LoginIdle(error: ContractBreak(...))` in the Err branch.
+- [x] [Review][Patch] Inline error not cleared when fields change [`lib/features/auth/login_screen.dart:66`] — Spec AC5.1 mandates `LoginIdle.error` "cleared when fields change". `_onFieldChanged` only calls `setState(() {})` and does not transition `LoginIdle(error: x)` → `LoginIdle()`. Add a `clearError()` method on `LoginNotifier` and invoke it from `_onFieldChanged` when current state is `LoginIdle(error != null)`.
+- [x] [Review][Patch] Unsafe `as String?` cast on Map body fields [`lib/features/auth/login_response_classifier.dart:70-71`] — If `body['SystemMessage']` or `body['UserMessage']` is non-String (number, nested map), the cast throws `TypeError` outside `try/catch`, bypassing the `Result` contract. Use `is String` check or `body[key].toString()` after `is String?` validation.
+- [x] [Review][Patch] `isApiKeyAvailable` mutable public field [`lib/features/submission/evisitor_api_client.dart:28-30`] — `@visibleForTesting` annotation does not prevent production code from mutating it. Make it a constructor-injected `final bool Function()` with the production default; tests pass an override.
+- [x] [Review][Patch] Notifier may assign state after dispose [`lib/features/auth/login_notifier.dart:79-88`] — Back-button during in-flight submit disposes the autoDispose notifier; the awaited `apiClient.login()` then assigns to a disposed notifier. Guard with `if (!ref.mounted) return result;` before each `state = …` assignment in `_handleFailure` and `_handleSuccess`.
+- [x] [Review][Patch] Missing test: cookies present in jar after success [`test/unit/features/submission/evisitor_api_client_login_test.dart`] — AC10.2 explicitly mandates `jar.loadForRequest(Uri.parse('https://www.evisitor.hr/Resources/'))` assertion on the success path. Current test only checks `result is Ok`. Wire `PersistCookieJar` + `CookieManager` into `_buildClient` and assert all three cookies land.
+- [x] [Review][Patch] Missing test: cookie jar empty after credentials-invalid [`test/unit/features/submission/evisitor_api_client_login_test.dart`] — AC10.2 fourth bullet explicitly mandates `jar.loadForRequest(...).isEmpty` assertion on the failure path.
+- [x] [Review][Patch] Missing test: lockout transitions back to `LoginIdle` after `retryAfter` [`test/widget/features/auth/login_screen_test.dart`] — AC10.3 mandates this test ("set retryAfter to 2 seconds, pump 3 seconds, assert form re-enabled"). Requires injecting a custom retryAfter via the fake — extend `FakeLoginLockedOut` to carry a configurable `retryAfter` for tests.
+- [x] [Review][Patch] Missing test: server-error path renders Croatian server message [`test/widget/features/auth/login_screen_test.dart`] — AC10.3 mandates "adapter returns 500, assert `find.text(l10n.loginServerError)`". Requires adding a `FakeLoginServerError` script to `EvisitorFakeAdapter` (currently absent).
+- [x] [Review][Patch] FLAG_SECURE method-channel handler not on UI thread [`android/app/src/main/kotlin/hr/prijavko/prijavko/MainActivity.kt:17-26`] — `Window.setFlags`/`clearFlags` may throw `CalledFromWrongThreadException` on some OEMs. Wrap each branch in `runOnUiThread { … }` and only call `result.success(null)` from inside.
+- [x] [Review][Patch] Hardcoded `/tmp/test_cookies` test path [`test/widget/features/auth/login_screen_test.dart:55`] — Parallel test workers collide on the same directory; also non-portable. Use `Directory.systemTemp.createTempSync('prijavko_test_cookies_')` and clean up in `tearDown`.
+- [x] [Review][Patch] FLAG_SECURE cleared on `paused` (resolved decision) [`lib/features/auth/login_screen.dart:54-64`] — Drop the `paused→disable` and `resumed→enable` branches. Keep FLAG_SECURE active for the entire LoginScreen lifecycle: enable in `initState`, disable in `dispose` only. Spec rationale at line 248 was based on a misunderstanding (FLAG_SECURE is per-window, not persistent across screens).
+- [x] [Review][Patch] Add macOS-runner CI job for golden tests (resolved decision) [`.github/workflows/test.yml`] — Current Linux runner skips goldens via `SKIP_GOLDENS=true`. Add a parallel `golden-tests` job using `macos-latest` runner that runs `flutter test` (without the SKIP_GOLDENS define) so golden baselines actually gate merges. Keep the Linux job for unit/widget speed.
+- [x] [Review][Patch] Map `DioExceptionType.cancel` and `badCertificate` to `NetworkUnreachable` (resolved decision) [`lib/features/submission/evisitor_api_client.dart:68-89`] — Add explicit branches in `_classifyDioException` for `cancel` and `badCertificate` returning `const NetworkUnreachable()` instead of falling through to `ContractBreak`. Story 2.2 will introduce a dedicated certificate-pin variant when the full classifier lands.
+
+### Defer (pre-existing or out-of-scope)
+
+- [x] [Review][Defer] CredentialStore non-atomic partial writes [`lib/features/settings/credential_store.dart:55-58`] — pre-existing Story 1.3 logic with documented "partial state is tolerable" comment; not introduced by this change.
+- [x] [Review][Defer] Lockout state lost on process death [`lib/features/auth/login_notifier.dart`] — spec defers persistent circuit breaker to Epic 2 Story 2.5; in-process timer is the documented interim.
+- [x] [Review][Defer] Lockout countdown briefly shows `0 seconds remaining` for ~1s before transitioning to LoginIdle [`lib/features/auth/login_notifier.dart:90-100`] — minor UX nit; tighten when AuthNotifier subsumes the timer in Epic 2.
+- [x] [Review][Defer] `EvisitorFakeAdapter` lacks fixtures for boolean-false / 401 / 403 / 5xx / malformed body — classifier unit tests cover these paths; spec AC7 prescribed only the listed scripts. Extend when widget-level coverage of those paths is added (see Patch items above for the 5xx case).
+- [x] [Review][Defer] No automated PII-grep guard for `evisitorApiKey` — spec AC11.4 explicitly defers to Story 9.1 (AppLogger).
+- [x] [Review][Defer] `CredentialStoreRef` typedef carries `@Deprecated('Will be removed in 3.0')` codegen output [`lib/features/settings/credential_store.g.dart:18-21`] — generated by `riverpod_generator`; will resolve on next codegen bump or migrate when Riverpod 3.x lands across the project.
+

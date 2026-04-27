@@ -13,15 +13,18 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             "hr.prijavko.window_secure"
         ).setMethodCallHandler { call, result ->
+            // WHY runOnUiThread: MethodChannel handlers run on the platform
+            // thread; Window.setFlags / clearFlags must be called on the UI
+            // thread on some OEMs (CalledFromWrongThreadException otherwise).
             when (call.method) {
-                "enable" -> {
+                "enable" -> runOnUiThread {
                     window.setFlags(
                         WindowManager.LayoutParams.FLAG_SECURE,
                         WindowManager.LayoutParams.FLAG_SECURE
                     )
                     result.success(null)
                 }
-                "disable" -> {
+                "disable" -> runOnUiThread {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     result.success(null)
                 }

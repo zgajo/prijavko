@@ -1,4 +1,6 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prijavko/core/result/result.dart';
 import 'package:prijavko/features/auth/login_failure.dart';
@@ -9,10 +11,21 @@ import '../../../fakes/evisitor_fake_adapter.dart';
 EvisitorApiClient _buildClient(EvisitorFakeAdapter adapter) {
   final dio = Dio(BaseOptions(baseUrl: 'http://localhost/'))
     ..httpClientAdapter = adapter;
-  final client = EvisitorApiClient(dio);
-  // Override apikey check — tests run without --dart-define=EVISITOR_API_KEY.
-  client.isApiKeyAvailable = () => true;
-  return client;
+  // isApiKeyAvailable: tests run without --dart-define=EVISITOR_API_KEY.
+  return EvisitorApiClient(dio, isApiKeyAvailable: () => true);
+}
+
+({EvisitorApiClient client, CookieJar jar}) _buildClientWithJar(
+  EvisitorFakeAdapter adapter,
+) {
+  final jar = CookieJar();
+  final dio = Dio(BaseOptions(baseUrl: 'http://localhost/'))
+    ..httpClientAdapter = adapter
+    ..interceptors.add(CookieManager(jar));
+  return (
+    client: EvisitorApiClient(dio, isApiKeyAvailable: () => true),
+    jar: jar,
+  );
 }
 
 void main() {
@@ -134,9 +147,8 @@ void main() {
         );
         final dio = Dio(BaseOptions(baseUrl: 'http://localhost/'))
           ..httpClientAdapter = adapter;
-        final client = EvisitorApiClient(dio);
         // Simulate non-fake env with empty apikey.
-        client.isApiKeyAvailable = () => false;
+        final client = EvisitorApiClient(dio, isApiKeyAvailable: () => false);
 
         final result = await client.login(userName: 'u', password: 'p');
 
@@ -147,5 +159,41 @@ void main() {
         expect(adapter.lastRequest, isNull);
       },
     );
+
+    test('success path persists all three cookies in the jar', () async {
+      // AC10.2: assert all three cookies (authentication, affinity, language)
+      // land in the CookieJar after a successful login. Validates that
+      // CookieManager interceptor and Set-Cookie framing are wired correctly.
+      final adapter = EvisitorFakeAdapter(
+        scriptedLogin: const FakeLoginSuccess(),
+      );
+      final (:client, :jar) = _buildClientWithJar(adapter);
+
+      final result = await client.login(userName: 'u', password: 'p');
+
+      expect(result, isA<Ok<void, LoginFailure>>());
+      final cookies = await jar.loadForRequest(
+        Uri.parse('http://localhost/Resources/'),
+      );
+      final names = cookies.map((c) => c.name).toSet();
+      expect(names, containsAll(['authentication', 'affinity', 'language']));
+    });
+
+    test('credentials-invalid path leaves cookie jar empty', () async {
+      // AC10.2: failure paths must not emit Set-Cookie headers — the jar
+      // remains empty so a stale auth cookie can't paper over a real failure.
+      final adapter = EvisitorFakeAdapter(
+        scriptedLogin: const FakeLoginCredentialsInvalid(),
+      );
+      final (:client, :jar) = _buildClientWithJar(adapter);
+
+      final result = await client.login(userName: 'u', password: 'wrong');
+
+      expect(result, isA<Err<void, LoginFailure>>());
+      final cookies = await jar.loadForRequest(
+        Uri.parse('http://localhost/Resources/'),
+      );
+      expect(cookies, isEmpty);
+    });
   });
 }
