@@ -25,6 +25,12 @@ import '../../../fakes/fake_security_service.dart';
 
 const _homeStub = 'home-stub';
 
+// WHY: golden pixel comparisons are platform-dependent (macOS vs Linux font
+// rendering). CI sets SKIP_GOLDENS=true; local dev runs them normally.
+final _skipGoldens = const bool.fromEnvironment('SKIP_GOLDENS')
+    ? 'Platform-dependent golden rendering — run locally with --update-goldens'
+    : null;
+
 Widget _makeTestApp({
   ThemeMode themeMode = ThemeMode.light,
   Locale locale = const Locale('hr'),
@@ -409,7 +415,7 @@ void main() {
       expect(find.byType(AppBar), findsNothing);
     });
 
-    group('golden tests', () {
+    group('golden tests', skip: _skipGoldens, () {
       testWidgets('dark theme idle — login_idle_dark.png', (tester) async {
         await tester.pumpWidget(makeApp(themeMode: ThemeMode.dark));
         await tester.pumpAndSettle();
