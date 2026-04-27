@@ -83,10 +83,10 @@ void main() {
     });
 
     Widget makeApp({ThemeMode themeMode = ThemeMode.light}) => _makeTestApp(
-          themeMode: themeMode,
-          fakePermission: fakePermission,
-          fakeStore: fakeStore,
-        );
+      themeMode: themeMode,
+      fakePermission: fakePermission,
+      fakeStore: fakeStore,
+    );
 
     testWidgets('headline renders in Croatian', (tester) async {
       await tester.pumpWidget(makeApp());
@@ -119,58 +119,63 @@ void main() {
     });
 
     testWidgets(
-        'tapping Allow triggers permission request and navigates to login '
-        'with CapturePreference.live on grant', (tester) async {
-      fakePermission = FakePermissionService(grantCamera: true);
-      fakeStore = FakeCapturePreferenceStore();
+      'tapping Allow triggers permission request and navigates to login '
+      'with CapturePreference.live on grant',
+      (tester) async {
+        fakePermission = FakePermissionService(grantCamera: true);
+        fakeStore = FakeCapturePreferenceStore();
 
-      await tester.pumpWidget(_makeTestApp(
-        fakePermission: fakePermission,
-        fakeStore: fakeStore,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _makeTestApp(fakePermission: fakePermission, fakeStore: fakeStore),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Dopusti pristup'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Dopusti pristup'));
+        await tester.pumpAndSettle();
 
-      expect(fakePermission.requestCameraCallCount, 1);
-      expect(fakeStore.savedPreference, CapturePreference.live);
-      expect(find.text(_loginStub), findsOneWidget);
-    });
-
-    testWidgets(
-        'tapping Allow when permission denied saves manualOnly and navigates',
-        (tester) async {
-      fakePermission = FakePermissionService(grantCamera: false);
-      fakeStore = FakeCapturePreferenceStore();
-
-      await tester.pumpWidget(_makeTestApp(
-        fakePermission: fakePermission,
-        fakeStore: fakeStore,
-      ));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Dopusti pristup'));
-      await tester.pumpAndSettle();
-
-      expect(fakeStore.savedPreference, CapturePreference.manualOnly);
-      expect(find.text(_loginStub), findsOneWidget);
-    });
+        expect(fakePermission.requestCameraCallCount, 1);
+        expect(fakeStore.savedPreference, CapturePreference.live);
+        expect(find.text(_loginStub), findsOneWidget);
+      },
+    );
 
     testWidgets(
-        'tapping Skip does NOT call requestCamera, saves manualOnly, navigates',
-        (tester) async {
-      await tester.pumpWidget(makeApp());
-      await tester.pumpAndSettle();
+      'tapping Allow when permission denied saves manualOnly and navigates',
+      (tester) async {
+        fakePermission = FakePermissionService(grantCamera: false);
+        fakeStore = FakeCapturePreferenceStore();
 
-      await tester.tap(find.text('Preskoči — ručni unos'));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _makeTestApp(fakePermission: fakePermission, fakeStore: fakeStore),
+        );
+        await tester.pumpAndSettle();
 
-      expect(fakePermission.requestCameraCallCount, 0,
-          reason: 'Skip must not trigger the OS permission dialog');
-      expect(fakeStore.savedPreference, CapturePreference.manualOnly);
-      expect(find.text(_loginStub), findsOneWidget);
-    });
+        await tester.tap(find.text('Dopusti pristup'));
+        await tester.pumpAndSettle();
+
+        expect(fakeStore.savedPreference, CapturePreference.manualOnly);
+        expect(find.text(_loginStub), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping Skip does NOT call requestCamera, saves manualOnly, navigates',
+      (tester) async {
+        await tester.pumpWidget(makeApp());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Preskoči — ručni unos'));
+        await tester.pumpAndSettle();
+
+        expect(
+          fakePermission.requestCameraCallCount,
+          0,
+          reason: 'Skip must not trigger the OS permission dialog',
+        );
+        expect(fakeStore.savedPreference, CapturePreference.manualOnly);
+        expect(find.text(_loginStub), findsOneWidget);
+      },
+    );
 
     testWidgets('camera icon renders', (tester) async {
       await tester.pumpWidget(makeApp());

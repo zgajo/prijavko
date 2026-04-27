@@ -34,9 +34,8 @@ GoRouter router(Ref ref) {
             name: 'login',
             // TODO(story-1.7): replace placeholder with LoginScreen
             // i18n-ignore: placeholder scaffold; replaced in Story 1.7
-            builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Login — Story 1.7')),
-            ),
+            builder: (context, state) =>
+                const Scaffold(body: Center(child: Text('Login — Story 1.7'))),
           ),
         ],
       ),

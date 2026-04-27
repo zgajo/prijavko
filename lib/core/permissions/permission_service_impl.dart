@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:prijavko/core/permissions/permission_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import 'permission_service.dart';
 
 part 'permission_service_impl.g.dart';
 

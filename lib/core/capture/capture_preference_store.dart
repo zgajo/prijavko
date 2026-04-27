@@ -9,10 +9,9 @@
 // changes (adding a third variant), a new key prefix forces a clean migration
 // rather than silently mis-reading a stale integer.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:prijavko/core/capture/capture_preference.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'capture_preference.dart';
 
 part 'capture_preference_store.g.dart';
 
