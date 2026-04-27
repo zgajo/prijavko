@@ -4,6 +4,13 @@ This file provides rules for AI coding agents (Claude Code, Copilot, Codex, Wind
 
 Cursor users: the same rules live under `.claude/rules/*.md` with scoping support.
 
+## Agent Efficiency Rules (non-negotiable)
+
+- **Read before edit.** Always read a file fully before editing it. Never edit from memory of a previous read.
+- **Grep before touch.** Before modifying a function or symbol, grep for all callers/references first.
+- **No redundant re-reads.** If you've read a file in this session, do not read it again unless its content changed. Use your context.
+- **Research before edit.** Understand the full scope of a change before writing any code.
+
 ---
 
 ## Project: prijavko
