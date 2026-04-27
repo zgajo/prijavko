@@ -1,5 +1,5 @@
 # generated: 2026-04-23
-# last_updated: 2026-04-28 (story 1.9 → done; epic 1 complete)
+# last_updated: 2026-04-28 (epic 1 → done; epic-1-retrospective → done)
 # project: prijavko
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-23
-last_updated: 2026-04-28 (story 1.9 → done; epic 1 complete)
+last_updated: 2026-04-28 (epic 1 → done; epic-1-retrospective → done)
 project: prijavko
 
 project_key: NOKEY
@@ -44,7 +44,7 @@ story_location: "{project-root}/_bmad-output/implementation-artifacts"
 
 development_status:
   # Epic 1: First-Run Onboarding & Credential Trust
-  epic-1: in-progress
+  epic-1: done
   1-1-project-bootstrap-and-ci-foundation: done
   1-2-design-system-foundation: done
   1-3-security-primitives-dio-and-cert-pinning: done
@@ -54,7 +54,7 @@ development_status:
   1-7-evisitor-login-and-live-credential-verification: done
   1-8-session-persistence-across-restarts: done
   1-9-credential-re-entry-from-settings: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: Resilient Auth Lifecycle (No Door Surprises)
   epic-2: backlog
