@@ -133,6 +133,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue'**
   String get welcomeContinueButton;
+
+  /// Camera permission screen headline
+  ///
+  /// In en, this message translates to:
+  /// **'Camera Access'**
+  String get cameraPermissionHeadline;
+
+  /// Camera permission rationale explaining why camera is needed and privacy assurance
+  ///
+  /// In en, this message translates to:
+  /// **'The camera is needed to scan passport MRZ codes. Photos are never stored or sent — processing is entirely on-device.'**
+  String get cameraPermissionBody;
+
+  /// Primary CTA requesting camera permission from the OS
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access'**
+  String get cameraPermissionAllowButton;
+
+  /// Secondary CTA skipping camera permission and using manual entry path
+  ///
+  /// In en, this message translates to:
+  /// **'Skip — manual entry'**
+  String get cameraPermissionSkipButton;
 }
 
 class _AppLocalizationsDelegate

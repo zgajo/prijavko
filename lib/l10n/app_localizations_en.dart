@@ -26,4 +26,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get welcomeContinueButton => 'Continue';
+
+  @override
+  String get cameraPermissionHeadline => 'Camera Access';
+
+  @override
+  String get cameraPermissionBody =>
+      'The camera is needed to scan passport MRZ codes. Photos are never stored or sent — processing is entirely on-device.';
+
+  @override
+  String get cameraPermissionAllowButton => 'Allow access';
+
+  @override
+  String get cameraPermissionSkipButton => 'Skip — manual entry';
 }

@@ -5,5 +5,9 @@
   "welcomePrivacyPolicyLink": "Pravila privatnosti",
   "welcomeTermsOfServiceLink": "Uvjeti korištenja",
   "welcomeLinkConnector": " i ",
-  "welcomeContinueButton": "Nastavi"
+  "welcomeContinueButton": "Nastavi",
+  "cameraPermissionHeadline": "Pristup kameri",
+  "cameraPermissionBody": "Kamera je potrebna za skeniranje MRZ koda s putovnica. Slike se ne pohranjuju ni ne šalju — obrada je potpuno na uređaju.",
+  "cameraPermissionAllowButton": "Dopusti pristup",
+  "cameraPermissionSkipButton": "Preskoči — ručni unos"
 }
