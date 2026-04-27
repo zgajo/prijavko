@@ -24,6 +24,7 @@ import 'package:prijavko/core/consent/consent_state.dart';
 import 'package:prijavko/core/result/result.dart';
 
 // TODO(story-1.9): render "Privola za oglase" ListTile gated on isPrivacyOptionsRequired()
+// TODO(story-1.9): add settingsAdConsentTile ARB key to lib/l10n/app_hr.arb and app_en.arb (AC11.4)
 abstract interface class ConsentService {
   factory ConsentService() = _DefaultConsentService;
 
@@ -43,37 +44,67 @@ final class _DefaultConsentService implements ConsentService {
     final params = ConsentRequestParameters();
     final completer = Completer<ConsentState>();
 
-    ConsentInformation.instance.requestConsentInfoUpdate(
-      params,
-      () async {
-        // Success path: SDK has updated consent info. Show the form if needed.
-        FormError? formErr;
-        await ConsentForm.loadAndShowConsentFormIfRequired(
-          (FormError? error) => formErr = error,
+    // WHY: requestConsentInfoUpdate can throw synchronously if the SDK is in
+    // a bad state (e.g. missing Play Services). Without this guard the
+    // Completer never completes and the caller hangs forever.
+    try {
+      ConsentInformation.instance.requestConsentInfoUpdate(
+        params,
+        () async {
+          try {
+            FormError? formErr;
+            await ConsentForm.loadAndShowConsentFormIfRequired(
+              (FormError? error) => formErr = error,
+            );
+
+            if (completer.isCompleted) return;
+
+            if (formErr != null) {
+              completer.complete(ConsentFailed(_classifyFormError(formErr!)));
+              return;
+            }
+
+            final canRequest = await ConsentInformation.instance
+                .canRequestAds();
+            final status = await ConsentInformation.instance.getConsentStatus();
+
+            if (completer.isCompleted) return;
+
+            if (status == ConsentStatus.notRequired) {
+              completer.complete(const ConsentNotRequired());
+            } else {
+              // WHY: the || status == ConsentStatus.required guard is a
+              // Poka-yoke — if the SDK returns canRequestAds() == true while
+              // status is still 'required' (a plausible edge case after form
+              // dismissal without consent), we default to non-personalized.
+              completer.complete(
+                ConsentObtained(
+                  requestNonPersonalizedAdsOnly:
+                      !canRequest || status == ConsentStatus.required,
+                ),
+              );
+            }
+          } catch (_) {
+            if (!completer.isCompleted) {
+              completer.complete(
+                const ConsentFailed(ConsentFailureReason.internalError),
+              );
+            }
+          }
+        },
+        (FormError error) {
+          if (!completer.isCompleted) {
+            completer.complete(ConsentFailed(_classifyFormError(error)));
+          }
+        },
+      );
+    } catch (_) {
+      if (!completer.isCompleted) {
+        completer.complete(
+          const ConsentFailed(ConsentFailureReason.internalError),
         );
-
-        if (formErr != null) {
-          completer.complete(ConsentFailed(_classifyFormError(formErr!)));
-          return;
-        }
-
-        final canRequest = await ConsentInformation.instance.canRequestAds();
-        final status = await ConsentInformation.instance.getConsentStatus();
-
-        if (status == ConsentStatus.notRequired) {
-          completer.complete(const ConsentNotRequired());
-        } else {
-          // ConsentStatus.obtained (or unknown/required as safe fallback):
-          // if canRequest is false, user declined personalised ads.
-          completer.complete(
-            ConsentObtained(requestNonPersonalizedAdsOnly: !canRequest),
-          );
-        }
-      },
-      (FormError error) {
-        completer.complete(ConsentFailed(_classifyFormError(error)));
-      },
-    );
+      }
+    }
 
     return completer.future;
   }

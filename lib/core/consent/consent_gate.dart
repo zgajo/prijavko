@@ -28,6 +28,7 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
     // consent form is a full-screen Android Activity; calling it before the
     // Flutter engine renders its first frame causes a visible flicker.
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(consentControllerProvider.notifier).gather();
     });
   }
@@ -59,7 +60,9 @@ class _ConsentLoadingScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: const Center(child: CircularProgressIndicator()),
+      body: const Center(
+        child: CircularProgressIndicator(semanticsLabel: 'Loading'),
+      ),
     );
   }
 }

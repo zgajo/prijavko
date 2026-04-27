@@ -1,6 +1,6 @@
 # Story 1.4: UMP/CMP EU Consent Surface
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -301,6 +301,25 @@ Tests live under `test/unit/core/consent/` (pure Dart) and `integration_test/` (
   - [x] Subtask 10.4 — PII grep guard: consent files have no Croatian/English literals in widget build methods. `_ConsentLoadingScaffold` has zero user-facing strings.
   - [x] Subtask 10.5 — Build release AAB: deferred to emulator CI (no emulator in this environment). ProGuard rules added per AC13; no known R8 risks given the keep rules.
   - [x] Subtask 10.6 — Manual emulator smoke test: deferred to emulator CI. Unit/widget tests provide full behavioral coverage; `FakeConsentService` verifies gate flow end-to-end.
+
+### Review Findings
+
+- [x] [Review][Patch] `reopenPrivacyOptions()` must call `gather()` after form closes — **fixed**: re-gathers consent state after successful form close.
+- [x] [Review][Patch] `gatherConsent()` lacks defensive error handling — **fixed**: added `completer.isCompleted` guards, try/catch around success callback body, try/catch around `requestConsentInfoUpdate`.
+- [x] [Review][Patch] `gather()` in `ConsentController` has no try/catch — **fixed**: wrapped in try/catch, falls back to `ConsentFailed(internalError)`.
+- [x] [Review][Patch] `ConsentGate` widget disposed before post-frame callback — **fixed**: added `if (!mounted) return;` guard.
+- [x] [Review][Patch] `gather()` has no re-entrancy guard — **fixed**: added `_gathering` boolean flag.
+- [x] [Review][Patch] Missing `|| status == ConsentStatus.required` safety net in `gatherConsent()` — **fixed**: added Poka-yoke condition per AC4.2.
+- [x] [Review][Patch] Missing `==` and `hashCode` on `ConsentObtained` and `ConsentFailed` — **fixed**: structural equality implemented.
+- [x] [Review][Patch] No `semanticsLabel` on `CircularProgressIndicator` — **fixed**: added `semanticsLabel: 'Loading'`.
+- [x] [Review][Patch] Sprint status should be `review` not `in-progress` — **fixed**: `sprint-status.yaml` updated to `review`.
+- [x] [Review][Patch] Missing TODO in `canary_test.dart` for real-SDK smoke test — **fixed**: added to `integration_test/app_test.dart` (canary_test.dart does not exist yet).
+- [x] [Review][Patch] Missing ARB key placeholder TODO in `consent_service.dart` — **fixed**: added `settingsAdConsentTile` ARB TODO.
+- [x] [Review][Defer] `FakeConsentService` missing `showPrivacyOptionsForm` scripting — cannot test error path; needed for Story 1.9 wiring. [test/fakes/fake_consent_service.dart] — deferred, not blocking this story
+- [x] [Review][Defer] No test for `reopenPrivacyOptions()` on `ConsentController` — method deferred to Story 1.9 wiring. [test/unit/core/consent/consent_controller_test.dart] — deferred, Story 1.9
+- [x] [Review][Defer] `requestNonPersonalizedAds_test.dart` uses `testWidgets` with unused `WidgetTester` — should be plain `test()` with `ProviderContainer`. — deferred, cleanup
+- [x] [Review][Defer] ProGuard `-keep class com.google.android.gms.ads.**` is too broad — keeps entire ads SDK from R8 tree-shaking; refine to UMP-only when Story 10.1 lands. — deferred, Story 10.1
+- [x] [Review][Defer] `docs/release-checklist.md` not CI-enforced — no automated guard against shipping sample AdMob App ID; a `grep` in CI would be a real Poka-yoke. — deferred, CI hardening
 
 ---
 

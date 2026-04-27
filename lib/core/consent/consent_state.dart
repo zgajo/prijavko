@@ -16,6 +16,15 @@ final class ConsentObtained extends ConsentState {
   const ConsentObtained({required this.requestNonPersonalizedAdsOnly});
 
   final bool requestNonPersonalizedAdsOnly;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConsentObtained &&
+          other.requestNonPersonalizedAdsOnly == requestNonPersonalizedAdsOnly;
+
+  @override
+  int get hashCode => requestNonPersonalizedAdsOnly.hashCode;
 }
 
 final class ConsentNotRequired extends ConsentState {
@@ -26,6 +35,14 @@ final class ConsentFailed extends ConsentState {
   const ConsentFailed(this.reason);
 
   final ConsentFailureReason reason;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ConsentFailed && other.reason == reason;
+
+  @override
+  int get hashCode => reason.hashCode;
 }
 
 // WHY: Failure must be a Poka-yoke barrier — without consent the app proceeds,

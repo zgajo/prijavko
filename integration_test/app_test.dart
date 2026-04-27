@@ -24,6 +24,10 @@
 // `AutomatedTestWidgetsFlutterBinding` never rasterizes, so the marker
 // stays false there and the probe is unreachable without a device.
 //
+// TODO(story-10.1): real-SDK smoke test on emulator with
+// DebugGeography.debugGeographyEea — requires Play Services and a valid
+// AdMob test device ID. Deferred from Story 1.4 (AC9.6).
+//
 // Why a single sample, not N: with 5 samples, iteration 0 consumed the
 // one-shot `waitUntilFirstFrameRasterized` Completer; iterations 1..4
 // measured warm widget rebuilds on the same binding — producing a

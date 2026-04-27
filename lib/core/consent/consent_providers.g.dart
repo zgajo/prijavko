@@ -41,7 +41,7 @@ final requestNonPersonalizedAdsProvider = Provider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef RequestNonPersonalizedAdsRef = ProviderRef<bool>;
-String _$consentControllerHash() => r'b22825824740ed5e36f9a55e6213b16aa1ed6bbd';
+String _$consentControllerHash() => r'a0b607d86f2b59af813b031c06ea6b3397c6c794';
 
 /// See also [ConsentController].
 @ProviderFor(ConsentController)

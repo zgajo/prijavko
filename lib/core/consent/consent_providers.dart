@@ -21,16 +21,35 @@ ConsentService consentService(Ref ref) => ConsentService();
 // holds the authoritative ConsentState for the entire process lifetime.
 @Riverpod(keepAlive: true)
 class ConsentController extends _$ConsentController {
+  bool _gathering = false;
+
   @override
   ConsentState build() => const ConsentLoading();
 
   Future<void> gather() async {
-    state = const ConsentLoading();
-    state = await ref.read(consentServiceProvider).gatherConsent();
+    if (_gathering) return;
+    _gathering = true;
+    try {
+      state = const ConsentLoading();
+      state = await ref.read(consentServiceProvider).gatherConsent();
+    } catch (_) {
+      state = const ConsentFailed(ConsentFailureReason.internalError);
+    } finally {
+      _gathering = false;
+    }
   }
 
-  Future<Result<void, ConsentError>> reopenPrivacyOptions() {
-    return ref.read(consentServiceProvider).showPrivacyOptionsForm();
+  /// Shows the privacy options form and re-gathers consent state so
+  /// [requestNonPersonalizedAdsProvider] reflects the user's new choice
+  /// within the same session.
+  Future<Result<void, ConsentError>> reopenPrivacyOptions() async {
+    final result = await ref
+        .read(consentServiceProvider)
+        .showPrivacyOptionsForm();
+    if (result is Ok) {
+      await gather();
+    }
+    return result;
   }
 }
 
