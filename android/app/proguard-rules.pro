@@ -37,6 +37,17 @@
 # R8 renaming them breaks the registry lookup at app launch. Keeping the
 # embedding surface also protects the method-channel plumbing used by every
 # plugin the project will eventually pull in.
+# flutter_secure_storage — Story 1.3 AC13
+-keep class com.it_nomads.fluttersecurestorage.** { *; }
+# path_provider — Story 1.3 AC13
+-keep class io.flutter.plugins.pathprovider.** { *; }
+# cryptography_flutter uses BouncyCastle / system provider — no custom classes to keep
+# dio, cookie_jar — pure Dart, no native code, no keep rules needed
+
+# -----------------------------------------------------------------------------
+# Flutter engine & plugin entry points (Story 1.1 blanket — kept until all
+# plugins are known; refine in a future Kaizen pass)
+# -----------------------------------------------------------------------------
 -keep class io.flutter.app.** { *; }
 -keep class io.flutter.plugin.** { *; }
 -keep class io.flutter.plugins.** { *; }

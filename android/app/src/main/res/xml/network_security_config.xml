@@ -27,12 +27,33 @@
     </base-config>
 
     <!--
-        eVisitor domain — <pin-set> added by Story 1.3 once real SPKI SHA-256
-        digests for the evisitor.hr leaf + intermediate are known. Until then
-        this domain-config is intentionally empty: it exists so Story 1.3's
-        change is a single additive edit, not a file creation.
+        eVisitor domain.
+
+        Story 1.3 adds the <pin-set>. Both Dart-level (badCertificateCallback)
+        and platform-level (this pin-set) pinning are active simultaneously.
+        Dart-level fails requests with a DioException; platform-level fails at
+        the OS socket layer before Dart even sees the connection.
+
+        IMPORTANT: Android <pin-set> uses base64-encoded SPKI (Subject Public
+        Key Info) hash, NOT the DER certificate hash used in CertPins.dart.
+        The two values intentionally differ.
+
+        expiration is set to 2026-09-19 (30 days before the leaf cert's Not
+        After date of 2026-10-19). Without expiration, a stale pin silently
+        allows all certs post-expiry — worse than useless.
+        See docs/security/cert-pins.md for the rotation procedure.
     -->
     <domain-config>
         <domain includeSubdomains="true">www.evisitor.hr</domain>
+        <pin-set expiration="2026-09-19">
+            <!-- Leaf cert SHA-256 SPKI fingerprint (base64) — valid Oct 20 2025 – Oct 19 2026 -->
+            <pin digest="SHA-256">auwWkCCvoXUIBsH0t4Db36v2pfKdQXHwPoQWRdbiIag=</pin>
+            <!-- Intermediate CA SHA-256 SPKI fingerprint (base64) — valid Mar 30 2021 – Mar 29 2031 -->
+            <pin digest="SHA-256">Wec45nQiFwKvHtuHxSAMGkt19k+uPSw9JlEkxhvYPHk=</pin>
+            <!-- Backup: DigiCert Global Root G2 SPKI fingerprint (base64) — valid Aug  1 2013 – Jan 15 2038.
+                 Required so an emergency rotation of BOTH leaf and intermediate
+                 doesn't brick installed apps; the root rotates ~once per decade. -->
+            <pin digest="SHA-256">i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</pin>
+        </pin-set>
     </domain-config>
 </network-security-config>
