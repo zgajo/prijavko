@@ -43,6 +43,14 @@
 -keep class io.flutter.plugins.pathprovider.** { *; }
 # cryptography_flutter uses BouncyCastle / system provider — no custom classes to keep
 # dio, cookie_jar — pure Dart, no native code, no keep rules needed
+# google_mobile_ads / UMP — Story 1.4 AC13
+# WHY: UMP and Mobile Ads SDKs use reflection internally for IAB TCF vendor list
+# parsing and Play Services dynamic discovery. Without these keep rules, R8 strips
+# classes the SDKs reach via JNI and the consent form silently fails to load,
+# manifesting as FormError code 0 (INTERNAL_ERROR) / errorCode -1.
+-keep class com.google.android.ump.** { *; }
+-keep class com.google.android.gms.ads.** { *; }
+-keep class io.flutter.plugins.googlemobileads.** { *; }
 
 # -----------------------------------------------------------------------------
 # Flutter engine & plugin entry points (Story 1.1 blanket — kept until all

@@ -56,6 +56,12 @@ dependencies:
   # depend_on_referenced_packages.
   meta: ^1.16.0
 
+  # Story 1.4 — UMP/CMP consent SDK; Story 10.x will additionally call
+  # MobileAds.instance.initialize() for AdBanner.
+  # NOTE: story spec targeted ^6.x; 8.0.0 is the latest stable at install time
+  # and is used instead. API delta documented in consent_service.dart.
+  google_mobile_ads: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -27,6 +27,17 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 - `Tokens.color` is a single-field nested class wrapping just `primarySeed`. Speculative scaffolding — AC1.1 mandates the namespace structure; future seed additions land here.
 - Theme builder does not set `splashFactory` or `visualDensity` explicitly. Defensive future-proofing not required by AC2.5; revisit if Flutter SDK changes adaptive-density defaults.
 
+## Deferred from: code review of story-1-4-ump-cmp-eu-consent-surface (2026-04-27)
+
+- Settings list tile "Privola za oglase" is not wired in this story — Settings UI lands in Story 1.9. `ConsentService.showPrivacyOptionsForm()` and `isPrivacyOptionsRequired()` are exposed and ready for Story 1.9 to consume.
+- Real-SDK integration test (UMP form on Android emulator with `DebugGeography.debugGeographyEea`) deferred to Story 10.1 canary test — requires emulator with Play Services and a valid AdMob test device ID; CI-fragile at this stage.
+- Architecture doc line 673 still lists `lib/features/onboarding/consent_screen.dart`. Update to `lib/core/consent/consent_gate.dart` in a small follow-up PR or Story 1.5.
+- `FakeConsentService` missing `showPrivacyOptionsForm` scripting — cannot test error path for `reopenPrivacyOptions()`. Add `scriptedPrivacyFormResult` param when Story 1.9 wires the Settings tile.
+- No test for `reopenPrivacyOptions()` on `ConsentController` — method is unwired until Story 1.9; add test coverage when Settings tile is implemented.
+- `requestNonPersonalizedAds_test.dart` uses `testWidgets` with unused `WidgetTester` parameter — should be plain `test()` with `ProviderContainer` for consistency with `consent_controller_test.dart`. Cleanup.
+- ProGuard `-keep class com.google.android.gms.ads.**` is too broad — keeps entire Mobile Ads SDK from R8 tree-shaking. Refine to UMP-only classes when Story 10.1 lands and actual ad format usage is known.
+- `docs/release-checklist.md` not CI-enforced — no automated guard against shipping sample AdMob App ID `ca-app-pub-3940256099942544~3347511713`. A CI grep for the sample ID in `AndroidManifest.xml` would be a real Poka-yoke.
+
 ## Deferred from: code review of story-1-3-security-primitives-dio-and-cert-pinning (2026-04-27)
 
 - `EncryptedStorage` methods before `init` throw `LateInitializationError` from `late _currentDirectory`. PersistCookieJar always calls init first today; harden when a second caller appears.

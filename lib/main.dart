@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:prijavko/app/providers.dart';
+import 'package:prijavko/core/consent/consent_gate.dart';
 import 'package:prijavko/core/security/security_service.dart';
 import 'package:prijavko/design/extensions.dart';
 import 'package:prijavko/design/icons.dart';
@@ -59,7 +60,7 @@ class MainApp extends StatelessWidget {
       // user-preferences story lands. PRD NFR-U2 (follow system dark/light)
       // is satisfied by construction.
       themeMode: ThemeMode.system,
-      home: const _DesignSystemPreview(),
+      home: const ConsentGate(child: _DesignSystemPreview()),
     );
   }
 }
