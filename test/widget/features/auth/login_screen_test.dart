@@ -10,7 +10,6 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +23,7 @@ import 'package:prijavko/l10n/app_localizations.dart';
 import '../../../fakes/evisitor_fake_adapter.dart';
 import '../../../fakes/fake_credential_store.dart';
 import '../../../fakes/fake_security_service.dart';
+import '../../../helpers/window_secure_flag_mock.dart';
 
 const _homeStub = 'home-stub';
 
@@ -94,22 +94,8 @@ Widget _makeTestApp({
 }
 
 void main() {
-  // Mock the WindowSecureFlag MethodChannel to prevent MissingPluginException.
-  setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('hr.prijavko.window_secure'),
-          (call) async => null,
-        );
-  });
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('hr.prijavko.window_secure'),
-          null,
-        );
-  });
+  setUp(setUpWindowSecureFlagMock);
+  tearDown(tearDownWindowSecureFlagMock);
 
   group('LoginScreen', () {
     late EvisitorFakeAdapter fakeAdapter;
@@ -154,6 +140,16 @@ void main() {
 
       final button = tester.widget<FilledButton>(find.byType(FilledButton));
       expect(button.onPressed, isNull);
+      // AC6.3 regression guard: default LoginScreen() has no replace banner and
+      // no pre-filled username — guards against a future replaceMode default flip.
+      expect(find.textContaining('Zamjena podataka'), findsNothing);
+      final usernameField = tester.widget<TextField>(
+        find.byType(TextField).first,
+      );
+      // Assert controller exists *before* checking text to avoid
+      // null-tolerant matcher false-pass.
+      expect(usernameField.controller, isNotNull);
+      expect(usernameField.controller!.text, isEmpty);
     });
 
     testWidgets('submit enabled once both fields have text', (tester) async {

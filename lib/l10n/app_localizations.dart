@@ -253,6 +253,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{seconds, plural, =1 {1 second remaining} other {{seconds} seconds remaining}}'**
   String loginLockoutCountdownSeconds(int seconds);
+
+  /// Settings screen AppBar title
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// Tooltip for the gear icon button on the Home AppBar
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsButtonTooltip;
+
+  /// Label for the credential re-entry tile on the Settings screen
+  ///
+  /// In en, this message translates to:
+  /// **'Replace sign-in credentials'**
+  String get settingsReplaceCredentialsLabel;
+
+  /// SnackBar message shown on Settings screen after successful credential replacement
+  ///
+  /// In en, this message translates to:
+  /// **'Credentials updated.'**
+  String get settingsCredentialsUpdatedSnackbar;
+
+  /// Informational banner shown on LoginScreen in replace mode; reassures the host that facility context and queue are preserved
+  ///
+  /// In en, this message translates to:
+  /// **'Replacing credentials — facilities and undelivered guests stay.'**
+  String get replaceCredentialsBanner;
+
+  /// Submit button label on LoginScreen in replace mode; replaces the default 'Sign in' copy
+  ///
+  /// In en, this message translates to:
+  /// **'Save new credentials'**
+  String get replaceCredentialsSubmitButton;
 }
 
 class _AppLocalizationsDelegate

@@ -23,6 +23,7 @@ import 'package:prijavko/app/app.dart';
 import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/core/consent/consent_providers.dart';
 import 'package:prijavko/core/consent/consent_state.dart';
+import 'package:prijavko/design/icons.dart';
 import 'package:prijavko/features/settings/credential_store.dart';
 
 import 'fakes/fake_consent_service.dart';
@@ -30,6 +31,45 @@ import 'fakes/fake_credential_store.dart';
 import 'fakes/fake_security_service.dart';
 
 void main() {
+  testWidgets(
+    'seeded boot lands on /home; gear icon navigates to Settings tile',
+    (tester) async {
+      // Credentials seeded → BootCookiesMissing (no auth cookie in empty jar)
+      // → BootGate navigates to /home.
+      final seededStore = FakeCredentialStore();
+      seededStore.savedCredentials = const Credentials(
+        username: 'testHost',
+        password: 'testPass',
+        apiKey: 'testKey',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            securityServiceProvider.overrideWithValue(FakeSecurityService()),
+            cookieJarDirectoryProvider.overrideWithValue('/tmp/test_cookies'),
+            consentServiceProvider.overrideWithValue(
+              FakeConsentService(scriptedState: const ConsentNotRequired()),
+            ),
+            credentialStoreProvider.overrideWithValue(seededStore),
+            cookieJarProvider.overrideWithValue(CookieJar()),
+          ],
+          child: const PrijavkoApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Gear icon is visible on the /home placeholder AppBar.
+      expect(find.byIcon(Symbols.settings_rounded), findsOneWidget);
+
+      await tester.tap(find.byIcon(Symbols.settings_rounded));
+      await tester.pumpAndSettle();
+
+      // Settings screen: credential re-entry tile is visible.
+      expect(find.byIcon(Symbols.lock_reset_rounded), findsOneWidget);
+    },
+  );
+
   testWidgets('PrijavkoApp pumps without errors and renders WelcomeScreen', (
     tester,
   ) async {
