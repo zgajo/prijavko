@@ -1,0 +1,77 @@
+# Story 1.2 AC5.5 — block the Material-Icons-vs-Material-Symbols
+# cross-font collision at CI.
+#
+# Why a grep and not a custom lint: `Icons.<name>` (Material Icons font)
+# and `Symbols.<name>` (Material Symbols, the project's house style) live
+# in different fonts with different stroke languages. Mixing them in the
+# same UI is a visual bug that lands silently because both compile, both
+# render, and both find their target glyph. This guard fires on any
+# `Icon(Icons.…)` call site so a stale habit from another project cannot
+# bleed in.
+#
+# Regex source of truth: docs/ci/icons-guard-regex.md (passing/failing
+# examples live there). Mirror with pii_guard.yml's `rc=$?` exit-code
+# dispatch and ::error:: on no-SCAN_DIRS so a refactor-rename of the
+# source tree fails the guard loudly rather than silently passing.
+
+name: icons_guard
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ['**']
+
+jobs:
+  icons_guard:
+    name: grep for Material Icons leaking into the Material Symbols house style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan lib/ test/ integration_test/ for Icon(Icons.*) call sites
+        env:
+          # Keep this env var in sync with docs/ci/icons-guard-regex.md.
+          # Alternation catches the two real-world constructor shapes that
+          # leak Material Icons into the codebase: `Icon(Icons.foo)` and
+          # `Icon.adaptive(Icons.foo)`. Bare `Icons.foo` references (e.g.
+          # `final IconData x = Icons.foo;`) and prefix-aliased imports
+          # are intentionally out of scope — the trade-off is documented
+          # in docs/ci/icons-guard-regex.md.
+          ICONS_REGEX: '(Icon\s*\(\s*|Icon\.adaptive\s*\(\s*)Icons\.'
+        run: |
+          set -euo pipefail
+          SCAN_DIRS=()
+          for d in lib test integration_test; do
+            if [ -d "$d" ]; then SCAN_DIRS+=("$d"); fi
+          done
+          if [ ${#SCAN_DIRS[@]} -eq 0 ]; then
+            # Fail-closed: if none of the canonical Dart source dirs exist,
+            # the guard cannot do its job. Better to block the build and
+            # prompt investigation than silently pass as "clean".
+            echo "::error::No Dart source dirs (lib/ test/ integration_test/) found — icons guard cannot scan. Did a refactor rename the source tree?"
+            exit 1
+          fi
+          echo "Scanning: ${SCAN_DIRS[*]}"
+          # Explicit exit-code dispatch so a grep internal error (status 2 —
+          # broken regex, unreadable file, PCRE unsupported) is surfaced
+          # instead of being silently treated as "no match" by a bare
+          # `if grep; then`. grep exits 0 on match, 1 on no match, ≥2 on error.
+          set +e
+          grep -rnP --include='*.dart' -- "$ICONS_REGEX" "${SCAN_DIRS[@]}"
+          rc=$?
+          set -e
+          case "$rc" in
+            0)
+              echo "::error::Material Icons leak detected. Use Symbols.<name>_rounded from package:prijavko/design/icons.dart, never Icons.<name>."
+              exit 1
+              ;;
+            1)
+              echo "Icons grep guard clean."
+              ;;
+            *)
+              echo "::error::grep exited with status $rc — regex broken, file unreadable, or PCRE unsupported on this runner. Guard cannot certify the tree."
+              exit "$rc"
+              ;;
+          esac

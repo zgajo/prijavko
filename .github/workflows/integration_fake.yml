@@ -29,6 +29,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # WHY: GitHub-hosted Ubuntu runners ship with ~14 GB free, which is
+      # eaten quickly by the Android SDK + AVD image + Gradle cache +
+      # Flutter build artefacts. Without this step the build fails late
+      # with `No space left on device` while writing kernel_blob.bin
+      # (observed 2026-04-27). `jlumbroso/free-disk-space` reclaims ~30 GB
+      # by purging unused tooling (haskell, dotnet, large docker caches);
+      # the AVD/SDK we DO need are preserved.
+      - name: Free disk space on the runner
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:

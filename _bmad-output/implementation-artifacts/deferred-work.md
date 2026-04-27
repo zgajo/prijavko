@@ -15,3 +15,14 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 - No `CODEOWNERS` file, no `docs/ci/branch-protection.md`. CI workflows are wired but merge policy (required status checks, review requirements) is not codified in the repo.
 - `networkSecurityConfig` attribute merges into `src/debug` builds via manifest merger, preventing localhost HTTP to Dio fake fixture servers. Address in Story 1.3+ when the Dio fake lands (add `src/debug/res/xml/network_security_config.xml` permitting `10.0.2.2`).
 - `actions/checkout@v4` defaults to `fetch-depth: 1`. Works today; becomes a trap the first time a workflow needs git history (changelog derivation, `git describe`).
+
+## Deferred from: code review of story-1-2-design-system-foundation (2026-04-27)
+
+- `semantic_colors_test.dart` doesn't directly exercise `buildLightTheme`/`buildDarkTheme` extension registration. Coverage is indirect via `theme_test.dart`'s `extension<SemanticColors>() != null` per-mode assertion. Direct test would close the gap.
+- Icons guard regex (`Icon\s*\(\s*Icons\.`) matches forbidden shape if it appears inside a multi-line string literal or dartdoc code fence in `lib/**`. Latent false-positive trap; no current call site triggers it.
+- `pubspec.lock` pulls heavy `native_toolchain_c`, `objective_c`, `jni`, `code_assets`, `record_use`, `path_provider_*` transitives via `google_fonts 8.x`. Cannot be removed without forking; apk size impact unverified.
+- `outlinedButton` border uses `colorScheme.outline` directly. WCAG AA contrast vs dark surface is not asserted by any test. Accessibility test posture lands with Welcome / Onboarding (Story 1.5+) where outline-on-surface text first matters.
+- `_DesignSystemPreview` does not handle `MediaQuery.textScaleFactor` extremes or RTL. Preview is throwaway and replaced by `WelcomeScreen` in Story 1.5; not worth hardening.
+- `icons_test.dart` asserts package-internal font family string `MaterialSymbolsRounded`. Brittle to `material_symbols_icons` internals but currently the only signal that the rounded variant resolved.
+- `Tokens.color` is a single-field nested class wrapping just `primarySeed`. Speculative scaffolding — AC1.1 mandates the namespace structure; future seed additions land here.
+- Theme builder does not set `splashFactory` or `visualDensity` explicitly. Defensive future-proofing not required by AC2.5; revisit if Flutter SDK changes adaptive-density defaults.
