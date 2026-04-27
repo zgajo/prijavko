@@ -8,6 +8,7 @@
 // widget (AdBanner, Story 10.1) is mounted — satisfying GDPR sequencing.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:prijavko/core/bootstrap/boot_loading_scaffold.dart';
 import 'package:prijavko/core/consent/consent_providers.dart';
 import 'package:prijavko/core/consent/consent_state.dart';
 
@@ -38,7 +39,7 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
     final consentState = ref.watch(consentControllerProvider);
 
     return switch (consentState) {
-      ConsentLoading() => const _ConsentLoadingScaffold(),
+      ConsentLoading() => const BootLoadingScaffold(),
       ConsentObtained() || ConsentNotRequired() => widget.child,
       // WHY: ConsentFailed does NOT block the app. Failure means non-personalized
       // ads (safe default via requestNonPersonalizedAdsProvider). The user should
@@ -46,23 +47,5 @@ class _ConsentGateState extends ConsumerState<ConsentGate> {
       // TODO(story-9.x): emit telemetry event consent_gather_failed
       ConsentFailed() => widget.child,
     };
-  }
-}
-
-// Shown for the ~50ms UMP RPC window in EEA users. Non-EEA users never see it
-// because requestConsentInfoUpdate returns notRequired synchronously from cache.
-// No user-facing strings: the form text is entirely SDK-owned and localized.
-// i18n-ignore: ConsentLoadingScaffold has no user-facing strings (AC11.2)
-class _ConsentLoadingScaffold extends StatelessWidget {
-  const _ConsentLoadingScaffold();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: const Center(
-        child: CircularProgressIndicator(semanticsLabel: 'Loading'),
-      ),
-    );
   }
 }

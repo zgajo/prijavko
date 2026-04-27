@@ -13,6 +13,17 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
 
+// Single source of truth for the eVisitor base URL across dioProvider and the
+// bootstrap cookie check. A duplicate string would silently desync on a
+// testApi → prod cutover.
+String evisitorBaseUrl() => switch (evisitorEnv) {
+  // WHY: baseUrl trailing slash — eVisitor's Rhetos API requires it.
+  // Omitting it causes 301 redirects that dio may follow incorrectly.
+  EvisitorEnv.prod => 'https://www.evisitor.hr/eVisitorRhetos_API/',
+  EvisitorEnv.test => 'https://www.evisitor.hr/testApi/',
+  EvisitorEnv.fake => 'http://localhost/',
+};
+
 // WHY: keepAlive — lifetime matches the app process; disposing would force
 // TLS + Keystore re-init on every navigation.
 @Riverpod(keepAlive: true)
@@ -36,16 +47,40 @@ String cookieJarDirectory(Ref ref) {
   );
 }
 
+// WHY keepAlive: same lifetime as dioProvider — the jar holds open file
+// handles via EncryptedStorage. Disposing would close them mid-request.
+// WHY CookieJar (interface) return type, not PersistCookieJar: fake env
+// returns the in-memory base class. Consumers (CookieManager, bootstrap
+// query) only need the interface.
+@Riverpod(keepAlive: true)
+CookieJar cookieJar(Ref ref) {
+  if (evisitorEnv == EvisitorEnv.fake) {
+    // CookieJar (in-memory) is sufficient for fake env — no persistence needed.
+    return CookieJar();
+  }
+
+  final security = ref.watch(securityServiceProvider);
+  final cookieDir = ref.watch(cookieJarDirectoryProvider);
+  final storage = EncryptedStorage(cookieDir, security.encryptionHelper);
+  // WHY: persistSession=true is required by the eVisitor auth contract —
+  // the `authentication` cookie may be issued without `max-age` (session
+  // cookie) and must survive process death so the host doesn't get
+  // re-prompted on every cold start. ignoreExpires=false respects the
+  // server's expiration so stale cookies don't paper over a real re-auth.
+  return PersistCookieJar(
+    storage: storage,
+    persistSession: true,
+    ignoreExpires: false,
+  );
+}
+
 // WHY: keepAlive — single Dio instance is the sole audit point for cert
 // pinning, cookie management, and future auth interceptor wiring.
 @Riverpod(keepAlive: true)
 Dio dio(Ref ref) {
-  final security = ref.watch(securityServiceProvider);
-  final cookieDir = ref.watch(cookieJarDirectoryProvider);
-
   final dio = Dio(
     BaseOptions(
-      baseUrl: _resolveBaseUrl(),
+      baseUrl: evisitorBaseUrl(),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
@@ -58,18 +93,8 @@ Dio dio(Ref ref) {
   );
 
   if (evisitorEnv != EvisitorEnv.fake) {
-    final storage = EncryptedStorage(cookieDir, security.encryptionHelper);
-    // WHY: persistSession=true is required by the eVisitor auth contract —
-    // the `authentication` cookie may be issued without `max-age` (session
-    // cookie) and must survive process death so the host doesn't get
-    // re-prompted on every cold start. ignoreExpires=false respects the
-    // server's expiration so stale cookies don't paper over a real re-auth.
-    final cookieJar = PersistCookieJar(
-      storage: storage,
-      persistSession: true,
-      ignoreExpires: false,
-    );
-    dio.interceptors.add(CookieManager(cookieJar));
+    final jar = ref.watch(cookieJarProvider);
+    dio.interceptors.add(CookieManager(jar));
 
     // TODO(story-2.3): AuthInterceptor wires here.
 
@@ -88,11 +113,3 @@ Dio dio(Ref ref) {
 
   return dio;
 }
-
-String _resolveBaseUrl() => switch (evisitorEnv) {
-  // WHY: baseUrl trailing slash — eVisitor's Rhetos API requires it.
-  // Omitting it causes 301 redirects that dio may follow incorrectly.
-  EvisitorEnv.prod => 'https://www.evisitor.hr/eVisitorRhetos_API/',
-  EvisitorEnv.test => 'https://www.evisitor.hr/testApi/',
-  EvisitorEnv.fake => 'http://localhost/',
-};

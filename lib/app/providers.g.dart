@@ -41,7 +41,24 @@ final cookieJarDirectoryProvider = Provider<String>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CookieJarDirectoryRef = ProviderRef<String>;
-String _$dioHash() => r'39e756dc12b42a19c446fbf4beb6fa0328710c16';
+String _$cookieJarHash() => r'8d5de651715ab6663d537dbfd886568b82b9805b';
+
+/// See also [cookieJar].
+@ProviderFor(cookieJar)
+final cookieJarProvider = Provider<CookieJar>.internal(
+  cookieJar,
+  name: r'cookieJarProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$cookieJarHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CookieJarRef = ProviderRef<CookieJar>;
+String _$dioHash() => r'535ba834d9cbe56a894b46c52f78e05d034444a3';
 
 /// See also [dio].
 @ProviderFor(dio)
