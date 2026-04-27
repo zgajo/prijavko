@@ -67,6 +67,12 @@ dependencies:
   # 14.8.1 is the highest stable compatible with flutter_riverpod 2.6.x.
   go_router: ^14.8.1
 
+  # Story 1.6 — runtime camera permission request; re-request from Settings in Story 1.9.
+  permission_handler: ^12.0.1
+
+  # Story 1.6 — CapturePreference persistence (non-sensitive UX flag).
+  shared_preferences: ^2.3.5
+
   # Story 1.5 — Privacy Policy and ToS deep links from Welcome screen.
   url_launcher: ^6.3.2
 

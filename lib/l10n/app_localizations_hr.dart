@@ -26,4 +26,24 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get welcomeContinueButton => 'Nastavi';
+
+  @override
+  String get cameraPermissionHeadline => 'Pristup kameri';
+
+  @override
+  String get cameraPermissionBody =>
+      'Kamera je potrebna za skeniranje MRZ koda s putovnica. Slike se ne pohranjuju ni ne šalju — obrada je potpuno na uređaju.';
+
+  @override
+  String get cameraPermissionAllowButton => 'Dopusti pristup';
+
+  @override
+  String get cameraPermissionSkipButton => 'Preskoči — ručni unos';
+
+  @override
+  String get cameraPermissionPermanentlyDeniedMessage =>
+      'Pristup kameri trajno odbijen. Otvorite postavke uređaja za dopuštenje.';
+
+  @override
+  String get cameraPermissionOpenSettingsButton => 'Postavke';
 }

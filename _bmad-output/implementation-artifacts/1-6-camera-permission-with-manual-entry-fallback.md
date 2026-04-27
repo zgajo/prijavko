@@ -1,6 +1,6 @@
 # Story 1.6: Camera Permission with Manual-Entry Fallback
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -233,56 +233,56 @@ so that if I deny it the app still works — manual entry remains fully function
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Add `permission_handler` dependency and Android manifest permission (AC: #1)
-  - [ ] Subtask 1.1 — Add `permission_handler: ^12.0.1` to `pubspec.yaml` with annotated comment.
-  - [ ] Subtask 1.2 — Add `shared_preferences` to `pubspec.yaml` if not present (for `CapturePreferenceStore`).
-  - [ ] Subtask 1.3 — Add `<uses-permission android:name="android.permission.CAMERA" />` to `AndroidManifest.xml`.
-  - [ ] Subtask 1.4 — `flutter pub get`. Record exact resolved versions. Verify no transitive conflicts.
+- [x] Task 1 — Add `permission_handler` dependency and Android manifest permission (AC: #1)
+  - [x] Subtask 1.1 — Add `permission_handler: ^12.0.1` to `pubspec.yaml` with annotated comment.
+  - [x] Subtask 1.2 — Add `shared_preferences` to `pubspec.yaml` if not present (for `CapturePreferenceStore`).
+  - [x] Subtask 1.3 — Add `<uses-permission android:name="android.permission.CAMERA" />` to `AndroidManifest.xml`. (already present from Story 1.1 AC4.2)
+  - [x] Subtask 1.4 — `flutter pub get`. Record exact resolved versions. Verify no transitive conflicts.
 
-- [ ] Task 2 — `CapturePreference` enum and `CapturePreferenceStore` (AC: #2)
-  - [ ] Subtask 2.1 — Create `lib/core/capture/capture_preference.dart` with `CapturePreference` enum.
-  - [ ] Subtask 2.2 — Create `lib/core/capture/capture_preference_store.dart` with `SharedPreferences`-backed persistence.
-  - [ ] Subtask 2.3 — Create `@riverpod` provider for `CapturePreferenceStore`.
-  - [ ] Subtask 2.4 — Run `dart run build_runner build --delete-conflicting-outputs`. Commit generated `.g.dart`.
+- [x] Task 2 — `CapturePreference` enum and `CapturePreferenceStore` (AC: #2)
+  - [x] Subtask 2.1 — Create `lib/core/capture/capture_preference.dart` with `CapturePreference` enum.
+  - [x] Subtask 2.2 — Create `lib/core/capture/capture_preference_store.dart` with `SharedPreferences`-backed persistence.
+  - [x] Subtask 2.3 — Create `@riverpod` provider for `CapturePreferenceStore`.
+  - [x] Subtask 2.4 — Run `dart run build_runner build --delete-conflicting-outputs`. Commit generated `.g.dart`.
 
-- [ ] Task 3 — `PermissionService` abstraction and implementation (AC: #3)
-  - [ ] Subtask 3.1 — Create `lib/core/permissions/permission_service.dart` (abstract interface).
-  - [ ] Subtask 3.2 — Create `lib/core/permissions/permission_service_impl.dart` (production implementation using `permission_handler`).
-  - [ ] Subtask 3.3 — Create `@riverpod` provider for `permissionServiceProvider`.
-  - [ ] Subtask 3.4 — Run `dart run build_runner build --delete-conflicting-outputs`. Commit generated `.g.dart`.
+- [x] Task 3 — `PermissionService` abstraction and implementation (AC: #3)
+  - [x] Subtask 3.1 — Create `lib/core/permissions/permission_service.dart` (abstract interface).
+  - [x] Subtask 3.2 — Create `lib/core/permissions/permission_service_impl.dart` (production implementation using `permission_handler`).
+  - [x] Subtask 3.3 — Create `@riverpod` provider for `permissionServiceProvider`.
+  - [x] Subtask 3.4 — Run `dart run build_runner build --delete-conflicting-outputs`. Commit generated `.g.dart`.
 
-- [ ] Task 4 — l10n strings (AC: #6)
-  - [ ] Subtask 4.1 — Add 4 camera-permission keys to `app_en.arb`.
-  - [ ] Subtask 4.2 — Add 4 camera-permission values to `app_hr.arb`. Full diacritics.
-  - [ ] Subtask 4.3 — Run `flutter gen-l10n`. Verify generated getters.
+- [x] Task 4 — l10n strings (AC: #6)
+  - [x] Subtask 4.1 — Add 4 camera-permission keys to `app_en.arb`.
+  - [x] Subtask 4.2 — Add 4 camera-permission values to `app_hr.arb`. Full diacritics.
+  - [x] Subtask 4.3 — Run `flutter gen-l10n`. Verify generated getters.
 
-- [ ] Task 5 — `CameraPermissionScreen` widget (AC: #4)
-  - [ ] Subtask 5.1 — Create `lib/features/onboarding/camera_permission_screen.dart` as `ConsumerStatefulWidget` with layout per AC4.2.
-  - [ ] Subtask 5.2 — Wire headline, rationale, camera icon — all text from `AppLocalizations`.
-  - [ ] Subtask 5.3 — Wire "Dopusti pristup" `FilledButton`: call `requestCamera()`, save preference, navigate to login.
-  - [ ] Subtask 5.4 — Wire "Preskoči — ručni unos" `OutlinedButton`: save `manualOnly`, navigate to login.
-  - [ ] Subtask 5.5 — Check `mounted` after async `requestCamera()` before calling `context.go()`.
+- [x] Task 5 — `CameraPermissionScreen` widget (AC: #4)
+  - [x] Subtask 5.1 — Create `lib/features/onboarding/camera_permission_screen.dart` as `ConsumerStatefulWidget` with layout per AC4.2.
+  - [x] Subtask 5.2 — Wire headline, rationale, camera icon — all text from `AppLocalizations`.
+  - [x] Subtask 5.3 — Wire "Dopusti pristup" `FilledButton`: call `requestCamera()`, save preference, navigate to login.
+  - [x] Subtask 5.4 — Wire "Preskoči — ručni unos" `OutlinedButton`: save `manualOnly`, navigate to login.
+  - [x] Subtask 5.5 — Check `mounted` after async `requestCamera()` before calling `context.go()`.
 
-- [ ] Task 6 — Router updates (AC: #5)
-  - [ ] Subtask 6.1 — Replace placeholder with `CameraPermissionScreen` in `router.dart`.
-  - [ ] Subtask 6.2 — Add `/onboarding/login` placeholder route for Story 1.7.
-  - [ ] Subtask 6.3 — Remove `TODO(story-1.6)` and `i18n-ignore` comments.
+- [x] Task 6 — Router updates (AC: #5)
+  - [x] Subtask 6.1 — Replace placeholder with `CameraPermissionScreen` in `router.dart`.
+  - [x] Subtask 6.2 — Add `/onboarding/login` placeholder route for Story 1.7.
+  - [x] Subtask 6.3 — Remove `TODO(story-1.6)` and `i18n-ignore` comments.
 
-- [ ] Task 7 — Tests (AC: #7)
-  - [ ] Subtask 7.1 — Create `test/fakes/fake_permission_service.dart`.
-  - [ ] Subtask 7.2 — Create `test/fakes/fake_capture_preference_store.dart`.
-  - [ ] Subtask 7.3 — Create `test/widget/features/onboarding/camera_permission_screen_test.dart` per AC7.3.
-  - [ ] Subtask 7.4 — Create `test/unit/core/capture/capture_preference_store_test.dart` per AC7.4.
-  - [ ] Subtask 7.5 — Add golden tests for dark + light (generate baselines with `--update-goldens`).
-  - [ ] Subtask 7.6 — Update `app_smoke_test.dart` and `integration_test/app_test.dart` if needed.
-  - [ ] Subtask 7.7 — Run all tests and verify green.
+- [x] Task 7 — Tests (AC: #7)
+  - [x] Subtask 7.1 — Create `test/fakes/fake_permission_service.dart`.
+  - [x] Subtask 7.2 — Create `test/fakes/fake_capture_preference_store.dart`.
+  - [x] Subtask 7.3 — Create `test/widget/features/onboarding/camera_permission_screen_test.dart` per AC7.3.
+  - [x] Subtask 7.4 — Create `test/unit/core/capture/capture_preference_store_test.dart` per AC7.4.
+  - [x] Subtask 7.5 — Add golden tests for dark + light (generate baselines with `--update-goldens`).
+  - [x] Subtask 7.6 — Update `app_smoke_test.dart` and `integration_test/app_test.dart` if needed. (smoke test verified green; integration_test unaffected)
+  - [x] Subtask 7.7 — Run all tests and verify green.
 
-- [ ] Task 8 — Validation gate (AC: #8)
-  - [ ] Subtask 8.1 — `flutter test` — all tests green.
-  - [ ] Subtask 8.2 — `dart analyze --fatal-warnings --fatal-infos` — clean.
-  - [ ] Subtask 8.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
-  - [ ] Subtask 8.4 — i18n literal-string guard on `lib/features/onboarding/camera_permission_screen.dart`.
-  - [ ] Subtask 8.5 — PII grep guard on `lib/features/onboarding/`.
+- [x] Task 8 — Validation gate (AC: #8)
+  - [x] Subtask 8.1 — `flutter test` — all tests green. (74 tests)
+  - [x] Subtask 8.2 — `dart analyze --fatal-warnings --fatal-infos` — clean.
+  - [x] Subtask 8.3 — `dart format --set-exit-if-changed lib test integration_test` — clean.
+  - [x] Subtask 8.4 — i18n literal-string guard on `lib/features/onboarding/camera_permission_screen.dart`. (clean)
+  - [x] Subtask 8.5 — PII grep guard on `lib/features/onboarding/`. (clean)
 
 ---
 
@@ -480,10 +480,85 @@ This story prepares the infrastructure (interface + implementation) that Story 1
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+- Resolved versions: permission_handler 12.0.1, shared_preferences 2.5.5. No transitive conflicts.
+- CAMERA already declared in AndroidManifest.xml (Story 1.1 AC4.2) — subtask 1.3 was a no-op.
+- `Ref` type requires `flutter_riverpod` import even when using `riverpod_annotation` — test VM compilation is stricter than `dart analyze` alone. Fixed by adding explicit `flutter_riverpod` import to both `capture_preference_store.dart` and `permission_service_impl.dart`.
+- `directives_ordering` lint: package imports must be alphabetically sorted in a single block (no blank line separating prijavko imports from other packages). Fixed in both source files.
+
 ### Completion Notes List
 
+- All 8 tasks / all subtasks complete.
+- 74 tests green (16 unit + 13 camera-permission widget + 12 welcome-screen widget + 1 smoke + design tests).
+- New infrastructure: `CapturePreference` enum + `CapturePreferenceStore` (SharedPreferences-backed, versioned key, default `manualOnly`). `PermissionService` interface seam + `PermissionServiceImpl`. Both follow ConsentService / SecurityService testability patterns.
+- `CameraPermissionScreen`: ConsumerStatefulWidget, mounted guard after async requestCamera(), all text via AppLocalizations, zero literal strings.
+- Golden baselines committed (dark + light).
+- `dart analyze --fatal-warnings --fatal-infos`: clean. `dart format`: clean.
+
 ### File List
+
+**New files:**
+- `lib/core/capture/capture_preference.dart`
+- `lib/core/capture/capture_preference_store.dart`
+- `lib/core/capture/capture_preference_store.g.dart`
+- `lib/core/permissions/permission_service.dart`
+- `lib/core/permissions/permission_service_impl.dart`
+- `lib/core/permissions/permission_service_impl.g.dart`
+- `lib/features/onboarding/camera_permission_screen.dart`
+- `test/fakes/fake_permission_service.dart`
+- `test/fakes/fake_capture_preference_store.dart`
+- `test/unit/core/capture/capture_preference_store_test.dart`
+- `test/widget/features/onboarding/camera_permission_screen_test.dart`
+- `test/widget/features/onboarding/goldens/camera_permission_dark.png`
+- `test/widget/features/onboarding/goldens/camera_permission_light.png`
+
+**Modified files:**
+- `pubspec.yaml` — permission_handler 12.0.1, shared_preferences 2.5.5 added
+- `pubspec.lock` — regenerated
+- `lib/l10n/app_en.arb` — 4 camera-permission keys
+- `lib/l10n/app_hr.arb` — 4 camera-permission values
+- `lib/l10n/app_localizations.dart` — regenerated
+- `lib/l10n/app_localizations_en.dart` — regenerated
+- `lib/l10n/app_localizations_hr.dart` — regenerated
+- `lib/app/router.dart` — placeholder → CameraPermissionScreen; login placeholder added
+
+### Change Log
+
+- 2026-04-27: Story 1.6 implemented — camera permission screen, PermissionService seam, CapturePreference persistence, l10n, router, tests, goldens. Branch: story-1-6-camera-permission.
+
+---
+
+## Review Findings
+
+Code review by parallel adversarial agents (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 2026-04-27.
+
+### Decision Needed
+
+- [x] [Review][Decision] **SharedPreferences Result contract** — `CapturePreferenceStore.save()` and `load()` are declared as `Future<void>` / `Future<CapturePreference>` (per AC2), but the project rule mandates all data-layer functions return `Result<T, Failure>`. `SharedPreferences.setString()` can throw (disk full, PlatformException) and is silently swallowed; user gets stuck on screen with no feedback and no navigation. Decision: add `Result` wrapping to `save()`/`load()`, or treat this store as a lightweight convenience layer exempt from the contract (safe fallback to `manualOnly` on failure is acceptable)?
+
+- [x] [Review][Decision] **permanentlyDenied path: no UI feedback, `openSettings()` dead code** — When camera is permanently denied, `Permission.camera.request()` returns immediately without showing an OS dialog. `requestCamera()` returns `false`, saves `manualOnly`, navigates. UX: user taps "Dopusti pristup", button responds instantly with no dialog, screen changes — looks broken. `isCameraPermanentlyDenied()` and `openSettings()` are defined in the AC3 interface but have zero call sites. Decision: does this story need to detect permanently-denied state and show an "Otvorite postavke" nudge (inline or via `openSettings()`), or is the silent-fallback-to-manualOnly path acceptable and the full handling deferred to Story 1.9?
+
+### Patches
+
+- [x] [Review][Patch] **No in-flight guard on `_onAllow`/`_onSkip` — double-tap race** — Both handlers are `async` with no `_isInFlight` flag. Double-tap during OS dialog or during `save()` fires concurrent executions: two `requestCamera()` calls and two `context.go()` calls. Fix: add `bool _isInFlight = false`, `setState` before each await, check at top of each handler, set `onPressed: _isInFlight ? null : _onAllow`. [`lib/features/onboarding/camera_permission_screen.dart`]
+
+- [x] [Review][Patch] **Allow-denied test missing `requestCameraCallCount` assertion** — The "tapping Allow when permission denied" test asserts `savedPreference` and navigation but not that `requestCamera()` was actually called. A refactor that skips `requestCamera()` entirely would pass. Fix: add `expect(fakePermission.requestCameraCallCount, 1)`. [`test/widget/features/onboarding/camera_permission_screen_test.dart`]
+
+- [x] [Review][Patch] **Semantics label on icon duplicates visible headline — double-announcement** — `Semantics(label: l10n.cameraPermissionHeadline, child: Icon(...))` followed immediately by `Text(l10n.cameraPermissionHeadline)` causes screen readers to announce the headline twice in succession. The icon is decorative; the text already communicates the label. Fix: replace with `ExcludeSemantics(child: Icon(...))` or add `excludeFromSemantics: true` to the `Semantics` wrapper. [`lib/features/onboarding/camera_permission_screen.dart`]
+
+- [x] [Review][Patch] **Hardcoded `'/onboarding/login'` string — use named navigation** — `context.go('/onboarding/login')` called in both `_onAllow` and `_onSkip`. The route already declares `name: 'login'`. Hardcoded path silently breaks at runtime if the route tree changes; `goNamed` would surface the regression as an assertion. Fix: `context.goNamed('login')`. [`lib/features/onboarding/camera_permission_screen.dart`]
+
+### Deferred
+
+- [x] [Review][Defer] **`CapturePreferenceStore` not behind abstract interface** [`lib/core/capture/capture_preference_store.dart`] — deferred, pre-existing design: `FakeCapturePreferenceStore` extends the concrete class rather than an interface. Any new method added to `CapturePreferenceStore` silently falls through to real SharedPreferences in tests. Contrast with `PermissionService` (abstract) + `PermissionServiceImpl`. Consider extracting `AbstractCapturePreferenceStore` in a future story if the class gains additional methods.
+
+- [x] [Review][Defer] **AutoDispose providers captured before long await** [`lib/features/onboarding/camera_permission_screen.dart`] — deferred, pre-existing design: `ref.read(capturePreferenceStoreProvider)` is captured before `await requestCamera()`. Safe today because both providers are stateless value types; becomes fragile if either is converted to a stateful `Notifier`. Document with a comment or migrate to a `Notifier`-hosted action method.
+
+- [x] [Review][Defer] **`restricted`/`limited` permission status → silent `manualOnly` with no OS dialog** [`lib/core/permissions/permission_service_impl.dart`] — deferred, edge case: on MDM-managed or OEM-restricted devices, `Permission.camera.request()` returns immediately without showing a dialog. User taps "Dopusti pristup" and the screen advances silently in manual-only mode with no explanation. Relevant for Story 1.9 or an explicit settings-screen remediation.
+
+- [x] [Review][Defer] **No test for SharedPreferences write failure** [`test/unit/core/capture/capture_preference_store_test.dart`] — deferred, pending Result contract decision: blocked on `decision-needed` item 1. If `Result` wrapping is added to `save()`, add a test for `PlatformException` propagation.
+
+- [x] [Review][Defer] **`openAppSettings()` return value discarded** [`lib/core/permissions/permission_service_impl.dart`] — deferred, not called in this story: `openSettings()` is defined but unused. `openAppSettings()` returns a `bool` (success/failure) that is currently discarded. When Story 1.9 wires the "open settings" action, change `openSettings()` return type to `Future<bool>` and update the interface and implementation.
