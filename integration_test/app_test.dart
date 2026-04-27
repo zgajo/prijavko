@@ -31,10 +31,18 @@
 // not signal. A single sample is honest. p50/p95 return when a driver-
 // based cold-start harness lands.
 
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/main.dart';
+
+import '../test/fakes/evisitor_fake_adapter.dart';
+import '../test/fakes/fake_security_service.dart';
 
 // Threshold inlined rather than `--dart-define`d: a guard rail that can
 // be silently loosened from CI arguments is not a guard rail. Changes
@@ -45,7 +53,20 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('app boots and paints its first frame', (tester) async {
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          securityServiceProvider.overrideWithValue(FakeSecurityService()),
+          cookieJarDirectoryProvider.overrideWithValue(
+            Directory.systemTemp.path,
+          ),
+          dioProvider.overrideWithValue(
+            Dio()..httpClientAdapter = EvisitorFakeAdapter(),
+          ),
+        ],
+        child: const MainApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // Story 1.2 swapped the `Hello World!` placeholder for the design-system
@@ -66,7 +87,20 @@ void main() {
     tester,
   ) async {
     final stopwatch = Stopwatch()..start();
-    await tester.pumpWidget(const MainApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          securityServiceProvider.overrideWithValue(FakeSecurityService()),
+          cookieJarDirectoryProvider.overrideWithValue(
+            Directory.systemTemp.path,
+          ),
+          dioProvider.overrideWithValue(
+            Dio()..httpClientAdapter = EvisitorFakeAdapter(),
+          ),
+        ],
+        child: const MainApp(),
+      ),
+    );
     // `waitUntilFirstFrameRasterized` is a per-binding one-shot Completer.
     // On the integration binding, awaiting it blocks until a real vsync
     // lands the first GPU frame — which is the best proxy to "the app is
