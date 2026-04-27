@@ -17,6 +17,16 @@
 // extensions), so we want it loud, not "fall back to a default and ship a
 // silently broken status palette." A widget test asserts the extension
 // resolves under both themes — regression caught in CI.
+//
+// Why `closureAccent` has NO paired `onClosureAccent`: by design,
+// `closureAccent` is a non-text-bearing accent — used as a background
+// tint for the closure-summary signature moment, as a border on the
+// closure card, or as an icon fill. Text-on-closure-accent is reserved
+// for the headline-on-surface relationship (so the gold remains a
+// flourish, not a typographic surface). If a future story requires text
+// to render on top of a `closureAccent` fill, the right move is to add
+// a paired `onClosureAccent` field here AND update the UX spec — not
+// to inline a foreground colour at the call site.
 
 import 'package:flutter/material.dart';
 
@@ -24,6 +34,7 @@ import 'package:flutter/material.dart';
 class SemanticColors extends ThemeExtension<SemanticColors> {
   const SemanticColors({
     required this.warning,
+    required this.onWarning,
     required this.warningContainer,
     required this.onWarningContainer,
     required this.success,
@@ -34,6 +45,7 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
   });
 
   final Color warning;
+  final Color onWarning;
   final Color warningContainer;
   final Color onWarningContainer;
   final Color success;
@@ -46,6 +58,10 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
   // requires a UX spec update first, not an inline tweak.
   factory SemanticColors.light() => const SemanticColors(
     warning: Color(0xFFED6C02),
+    // DERIVED FROM M3 on-warning pairing for the saturated orange — white
+    // foreground keeps WCAG AA on the warning fill (~5.5:1). Pinned so the
+    // pairing does not drift if `fromSeed` tonal output changes.
+    onWarning: Color(0xFFFFFFFF),
     // WHY: M3 warmth-on-light tonal — derived once from the closest
     // tertiary container produced by `ColorScheme.fromSeed(0xFF0D4F52,
     // brightness: light)` and pinned here so the warning palette never
@@ -63,6 +79,9 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
 
   factory SemanticColors.dark() => const SemanticColors(
     warning: Color(0xFFFFB74D),
+    // DERIVED FROM M3 on-warning pairing for the lighter dark-mode orange
+    // — very dark warm brown keeps WCAG AA against the bright orange fill.
+    onWarning: Color(0xFF422C00),
     warningContainer: Color(0xFF4A2E00),
     onWarningContainer: Color(0xFFFFE2B8),
     success: Color(0xFF81C784),
@@ -76,6 +95,7 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
   @override
   SemanticColors copyWith({
     Color? warning,
+    Color? onWarning,
     Color? warningContainer,
     Color? onWarningContainer,
     Color? success,
@@ -86,6 +106,7 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
   }) {
     return SemanticColors(
       warning: warning ?? this.warning,
+      onWarning: onWarning ?? this.onWarning,
       warningContainer: warningContainer ?? this.warningContainer,
       onWarningContainer: onWarningContainer ?? this.onWarningContainer,
       success: success ?? this.success,
@@ -101,6 +122,7 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
     if (other is! SemanticColors) return this;
     return SemanticColors(
       warning: Color.lerp(warning, other.warning, t)!,
+      onWarning: Color.lerp(onWarning, other.onWarning, t)!,
       warningContainer: Color.lerp(
         warningContainer,
         other.warningContainer,

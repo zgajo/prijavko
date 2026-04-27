@@ -11,7 +11,7 @@
 // pick — never hardcode either side.
 //
 // Why `ColorScheme.fromSeed`: a single brand byte
-// (`Tokens.color.primarySeed`) drives every surface, primary, secondary,
+// (`TokensColor.primarySeed`) drives every surface, primary, secondary,
 // and tertiary tone. WCAG AA contrast is satisfied by construction. We
 // never call `ColorScheme(primary: …, onPrimary: …, …)` by hand — that
 // path invites contrast regressions.
@@ -28,7 +28,7 @@ ThemeData buildDarkTheme() => _buildTheme(Brightness.dark);
 
 ThemeData _buildTheme(Brightness brightness) {
   final colorScheme = ColorScheme.fromSeed(
-    seedColor: Tokens.color.primarySeed,
+    seedColor: TokensColor.primarySeed,
     brightness: brightness,
   );
   final base = ThemeData(useMaterial3: true, colorScheme: colorScheme);
@@ -43,9 +43,9 @@ ThemeData _buildTheme(Brightness brightness) {
     ],
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: Size.fromHeight(Tokens.size.buttonMinHeight),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Tokens.radius.button),
+        minimumSize: const Size.fromHeight(TokensSize.buttonMinHeight),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(TokensRadius.button)),
         ),
       ),
     ),
@@ -54,41 +54,41 @@ ThemeData _buildTheme(Brightness brightness) {
         // WHY: 48dp for secondary actions per UX spec §Button Hierarchy —
         // primary/destructive get 56dp via filledButtonTheme; secondaries
         // de-emphasise through height before colour.
-        minimumSize: const Size.fromHeight(48.0),
+        minimumSize: const Size.fromHeight(TokensSize.outlinedButtonMinHeight),
         side: BorderSide(color: colorScheme.outline, width: 1.5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Tokens.radius.button),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(TokensRadius.button)),
         ),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Tokens.radius.button),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(TokensRadius.button)),
         ),
       ),
     ),
-    cardTheme: CardThemeData(
+    cardTheme: const CardThemeData(
       // WHY: padding lives on parents; Card shapes the surface only.
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Tokens.radius.card),
+        borderRadius: BorderRadius.all(Radius.circular(TokensRadius.card)),
       ),
     ),
-    bottomSheetTheme: BottomSheetThemeData(
+    bottomSheetTheme: const BottomSheetThemeData(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(Tokens.radius.sheet),
+          top: Radius.circular(TokensRadius.sheet),
         ),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
+    inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(Tokens.radius.button),
+        borderRadius: BorderRadius.all(Radius.circular(TokensRadius.button)),
       ),
       contentPadding: EdgeInsets.symmetric(
-        horizontal: Tokens.space.s16,
-        vertical: Tokens.space.s12,
+        horizontal: TokensSpace.s16,
+        vertical: TokensSpace.s12,
       ),
     ),
   );

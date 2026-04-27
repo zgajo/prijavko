@@ -8,13 +8,14 @@ with the pattern documented here.
 ## Pattern
 
 ```regexp
-Icon\s*\(\s*Icons\.
+(Icon\s*\(\s*|Icon\.adaptive\s*\(\s*)Icons\.
 ```
 
 ### What it catches
 
-Any `Icon(Icons.<name>)` call site. The guard exists because two
-different icon APIs are reachable from `flutter/material.dart`:
+Any `Icon(Icons.<name>)` or `Icon.adaptive(Icons.<name>)` call site.
+The guard exists because two different icon APIs are reachable from
+`flutter/material.dart`:
 
 - **`Icons.<name>`** — Material Icons font, classic Material 2 stroke.
   Loaded automatically when `flutter.uses-material-design: true`.
@@ -49,6 +50,8 @@ Icon(Icons.warning, color: Colors.amber);
 return Icon(Icons.check_circle);
 // extra whitespace doesn't help
 Icon (  Icons.bookmark);
+// the platform-adaptive constructor is also blocked
+Icon.adaptive(Icons.share);
 ```
 
 ### ✅ Allowed (regex does not match, build passes)
@@ -75,3 +78,23 @@ The regex deliberately matches the call shape, not bare `Icons.`. A
 future codebase change might legitimately reference the `Icons` class in
 a doc comment or a string — broadening the regex to `Icons\.\w+` would
 generate false positives there.
+
+## Known scope holes (intentional)
+
+The two patterns above cover the realistic ways a `Material Icons` font
+glyph reaches a render. The guard does **not** match:
+
+- Bare `IconData` references: `final IconData x = Icons.foo;`. These
+  almost always then flow into an `Icon(...)` call, which the guard
+  catches downstream.
+- Prefix-aliased imports: `import 'package:flutter/material.dart' as m;`
+  followed by `Icon(m.Icons.foo)`. Detecting this requires AST analysis,
+  not a grep — out of scope for a CI guard.
+- `Icons.<name>` literals inside multi-line string literals or dartdoc
+  code fences spanning lines. A doc-comment example that types
+  `Icon(Icons.foo)` in `lib/**` will trip the guard; keep illustrative
+  examples in `docs/`.
+
+If a real-world miss appears in code review, lift the relevant case
+into the alternation rather than expanding to `Icons\.\w+` (which
+generates noise). Document each such addition here in lockstep.

@@ -33,7 +33,13 @@ jobs:
       - name: Scan lib/ test/ integration_test/ for Icon(Icons.*) call sites
         env:
           # Keep this env var in sync with docs/ci/icons-guard-regex.md.
-          ICONS_REGEX: 'Icon\s*\(\s*Icons\.'
+          # Alternation catches the two real-world constructor shapes that
+          # leak Material Icons into the codebase: `Icon(Icons.foo)` and
+          # `Icon.adaptive(Icons.foo)`. Bare `Icons.foo` references (e.g.
+          # `final IconData x = Icons.foo;`) and prefix-aliased imports
+          # are intentionally out of scope — the trade-off is documented
+          # in docs/ci/icons-guard-regex.md.
+          ICONS_REGEX: '(Icon\s*\(\s*|Icon\.adaptive\s*\(\s*)Icons\.'
         run: |
           set -euo pipefail
           SCAN_DIRS=()

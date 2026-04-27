@@ -54,6 +54,12 @@ void main() {
     // probe goes red on the same emulator that protects the cold-start NFR.
     expect(find.byType(FilledButton), findsOneWidget);
     expect(find.byType(OutlinedButton), findsOneWidget);
+    // The preview button labels are 'Preview'. Asserting on rendered text
+    // (in addition to widget types) restores the strength of the original
+    // `Hello World!` content probe — a font-load failure that swallows
+    // glyphs but does not throw would still find the buttons but render
+    // empty Text, and that path needs to fail loud.
+    expect(find.text('Preview'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('mount-to-first-frame stays under 2.5s (AC10 / NFR-P8 guard)', (

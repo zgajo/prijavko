@@ -18,10 +18,11 @@ void main() {
     // No ErrorWidget in the tree — tree build didn't throw.
     expect(find.byType(ErrorWidget), findsNothing);
     // The preview surface lands a FilledButton, an OutlinedButton, and
-    // an Icon. If any token wiring or font asset were broken, the build
-    // would either throw or render Tofu and the test would fail loud.
+    // at least one Material Symbol Icon. If any token wiring or font
+    // asset were broken, the build would either throw or render Tofu
+    // and the test would fail loud.
     expect(find.byType(FilledButton), findsOneWidget);
     expect(find.byType(OutlinedButton), findsOneWidget);
-    expect(find.byType(Icon), findsOneWidget);
+    expect(find.byType(Icon), findsAtLeastNWidgets(1));
   });
 }

@@ -39,5 +39,16 @@ flutter:
   # The `google_fonts` package auto-detects files in this folder by name —
   # filenames must match `Manrope-{Regular,Medium,SemiBold,Bold,ExtraBold}.ttf`
   # exactly. OFL.txt ships alongside per SIL OFL 1.1 §4.
+  #
+  # Files are listed explicitly (not the parent folder) so that hidden dev
+  # artefacts — `.DS_Store` on macOS, `Thumbs.db` on Windows, editor swap
+  # files — cannot accidentally bundle into the AAB. Each new font weight
+  # or licence document must be added by name; the test in
+  # `test/design/offline_fonts_test.dart` asserts OFL.txt is present.
   assets:
-    - assets/google_fonts/Manrope/
+    - assets/google_fonts/Manrope/Manrope-Regular.ttf
+    - assets/google_fonts/Manrope/Manrope-Medium.ttf
+    - assets/google_fonts/Manrope/Manrope-SemiBold.ttf
+    - assets/google_fonts/Manrope/Manrope-Bold.ttf
+    - assets/google_fonts/Manrope/Manrope-ExtraBold.ttf
+    - assets/google_fonts/Manrope/OFL.txt

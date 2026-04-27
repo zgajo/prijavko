@@ -3,15 +3,23 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:prijavko/design/extensions.dart';
 import 'package:prijavko/design/icons.dart';
 import 'package:prijavko/design/theme.dart';
+import 'package:prijavko/design/tokens.dart';
 
 void main() {
-  // WHY: Manrope ships as bundled assets under assets/google_fonts/Manrope/
-  // (Story 1.2 AC8). Disabling runtime fetching turns a missing-asset bug
-  // into a loud startup exception in dev/CI rather than a silent CDN
-  // fallback that violates the offline-tolerant PRD NFR. Poka-yoke.
-  GoogleFonts.config.allowRuntimeFetching = false;
-
+  applyMainAppFontConfig();
   runApp(const MainApp());
+}
+
+// WHY: Manrope ships as bundled assets under assets/google_fonts/Manrope/
+// (Story 1.2 AC8). Disabling runtime fetching turns a missing-asset bug
+// into a loud startup exception in dev/CI rather than a silent CDN
+// fallback that violates the offline-tolerant PRD NFR. Poka-yoke.
+//
+// Factored out of `main()` so `test/design/offline_fonts_test.dart` can
+// exercise it directly — the only sanctioned way to drive the same
+// initialization the production app performs.
+void applyMainAppFontConfig() {
+  GoogleFonts.config.allowRuntimeFetching = false;
 }
 
 class MainApp extends StatelessWidget {
@@ -53,69 +61,78 @@ class _DesignSystemPreview extends StatelessWidget {
       appBar: AppBar(title: const Text('prijavko')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(TokensSpace.s16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Text(
                 // i18n-ignore: design-system preview scaffold; removed in 1.5
-                'prijavko',
+                'Design system',
                 style: theme.textTheme.headlineLarge,
               ),
-              const SizedBox(height: 16),
-              Card(
+              const SizedBox(height: TokensSpace.s16),
+              const Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      FilledButton(
-                        onPressed: () {},
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Icon(Symbols.check_rounded),
-                            SizedBox(width: 8),
-                            // i18n-ignore: design-system preview scaffold; removed in 1.5
-                            Text('Preview'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      OutlinedButton(
-                        onPressed: () {},
-                        // i18n-ignore: design-system preview scaffold; removed in 1.5
-                        child: const Text('Preview'),
-                      ),
-                    ],
-                  ),
+                  padding: EdgeInsets.all(TokensSpace.s16),
+                  child: _PreviewButtons(),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: TokensSpace.s24),
               _SemanticSwatch(
-                color: semantic.warningContainer,
-                onColor: semantic.onWarningContainer,
+                color: semantic.warning,
+                onColor: semantic.onWarning,
                 // i18n-ignore: design-system preview scaffold; removed in 1.5
                 label: 'warning',
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: TokensSpace.s8),
               _SemanticSwatch(
                 color: semantic.success,
                 onColor: semantic.onSuccess,
                 // i18n-ignore: design-system preview scaffold; removed in 1.5
                 label: 'success',
               ),
-              const SizedBox(height: 8),
-              _SemanticSwatch(
-                color: semantic.closureAccent,
-                onColor: theme.colorScheme.onSurface,
-                // i18n-ignore: design-system preview scaffold; removed in 1.5
-                label: 'closureAccent',
-              ),
+              const SizedBox(height: TokensSpace.s8),
+              // WHY: closureAccent ships without a paired `onClosureAccent`
+              // (see lib/design/extensions.dart header). The swatch renders
+              // the gold as a non-text-bearing accent — a thin strip with
+              // an icon-only label — to honour that contract on day one.
+              _ClosureAccentStrip(color: semantic.closureAccent),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PreviewButtons extends StatelessWidget {
+  const _PreviewButtons();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        FilledButton(
+          onPressed: () {},
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Symbols.check_rounded),
+              SizedBox(width: TokensSpace.s8),
+              // i18n-ignore: design-system preview scaffold; removed in 1.5
+              Text('Preview'),
+            ],
+          ),
+        ),
+        const SizedBox(height: TokensSpace.s12),
+        OutlinedButton(
+          onPressed: () {},
+          // i18n-ignore: design-system preview scaffold; removed in 1.5
+          child: const Text('Preview'),
+        ),
+      ],
     );
   }
 }
@@ -134,15 +151,41 @@ class _SemanticSwatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: TokensSpace.s16,
+        vertical: TokensSpace.s12,
+      ),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(
+          Radius.circular(TokensRadius.button),
+        ),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(color: onColor),
       ),
+    );
+  }
+}
+
+class _ClosureAccentStrip extends StatelessWidget {
+  const _ClosureAccentStrip({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: TokensSpace.s32,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: const BorderRadius.all(
+          Radius.circular(TokensRadius.button),
+        ),
+      ),
+      alignment: Alignment.center,
+      child: const Icon(Symbols.check_rounded),
     );
   }
 }
