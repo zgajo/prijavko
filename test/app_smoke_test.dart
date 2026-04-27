@@ -1,18 +1,15 @@
-// Story 1.1 AC3.3 — smoke test so test.yml is green from commit #1.
-//
-// `flutter test` exits non-zero when the `test/` directory has no
-// matching files, which would make the `test` workflow red before any
-// real unit test exists. This smoke test establishes the minimum
-// meaningful check (the root widget pumps without an ErrorWidget and
-// paints the `--empty` scaffold text) and earns its place until the
-// first feature-level widget test lands in Story 1.2+.
+// Story 1.2 AC4 — smoke test that MainApp pumps the design-system
+// preview without throwing. Replaces the Story 1.1 `Hello World!`
+// fixture now that the real MaterialApp shape (light/dark themes,
+// SemanticColors extension, Material Symbols rounded) is wired in.
+// Re-targets when WelcomeScreen lands in Story 1.5.
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:prijavko/main.dart';
 
 void main() {
-  testWidgets('MainApp pumps and paints the scaffold without errors', (
+  testWidgets('MainApp pumps without errors and renders the preview', (
     tester,
   ) async {
     await tester.pumpWidget(const MainApp());
@@ -20,9 +17,11 @@ void main() {
 
     // No ErrorWidget in the tree — tree build didn't throw.
     expect(find.byType(ErrorWidget), findsNothing);
-    // `--empty` emits a `Hello World!` Center(Text). This assertion is
-    // temporary — it moves to the app shell's landing-screen fixture
-    // once Story 1.2 lands real UI.
-    expect(find.text('Hello World!'), findsOneWidget);
+    // The preview surface lands a FilledButton, an OutlinedButton, and
+    // an Icon. If any token wiring or font asset were broken, the build
+    // would either throw or render Tofu and the test would fail loud.
+    expect(find.byType(FilledButton), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsOneWidget);
+    expect(find.byType(Icon), findsOneWidget);
   });
 }
