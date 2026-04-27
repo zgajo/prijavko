@@ -2,7 +2,6 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
 import 'package:prijavko/app/providers.dart';
 import 'package:prijavko/core/bootstrap/session_bootstrap.dart';
-import 'package:prijavko/core/errors/app_error.dart';
 import 'package:prijavko/core/result/result.dart';
 import 'package:prijavko/features/facility/has_facility_profile.dart';
 import 'package:prijavko/features/settings/credential_store.dart';
@@ -20,8 +19,12 @@ Future<SessionBootstrap> sessionBootstrap(Ref ref) async {
   final credentialStore = ref.watch(credentialStoreProvider);
   final jar = ref.watch(cookieJarProvider);
 
+  // WHY `is Ok` without type params: bootstrap only needs to know whether
+  // loading succeeded (boolean), not the actual credential values. Using the
+  // raw `Ok` check avoids referencing the Credentials type in bootstrap code
+  // (PII discipline — AC10.4).
   final credentialsResult = await credentialStore.loadCredentials();
-  final hasCredentials = credentialsResult is Ok<Credentials, StorageError>;
+  final hasCredentials = credentialsResult is Ok;
   final hasFacilityProfile = await ref.watch(hasFacilityProfileProvider.future);
   final hasViableCookies = await _hasViableSessionCookies(jar);
 
@@ -30,7 +33,9 @@ Future<SessionBootstrap> sessionBootstrap(Ref ref) async {
         ? const BootCredentialsMissing()
         : const BootFreshFirstRun();
   }
-  return hasViableCookies ? const BootSessionLive() : const BootCookiesMissing();
+  return hasViableCookies
+      ? const BootSessionLive()
+      : const BootCookiesMissing();
 }
 
 Future<bool> _hasViableSessionCookies(CookieJar jar) async {

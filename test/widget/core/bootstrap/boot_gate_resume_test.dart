@@ -23,75 +23,76 @@ import '../../../fakes/fake_security_service.dart';
 
 void main() {
   testWidgets(
-      'sessionBootstrapProvider resolves exactly once across pause/resume lifecycle',
-      (tester) async {
-    var resolveCount = 0;
+    'sessionBootstrapProvider resolves exactly once across pause/resume lifecycle',
+    (tester) async {
+      var resolveCount = 0;
 
-    final testRouter = GoRouter(
-      initialLocation: '/onboarding',
-      routes: [
-        GoRoute(
-          path: '/onboarding',
-          name: 'welcome',
-          // i18n-ignore: test stub
-          builder: (_, __) => const Scaffold(body: Text('WelcomeScreen')),
-        ),
-        GoRoute(
-          path: '/home',
-          name: 'home',
-          // i18n-ignore: test stub
-          builder: (_, __) => const Scaffold(body: Text('HomeScreen')),
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          securityServiceProvider.overrideWithValue(FakeSecurityService()),
-          cookieJarDirectoryProvider.overrideWithValue('/tmp/resume_test'),
-          consentServiceProvider.overrideWithValue(
-            FakeConsentService(scriptedState: const ConsentNotRequired()),
+      final testRouter = GoRouter(
+        initialLocation: '/onboarding',
+        routes: [
+          GoRoute(
+            path: '/onboarding',
+            name: 'welcome',
+            // i18n-ignore: test stub
+            builder: (_, _) => const Scaffold(body: Text('WelcomeScreen')),
           ),
-          credentialStoreProvider.overrideWithValue(FakeCredentialStore()),
-          cookieJarProvider.overrideWithValue(CookieJar()),
-          routerProvider.overrideWithValue(testRouter),
-          sessionBootstrapProvider.overrideWith((_) async {
-            resolveCount++;
-            return const BootSessionLive();
-          }),
+          GoRoute(
+            path: '/home',
+            name: 'home',
+            // i18n-ignore: test stub
+            builder: (_, _) => const Scaffold(body: Text('HomeScreen')),
+          ),
         ],
-        child: MaterialApp.router(
-          routerConfig: testRouter,
-          builder: (context, child) =>
-              BootGate(child: child ?? const SizedBox.shrink()),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            securityServiceProvider.overrideWithValue(FakeSecurityService()),
+            cookieJarDirectoryProvider.overrideWithValue('/tmp/resume_test'),
+            consentServiceProvider.overrideWithValue(
+              FakeConsentService(scriptedState: const ConsentNotRequired()),
+            ),
+            credentialStoreProvider.overrideWithValue(FakeCredentialStore()),
+            cookieJarProvider.overrideWithValue(CookieJar()),
+            routerProvider.overrideWithValue(testRouter),
+            sessionBootstrapProvider.overrideWith((_) async {
+              resolveCount++;
+              return const BootSessionLive();
+            }),
+          ],
+          child: MaterialApp.router(
+            routerConfig: testRouter,
+            builder: (context, child) =>
+                BootGate(child: child ?? const SizedBox.shrink()),
+          ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    // Provider resolved once — home is visible.
-    expect(resolveCount, equals(1));
-    expect(find.text('HomeScreen'), findsOneWidget);
+      // Provider resolved once — home is visible.
+      expect(resolveCount, equals(1));
+      expect(find.text('HomeScreen'), findsOneWidget);
 
-    // Simulate pause → resume lifecycle events.
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      'flutter/lifecycle',
-      const StringCodec().encodeMessage(AppLifecycleState.paused.toString()),
-      (_) {},
-    );
-    await tester.pump();
+      // Simulate pause → resume lifecycle events.
+      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+        'flutter/lifecycle',
+        const StringCodec().encodeMessage(AppLifecycleState.paused.toString()),
+        (_) {},
+      );
+      await tester.pump();
 
-    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
-      'flutter/lifecycle',
-      const StringCodec().encodeMessage(AppLifecycleState.resumed.toString()),
-      (_) {},
-    );
-    await tester.pumpAndSettle();
+      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+        'flutter/lifecycle',
+        const StringCodec().encodeMessage(AppLifecycleState.resumed.toString()),
+        (_) {},
+      );
+      await tester.pumpAndSettle();
 
-    // keepAlive + no WidgetsBindingObserver invalidation → provider resolves
-    // exactly once total. A regression (provider invalidated on resume) would
-    // increment resolveCount to 2.
-    expect(resolveCount, equals(1));
-  });
+      // keepAlive + no WidgetsBindingObserver invalidation → provider resolves
+      // exactly once total. A regression (provider invalidated on resume) would
+      // increment resolveCount to 2.
+      expect(resolveCount, equals(1));
+    },
+  );
 }

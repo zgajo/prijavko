@@ -24,10 +24,7 @@ import '../../../fakes/fake_security_service.dart';
 // navigate. In tests, routerProvider must return the same GoRouter instance
 // that MaterialApp.router uses — otherwise goNamed() navigates an orphaned
 // router that doesn't update the widget tree.
-Widget _makeBootApp({
-  required SessionBootstrap boot,
-  bool delayed = false,
-}) {
+Widget _makeBootApp({required SessionBootstrap boot, bool delayed = false}) {
   final router = GoRouter(
     initialLocation: '/onboarding',
     routes: [
@@ -35,13 +32,13 @@ Widget _makeBootApp({
         path: '/onboarding',
         name: 'welcome',
         // i18n-ignore: test stub
-        builder: (_, __) => const Scaffold(body: Text('WelcomeScreen')),
+        builder: (_, _) => const Scaffold(body: Text('WelcomeScreen')),
       ),
       GoRoute(
         path: '/home',
         name: 'home',
         // i18n-ignore: test stub
-        builder: (_, __) => const Scaffold(body: Text('HomeScreen')),
+        builder: (_, _) => const Scaffold(body: Text('HomeScreen')),
       ),
     ],
   );
@@ -77,22 +74,20 @@ Widget _makeBootApp({
 
 void main() {
   group('BootGate widget', () {
-    testWidgets('BootFreshFirstRun — no navigation; WelcomeScreen visible',
-        (tester) async {
-      await tester.pumpWidget(
-        _makeBootApp(boot: const BootFreshFirstRun()),
-      );
+    testWidgets('BootFreshFirstRun — no navigation; WelcomeScreen visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_makeBootApp(boot: const BootFreshFirstRun()));
       await tester.pumpAndSettle();
 
       expect(find.text('WelcomeScreen'), findsOneWidget);
       expect(find.text('HomeScreen'), findsNothing);
     });
 
-    testWidgets('BootSessionLive — navigates to home; HomeScreen visible',
-        (tester) async {
-      await tester.pumpWidget(
-        _makeBootApp(boot: const BootSessionLive()),
-      );
+    testWidgets('BootSessionLive — navigates to home; HomeScreen visible', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_makeBootApp(boot: const BootSessionLive()));
       await tester.pumpAndSettle();
 
       expect(find.text('HomeScreen'), findsOneWidget);
@@ -100,33 +95,33 @@ void main() {
     });
 
     testWidgets(
-        'BootCookiesMissing — navigates to home (Epic 2 CredentialBanner recovers)',
-        (tester) async {
-      await tester.pumpWidget(
-        _makeBootApp(boot: const BootCookiesMissing()),
-      );
-      await tester.pumpAndSettle();
+      'BootCookiesMissing — navigates to home (Epic 2 CredentialBanner recovers)',
+      (tester) async {
+        await tester.pumpWidget(_makeBootApp(boot: const BootCookiesMissing()));
+        await tester.pumpAndSettle();
 
-      // AC5.3: cookies-missing maps to home, not back to login.
-      expect(find.text('HomeScreen'), findsOneWidget);
-      expect(find.text('WelcomeScreen'), findsNothing);
-    });
+        // AC5.3: cookies-missing maps to home, not back to login.
+        expect(find.text('HomeScreen'), findsOneWidget);
+        expect(find.text('WelcomeScreen'), findsNothing);
+      },
+    );
 
     testWidgets(
-        'BootCredentialsMissing — no navigation; no crash; stays on WelcomeScreen',
-        (tester) async {
-      // TODO(story-2.8): When Story 2.8 lands, this branches to
-      // credentials-missing-recovery screen instead. For now: debugPrint +
-      // no goNamed (v1.0 unreachable until Story 3.1 makes profiles writable).
-      await tester.pumpWidget(
-        _makeBootApp(boot: const BootCredentialsMissing()),
-      );
-      await tester.pumpAndSettle();
+      'BootCredentialsMissing — no navigation; no crash; stays on WelcomeScreen',
+      (tester) async {
+        // TODO(story-2.8): When Story 2.8 lands, this branches to
+        // credentials-missing-recovery screen instead. For now: debugPrint +
+        // no goNamed (v1.0 unreachable until Story 3.1 makes profiles writable).
+        await tester.pumpWidget(
+          _makeBootApp(boot: const BootCredentialsMissing()),
+        );
+        await tester.pumpAndSettle();
 
-      // Must NOT crash — the TODO placeholder must not throw.
-      expect(tester.takeException(), isNull);
-      expect(find.text('WelcomeScreen'), findsOneWidget);
-    });
+        // Must NOT crash — the TODO placeholder must not throw.
+        expect(tester.takeException(), isNull);
+        expect(find.text('WelcomeScreen'), findsOneWidget);
+      },
+    );
 
     testWidgets('loading state shows BootLoadingScaffold', (tester) async {
       await tester.pumpWidget(
@@ -146,9 +141,7 @@ void main() {
     testWidgets('no double-navigation on rebuild', (tester) async {
       // Pump twice; goNamed must be called exactly once (not twice).
       // Verified indirectly: HomeScreen appears exactly once with no errors.
-      await tester.pumpWidget(
-        _makeBootApp(boot: const BootSessionLive()),
-      );
+      await tester.pumpWidget(_makeBootApp(boot: const BootSessionLive()));
       await tester.pump();
       await tester.pump(); // second pump — simulate rebuild
       await tester.pumpAndSettle();
