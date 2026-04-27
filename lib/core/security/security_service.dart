@@ -33,8 +33,12 @@ class SecurityService {
     // at 2 AM. Jidoka: stop the line early.
     String? encoded = await _storage.read(key: _keyName);
     if (encoded == null) {
+      // Hoist the SecureRandom instance — `Random.secure()` instantiates a
+      // platform-channel SecureRandom (JNI on Android) per call. One instance
+      // for all 32 bytes keeps the JNI hop count to 1.
+      final secureRandom = Random.secure();
       final keyBytes = Uint8List.fromList(
-        List.generate(32, (_) => Random.secure().nextInt(256)),
+        List.generate(32, (_) => secureRandom.nextInt(256)),
       );
       encoded = base64Encode(keyBytes);
       await _storage.write(key: _keyName, value: encoded);

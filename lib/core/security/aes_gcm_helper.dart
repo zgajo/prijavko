@@ -48,6 +48,15 @@ class AesGcmHelper {
   Future<Uint8List> decrypt(Uint8List ciphertext) async {
     const nonceLength = 12;
     const macLength = 16;
+    // Poka-yoke: a truncated/corrupt blob would produce opaque RangeError on
+    // sublist. Surface a typed ArgumentError before slicing — callers can
+    // distinguish "format error" from "MAC mismatch" (SecretBoxAuthenticationError).
+    if (ciphertext.length < nonceLength + macLength) {
+      throw ArgumentError(
+        'AES-GCM ciphertext must be at least ${nonceLength + macLength} bytes '
+        '(nonce + mac), got ${ciphertext.length}',
+      );
+    }
     final nonce = ciphertext.sublist(0, nonceLength);
     final mac = Mac(ciphertext.sublist(ciphertext.length - macLength));
     final encryptedBytes = ciphertext.sublist(

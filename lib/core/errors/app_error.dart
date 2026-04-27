@@ -11,4 +11,10 @@ final class StorageError extends AppError {
   // surface. Callers extract only the safe message string; `cause` is for
   // internal crash triage only — never passed to AppLogger, Crashlytics, or UI.
   final Object? cause;
+
+  // Poka-yoke: toString is what string interpolation (`'$err'`) calls. Pin it
+  // to the safe `message` so an accidental `logger.log('$err')` cannot leak
+  // `cause` into Crashlytics.
+  @override
+  String toString() => 'StorageError($message)';
 }

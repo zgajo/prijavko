@@ -1,6 +1,6 @@
 # Story 1.3: Security Primitives, Dio & Cert Pinning
 
-Status: review
+Status: done
 
 ## Story
 
@@ -533,3 +533,39 @@ claude-sonnet-4-6
 - `android/app/src/main/res/xml/network_security_config.xml` — `<pin-set>` added
 - `lib/main.dart` — async main, SecurityService.init(), ProviderScope wiring
 - `integration_test/app_test.dart` — ProviderScope with fake overrides
+
+### Review Findings
+
+_Code review on 2026-04-27. 5 decision-needed, 10 patch, 8 deferred, 14 dismissed as noise._
+
+**Decision-needed (resolve before patches):**
+
+- [x] [Review][Decision] **EncryptedStorage.deleteAll wipes whole directory and breaks subsequent writes** — Current impl `dir.delete(recursive: true)` ignores the `keys` arg AND leaves the dir nonexistent, so the next `write()` throws `FileSystemException`. Spec AC4.7 said "iterate keys + sweep extras". Options: (a) restore literal spec — iterate per-key, then sweep files not in keys; (b) keep full-wipe semantics but recreate the directory afterward; (c) accept current behavior. [lib/core/security/encrypted_storage.dart:60-66]
+- [x] [Review][Decision] **PersistCookieJar `persistSession` not set** — `PersistCookieJar(storage: storage)` defaults to `persistSession: false, ignoreExpires: false`. eVisitor's `authentication` cookie may be issued without `max-age` (session cookie); project memory mandates "cookie must persist across process death". Options: (a) `persistSession: true, ignoreExpires: false`; (b) accept default and let Story 1.7 decide; (c) defer until login lands. [lib/app/providers.dart PersistCookieJar construction]
+- [x] [Review][Decision] **CertPins positive-path test does not test the positive path** — Test admits SHA-256 inversion is impossible and only validates fingerprints are 64-char hex. Spec AC11.2 explicitly required `derBytes whose SHA-256 matches → returns true`. A regression that flipped `==` to `!=` in `validFingerprints.contains` would still pass. Options: (a) refactor `CertPins` to allow injectable fingerprint set + add fixture-bytes round-trip test; (b) commit a known fixture DER and add its fingerprint to `validFingerprints` permanently for testing; (c) accept current structural-only test. [test/unit/core/cert_pins_test.dart:62-93]
+- [x] [Review][Decision] **EncryptedStorage.init creates `${baseDir}ie<flag>_ps<flag>/` subpath** — Spec AC4.3 said `Directory(directory).create(recursive: true)` literally; code mimics FileStorage's flag-encoded sub-path. Silent scope expansion not noted in code comments. Options: (a) revert to literal directory; (b) keep + add `// WHY:` explaining FileStorage compat. [lib/core/security/encrypted_storage.dart:22-30]
+- [x] [Review][Decision] **`<pin-set>` lacks a backup pin** — Only leaf + intermediate pinned. If both rotate together (CA migration, force re-issuance), all installs hard-fail TLS with no fallback. Industry guidance: leaf + intermediate + backup root/CA. Spec AC1.2 specified leaf+intermediate only. Options: (a) add a backup pin (e.g., DigiCert/Sectigo root) + document expiry; (b) accept current per spec and rely on the force-update path (Story 9.4). [android/app/src/main/res/xml/network_security_config.xml]
+
+**Patch:**
+
+- [x] [Review][Patch] **EncryptedStorage.read should swallow corruption gracefully** [lib/core/security/encrypted_storage.dart:33-39] — wrap base64Decode + decrypt in try/catch; on `FormatException`/`RangeError`/`SecretBoxAuthenticationError` return `null` and best-effort delete the bad file. A single corrupt cookie file currently kills every subsequent request because `PersistCookieJar.loadForRequest` doesn't wrap in `Result`.
+- [x] [Review][Patch] **AesGcmHelper.decrypt must validate length ≥ 28 upfront** [lib/core/security/aes_gcm_helper.dart:60-77] — guard `if (ciphertext.length < 28) throw ArgumentError(...)` before sublist, else short input throws opaque `RangeError` instead of the documented `SecretBoxAuthenticationError`.
+- [x] [Review][Patch] **`_sanitizeKey` collisions** [lib/core/security/encrypted_storage.dart:_sanitizeKey] — `key.replaceAll('/', '_')` makes `a/b` and `a_b` collide on the same file. Use `base64Url.encode(utf8.encode(key))` (no padding stripped) — collision-free + reversible for `readAll`-style enumerations.
+- [x] [Review][Patch] **CredentialStore: narrow `catch` and reject empty creds** [lib/features/settings/credential_store.dart] — (a) replace `catch (e)` with `catch (PlatformException e)` so programming errors (StateError, OOM) aren't swallowed into `StorageError`; (b) reject empty `username`/`password`/`apiKey` in `saveCredentials` (return `Err`) — empty creds currently round-trip through `loadCredentials` as `Ok(Credentials('', '', ''))`, breaking the Poka-yoke claim.
+- [x] [Review][Patch] **AES-GCM tampered tests should also flip nonce + ciphertext bytes** [test/unit/core/aes_gcm_helper_test.dart] — current test only flips a MAC byte. Add: flip byte at offset 0 (nonce), flip byte between offset 12 and length-16 (ciphertext body). AES-GCM authenticates `nonce || ciphertext || aad` — all three regions must trip MAC verification.
+- [x] [Review][Patch] **AES-GCM empty-plaintext round-trip test missing** [test/unit/core/aes_gcm_helper_test.dart] — add `encrypt(Uint8List(0))` → `decrypt(...)` returns empty bytes. PersistCookieJar may write empty cookie values.
+- [x] [Review][Patch] **integration_test missing tearDown** [integration_test/app_test.dart] — encrypted cookie files leak in `Directory.systemTemp.path` between runs (no `tearDown`). On parallel test runs, instances collide. Add tearDown to delete the override directory.
+- [x] [Review][Patch] **SecurityService — single Random.secure() instance** [lib/core/security/security_service.dart:42-44] — `List.generate(32, (_) => Random.secure().nextInt(256))` constructs 32 separate `SecureRandom` instances (each a JNI call on Android). Hoist `final r = Random.secure();` and call `r.nextInt(256)` 32 times.
+- [x] [Review][Patch] **StorageError.toString() override** [lib/core/errors/app_error.dart] — `cause` (`Object?`) may leak via interpolation `'$err'` if a developer ever interpolates the object. Override `toString() => 'StorageError($message)'` so PII never reaches Crashlytics by accident — Poka-yoke per AC6.3.
+- [x] [Review][Patch] **CertPins host normalization** [lib/core/security/cert_pins.dart:isTrustedCertificate] — `host != 'www.evisitor.hr'` is case-sensitive and rejects FQDN trailing dot. Use `host.toLowerCase().replaceAll(RegExp(r'\.+$'), '') != 'www.evisitor.hr'` so `WWW.EVISITOR.HR` and `www.evisitor.hr.` route to the fingerprint check instead of failing closed silently.
+
+**Deferred:**
+
+- [x] [Review][Defer] **EncryptedStorage methods before init guard** [lib/core/security/encrypted_storage.dart] — `late _currentDirectory` throws unhelpful `LateInitializationError` if `read/write/delete` runs before `init`. PersistCookieJar always calls init first today; harden when a second caller appears.
+- [x] [Review][Defer] **SecurityService.init re-entrancy on hot-restart** [lib/core/security/security_service.dart:32-51] — concurrent `init()` calls can pass the `_initialized` guard during the await window, generating two keys. Hot-restart edge case; revisit when AuthNotifier (Story 2.x) starts touching `init`.
+- [x] [Review][Defer] **EvisitorFakeAdapter returns 200 for any path** [test/fakes/evisitor_fake_adapter.dart] — flesh out endpoint routing in Story 1.7 (login) and Story 6.3 (ImportTourists) per the existing TODO comment.
+- [x] [Review][Defer] **fake env compile-time guard for prod builds** [lib/app/providers.dart] — assert `evisitorEnv != fake` in `kReleaseMode`; prevents misconfigured release shipping plaintext localhost + no pinning. Wire when Story 10.x release-readiness lands.
+- [x] [Review][Defer] **`cryptography_flutter` unmaintained — track for replacement** [pubspec.yaml] — last release > 2 years; evaluate replacement before Epic 5 (Drift PII column encryption) hardens dependence.
+- [x] [Review][Defer] **FakeFlutterSecureStorage incomplete coverage** [test/unit/settings/credential_store_test.dart] — overrides only `read/write/delete`; future tests calling `containsKey/readAll/deleteAll` will throw `MissingPluginException` from the unoverridden methods. Extend when needed.
+- [x] [Review][Defer] **integration_test dioProvider override is dead code today** [integration_test/app_test.dart] — no widget consumes `dioProvider` until first network-call screen lands (Story 1.7). The override is harmless prep; revisit when WelcomeScreen (Story 1.5) or LoginScreen (Story 1.7) actually triggers the path.
+- [x] [Review][Defer] **SecurityService corrupt stored value handling** [lib/core/security/security_service.dart:40-49] — Jidoka by AC9.4 WHY ("crashes visibly at launch rather than silently"). Re-evaluate if real-world corrupt-state reports come in (backup restore to new device, OS upgrade quirks).

@@ -60,7 +60,16 @@ Dio dio(Ref ref) {
 
   if (evisitorEnv != EvisitorEnv.fake) {
     final storage = EncryptedStorage(cookieDir, security.encryptionHelper);
-    final cookieJar = PersistCookieJar(storage: storage);
+    // WHY: persistSession=true is required by the eVisitor auth contract —
+    // the `authentication` cookie may be issued without `max-age` (session
+    // cookie) and must survive process death so the host doesn't get
+    // re-prompted on every cold start. ignoreExpires=false respects the
+    // server's expiration so stale cookies don't paper over a real re-auth.
+    final cookieJar = PersistCookieJar(
+      storage: storage,
+      persistSession: true,
+      ignoreExpires: false,
+    );
     dio.interceptors.add(CookieManager(cookieJar));
 
     // TODO(story-2.3): AuthInterceptor wires here.

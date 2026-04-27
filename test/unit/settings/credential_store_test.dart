@@ -137,5 +137,37 @@ void main() {
         expect(fakeStorage.internalMap['some_other_plugin_key'], 'keep_me');
       },
     );
+
+    test(
+      'saveCredentials rejects empty username/password/apiKey (Poka-yoke)',
+      () async {
+        // Each empty field independently must short-circuit to Err — empty
+        // creds round-tripping as Ok would break the "are we logged in?"
+        // contract downstream.
+        final r1 = await store.saveCredentials(
+          username: '',
+          password: 'p',
+          apiKey: 'k',
+        );
+        expect(r1, isA<Err<void, StorageError>>());
+
+        final r2 = await store.saveCredentials(
+          username: 'u',
+          password: '',
+          apiKey: 'k',
+        );
+        expect(r2, isA<Err<void, StorageError>>());
+
+        final r3 = await store.saveCredentials(
+          username: 'u',
+          password: 'p',
+          apiKey: '',
+        );
+        expect(r3, isA<Err<void, StorageError>>());
+
+        // Storage must not have been written for any of them.
+        expect(fakeStorage.internalMap, isEmpty);
+      },
+    );
   });
 }

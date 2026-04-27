@@ -3,6 +3,7 @@
 // `allowBackup=false` manifest declaration (Story 1.1 AC4) prevents them
 // leaving the device. `CredentialStore` is the single entry point — no
 // feature may read credentials from any other surface.
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:prijavko/core/errors/app_error.dart';
 import 'package:prijavko/core/result/result.dart';
@@ -38,6 +39,12 @@ class CredentialStore {
     required String password,
     required String apiKey,
   }) async {
+    // Poka-yoke: empty credentials would round-trip through loadCredentials
+    // as Ok(Credentials('', '', '')) and pass downstream "is logged in" checks.
+    // Reject at the boundary.
+    if (username.isEmpty || password.isEmpty || apiKey.isEmpty) {
+      return const Err(StorageError('Credentials must not be empty'));
+    }
     try {
       // Writes are independent — partial state is tolerable; the next
       // `saveCredentials` call overwrites. No rollback on failure.
@@ -45,7 +52,7 @@ class CredentialStore {
       await _storage.write(key: _keyPassword, value: password);
       await _storage.write(key: _keyApiKey, value: apiKey);
       return const Ok(null);
-    } catch (e) {
+    } on PlatformException catch (e) {
       return Err(StorageError('Credential write failed', cause: e));
     }
   }
@@ -61,7 +68,7 @@ class CredentialStore {
       return Ok(
         Credentials(username: username, password: password, apiKey: apiKey),
       );
-    } catch (e) {
+    } on PlatformException catch (e) {
       return Err(StorageError('Credential read failed', cause: e));
     }
   }
@@ -74,7 +81,7 @@ class CredentialStore {
       await _storage.delete(key: _keyPassword);
       await _storage.delete(key: _keyApiKey);
       return const Ok(null);
-    } catch (e) {
+    } on PlatformException catch (e) {
       return Err(StorageError('Credential wipe failed', cause: e));
     }
   }

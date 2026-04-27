@@ -52,14 +52,24 @@ const _firstFrameThreshold = Duration(milliseconds: 2500);
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  // Per-test cookie-jar dir under systemTemp so encrypted blobs from one test
+  // never leak into the next (or into a parallel CI run on the same emulator).
+  late Directory cookieJarDir;
+  setUp(() {
+    cookieJarDir = Directory.systemTemp.createTempSync('prijavko_test_');
+  });
+  tearDown(() {
+    if (cookieJarDir.existsSync()) {
+      cookieJarDir.deleteSync(recursive: true);
+    }
+  });
+
   testWidgets('app boots and paints its first frame', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           securityServiceProvider.overrideWithValue(FakeSecurityService()),
-          cookieJarDirectoryProvider.overrideWithValue(
-            Directory.systemTemp.path,
-          ),
+          cookieJarDirectoryProvider.overrideWithValue(cookieJarDir.path),
           dioProvider.overrideWithValue(
             Dio()..httpClientAdapter = EvisitorFakeAdapter(),
           ),
@@ -91,9 +101,7 @@ void main() {
       ProviderScope(
         overrides: [
           securityServiceProvider.overrideWithValue(FakeSecurityService()),
-          cookieJarDirectoryProvider.overrideWithValue(
-            Directory.systemTemp.path,
-          ),
+          cookieJarDirectoryProvider.overrideWithValue(cookieJarDir.path),
           dioProvider.overrideWithValue(
             Dio()..httpClientAdapter = EvisitorFakeAdapter(),
           ),

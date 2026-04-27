@@ -50,6 +50,10 @@
             <pin digest="SHA-256">auwWkCCvoXUIBsH0t4Db36v2pfKdQXHwPoQWRdbiIag=</pin>
             <!-- Intermediate CA SHA-256 SPKI fingerprint (base64) — valid Mar 30 2021 – Mar 29 2031 -->
             <pin digest="SHA-256">Wec45nQiFwKvHtuHxSAMGkt19k+uPSw9JlEkxhvYPHk=</pin>
+            <!-- Backup: DigiCert Global Root G2 SPKI fingerprint (base64) — valid Aug  1 2013 – Jan 15 2038.
+                 Required so an emergency rotation of BOTH leaf and intermediate
+                 doesn't brick installed apps; the root rotates ~once per decade. -->
+            <pin digest="SHA-256">i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</pin>
         </pin-set>
     </domain-config>
 </network-security-config>

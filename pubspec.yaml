@@ -51,6 +51,11 @@ dependencies:
   # explicit dep required because cryptography_flutter does not re-export it.
   cryptography: ^2.9.0
 
+  # Story 1.3 review — @visibleForTesting annotation for CertPins test seam.
+  # Transitively available via flutter SDK; declared explicitly to satisfy
+  # depend_on_referenced_packages.
+  meta: ^1.16.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

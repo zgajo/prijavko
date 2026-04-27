@@ -1,4 +1,4 @@
-// guards AC1.3, AC1.4
+// guards AC1.3, AC1.4, AC11.2 (positive path)
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -8,8 +8,12 @@ import 'package:prijavko/core/security/cert_pins.dart';
 
 void main() {
   group('CertPins', () {
-    // fake DER bytes whose SHA-256 is NOT in validFingerprints
+    // Fake DER bytes whose SHA-256 is NOT in validFingerprints.
     final fakeDer = Uint8List(64)..fillRange(0, 64, 0xFF);
+
+    tearDown(() {
+      CertPins.debugOverrideFingerprints = null;
+    });
 
     test('isTrustedCertificate returns false for non-target host', () {
       expect(CertPins.isTrustedCertificate(fakeDer, 'evil.com'), isFalse);
@@ -17,6 +21,28 @@ void main() {
       expect(
         CertPins.isTrustedCertificate(fakeDer, 'sub.www.evisitor.hr'),
         isFalse,
+      );
+    });
+
+    test('isTrustedCertificate normalizes host casing and trailing dots', () {
+      // Lowercase + trailing-dot stripping must route to the fingerprint
+      // check, which then fails closed because fakeDer's hash isn't pinned.
+      // The point of this test is to verify host normalization happens; if
+      // the host check rejected upper-case or FQDN form, the regression here
+      // would still return false but for the wrong reason. Pin a fingerprint
+      // that DOES match fakeDer so a trip through the fingerprint check
+      // returns true — proving the normalizer routed past the host guard.
+      CertPins.debugOverrideFingerprints = {
+        CertPins.computeFingerprint(fakeDer),
+      };
+      expect(CertPins.isTrustedCertificate(fakeDer, 'WWW.EVISITOR.HR'), isTrue);
+      expect(
+        CertPins.isTrustedCertificate(fakeDer, 'www.evisitor.hr.'),
+        isTrue,
+      );
+      expect(
+        CertPins.isTrustedCertificate(fakeDer, 'Www.Evisitor.Hr...'),
+        isTrue,
       );
     });
 
@@ -33,44 +59,50 @@ void main() {
     test('computeFingerprint returns lowercase hex SHA-256 with no colons', () {
       final bytes = Uint8List.fromList(utf8.encode('test'));
       final result = CertPins.computeFingerprint(bytes);
-      // SHA-256 of 'test' is well-known
       expect(result, sha256.convert(bytes).toString());
       expect(result, isNot(contains(':')));
       expect(result, equals(result.toLowerCase()));
       expect(result.length, 64); // 32 bytes × 2 hex chars
     });
 
-    // Positive test: create DER bytes whose SHA-256 matches a known-good fingerprint.
+    test('production fingerprint set is non-empty and well-formed', () {
+      // Structural guard against accidentally clearing the production pins.
+      expect(CertPins.validFingerprints, isNotEmpty);
+      for (final fp in CertPins.validFingerprints) {
+        expect(fp.length, 64, reason: 'fingerprint must be 64 hex chars');
+        expect(
+          RegExp(r'^[0-9a-f]+$').hasMatch(fp),
+          isTrue,
+          reason: 'fingerprint must be lowercase hex',
+        );
+      }
+    });
+
     test(
-      'isTrustedCertificate returns true for www.evisitor.hr with matching fingerprint',
-      skip: CertPins.validFingerprints.isEmpty
-          ? 'Obtain real fingerprints — AC1 AC11 task 5'
-          : null,
+      'isTrustedCertificate returns true for matching fingerprint (positive path)',
       () {
-        // Pick the first pinned fingerprint and craft bytes that hash to it.
-        // We can't reverse SHA-256, so instead we call computeFingerprint
-        // on the real cert bytes. Here we synthesise a fake DER that is
-        // guaranteed to match by computing what its fingerprint would be and
-        // comparing with the set — but since we can't fake a real cert, we
-        // instead test the positive path by constructing derBytes such that
-        // computeFingerprint(derBytes) is in validFingerprints.
-        //
-        // Approach: for each pinned fingerprint F, find a Uint8List whose
-        // SHA-256 hex == F. We cannot invert SHA-256, so instead we verify
-        // the logic by directly checking that if the fingerprint is in the
-        // set, isTrustedCertificate returns true — using a mock-like approach:
-        // we know the fingerprint of fakeDer, so we temporarily add it to the
-        // set via a subclass isn't possible (final class). Instead we verify
-        // that each validFingerprint is a 64-char hex string (structural test).
-        for (final fp in CertPins.validFingerprints) {
-          expect(fp.length, 64, reason: 'fingerprint must be 64 hex chars');
-          expect(
-            RegExp(r'^[0-9a-f]+$').hasMatch(fp),
-            isTrue,
-            reason: 'fingerprint must be lowercase hex',
-          );
-        }
+        // Inject a test-only fingerprint computed from the fixture bytes.
+        // This proves: (a) the contains() check actually fires positive when
+        // fingerprints match; (b) computeFingerprint feeds the lookup
+        // correctly. A regression that flipped `==` to `!=` would fail this
+        // test, which is what AC11.2 requires.
+        final fixtureBytes = Uint8List.fromList(utf8.encode('fixture-cert'));
+        final fixtureFingerprint = CertPins.computeFingerprint(fixtureBytes);
+        CertPins.debugOverrideFingerprints = {fixtureFingerprint};
+
+        expect(
+          CertPins.isTrustedCertificate(fixtureBytes, 'www.evisitor.hr'),
+          isTrue,
+        );
       },
     );
+
+    test('debugOverrideFingerprints scopes to the test that set it', () {
+      // Sanity that the override slot resets between tests via tearDown.
+      // (If this test ran without tearDown and the previous test left an
+      // override, validFingerprints would not equal the production set.)
+      expect(CertPins.debugOverrideFingerprints, isNull);
+      expect(CertPins.validFingerprints.length, greaterThanOrEqualTo(2));
+    });
   });
 }

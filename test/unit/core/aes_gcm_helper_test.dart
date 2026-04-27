@@ -23,6 +23,16 @@ void main() {
       expect(decrypted, plaintext);
     });
 
+    test('encrypt → decrypt round-trip with empty plaintext', () async {
+      final helper = AesGcmHelper(key32);
+      final empty = Uint8List(0);
+      final encrypted = await helper.encrypt(empty);
+      // Output is nonce (12) + ciphertext (0) + mac (16) = 28 bytes.
+      expect(encrypted.length, 28);
+      final decrypted = await helper.decrypt(encrypted);
+      expect(decrypted, empty);
+    });
+
     test(
       'two encrypt calls on same plaintext produce different ciphertexts (random nonce)',
       () async {
@@ -39,13 +49,58 @@ void main() {
       () async {
         final helper = AesGcmHelper(key32);
         final encrypted = await helper.encrypt(plaintext);
-        // Flip last byte (in the MAC area — last 16 bytes)
         final tampered = Uint8List.fromList(encrypted);
+        // Flip last byte (MAC area — last 16 bytes).
         tampered[tampered.length - 1] ^= 0xFF;
         expect(
           () => helper.decrypt(tampered),
           throwsA(isA<SecretBoxAuthenticationError>()),
         );
+      },
+    );
+
+    test(
+      'decrypt of tampered ciphertext (flipped nonce byte) throws authentication error',
+      () async {
+        final helper = AesGcmHelper(key32);
+        final encrypted = await helper.encrypt(plaintext);
+        final tampered = Uint8List.fromList(encrypted);
+        // Flip first byte (nonce — first 12 bytes). AES-GCM authenticates
+        // nonce || ciphertext || aad so this MUST fail MAC verification.
+        tampered[0] ^= 0xFF;
+        expect(
+          () => helper.decrypt(tampered),
+          throwsA(isA<SecretBoxAuthenticationError>()),
+        );
+      },
+    );
+
+    test(
+      'decrypt of tampered ciphertext (flipped body byte) throws authentication error',
+      () async {
+        final helper = AesGcmHelper(key32);
+        final encrypted = await helper.encrypt(plaintext);
+        final tampered = Uint8List.fromList(encrypted);
+        // Flip a byte in the ciphertext body (between offset 12 and length-16).
+        const bodyOffset = 12;
+        tampered[bodyOffset] ^= 0xFF;
+        expect(
+          () => helper.decrypt(tampered),
+          throwsA(isA<SecretBoxAuthenticationError>()),
+        );
+      },
+    );
+
+    test(
+      'decrypt rejects truncated input shorter than nonce+mac (28 bytes)',
+      () async {
+        final helper = AesGcmHelper(key32);
+        // Empty.
+        expect(() => helper.decrypt(Uint8List(0)), throwsArgumentError);
+        // Only the nonce, no MAC.
+        expect(() => helper.decrypt(Uint8List(12)), throwsArgumentError);
+        // One byte short of the minimum.
+        expect(() => helper.decrypt(Uint8List(27)), throwsArgumentError);
       },
     );
   });

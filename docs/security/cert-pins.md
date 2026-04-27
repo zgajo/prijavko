@@ -34,6 +34,26 @@ Fingerprints verified: **2026-04-27**
   Wec45nQiFwKvHtuHxSAMGkt19k+uPSw9JlEkxhvYPHk=
   ```
 
+## Backup Root Certificate (DigiCert Global Root G2)
+
+Pinned as a defense against simultaneous leaf+intermediate rotation. The root
+rotates roughly once per decade and is in every Android device's trust store,
+so a force-update window is the only realistic recovery path if it ever
+changes; until then this pin keeps the app reachable through any CA-side
+emergency rotation.
+
+- **Subject:** `C=US, O=DigiCert Inc, OU=www.digicert.com, CN=DigiCert Global Root G2`
+- **Not Before:** Aug  1 12:00:00 2013 GMT
+- **Not After:** Jan 15 12:00:00 2038 GMT
+- **DER SHA-256 (hex, lowercase, no colons)** — used in `CertPins.validFingerprints`:
+  ```
+  cb3ccbb76031e5e0138f8dd39a23f9de47ffc35e43c1144cea27d46a5ab1cb5f
+  ```
+- **SPKI SHA-256 (base64)** — used in `network_security_config.xml` `<pin-set>`:
+  ```
+  i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=
+  ```
+
 ---
 
 ## Rotation Trigger
@@ -81,4 +101,13 @@ echo | openssl s_client -connect www.evisitor.hr:443 -showcerts 2>/dev/null \
 # Cert validity dates:
 echo | openssl s_client -connect www.evisitor.hr:443 2>/dev/null \
   | openssl x509 -noout -dates
+
+# Backup root (DigiCert Global Root G2) — fetch from DigiCert and compute pins:
+curl -sS https://cacerts.digicert.com/DigiCertGlobalRootG2.crt.pem -o /tmp/dgr-g2.pem
+openssl x509 -in /tmp/dgr-g2.pem -pubkey -noout \
+  | openssl pkey -pubin -outform DER \
+  | openssl dgst -sha256 -binary \
+  | openssl base64
+openssl x509 -in /tmp/dgr-g2.pem -noout -fingerprint -sha256 \
+  | sed 's/://g' | awk -F= '{print tolower($2)}'
 ```

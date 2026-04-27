@@ -26,3 +26,14 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 - `icons_test.dart` asserts package-internal font family string `MaterialSymbolsRounded`. Brittle to `material_symbols_icons` internals but currently the only signal that the rounded variant resolved.
 - `Tokens.color` is a single-field nested class wrapping just `primarySeed`. Speculative scaffolding — AC1.1 mandates the namespace structure; future seed additions land here.
 - Theme builder does not set `splashFactory` or `visualDensity` explicitly. Defensive future-proofing not required by AC2.5; revisit if Flutter SDK changes adaptive-density defaults.
+
+## Deferred from: code review of story-1-3-security-primitives-dio-and-cert-pinning (2026-04-27)
+
+- `EncryptedStorage` methods before `init` throw `LateInitializationError` from `late _currentDirectory`. PersistCookieJar always calls init first today; harden when a second caller appears.
+- `SecurityService.init` re-entrancy: concurrent `init()` calls can pass the `_initialized` guard during the await window, generating two keys. Hot-restart edge case; revisit when AuthNotifier (Story 2.x) touches `init`.
+- `EvisitorFakeAdapter` returns 200 for any path. Flesh out endpoint routing in Story 1.7 (login) and Story 6.3 (ImportTourists) per the existing TODO.
+- Fake env compile-time guard for prod builds: assert `evisitorEnv != fake` in `kReleaseMode`. Wire when Story 10.x release-readiness lands.
+- `cryptography_flutter` unmaintained (last release > 2 years). Evaluate replacement before Epic 5 (Drift PII column encryption) hardens dependence.
+- `FakeFlutterSecureStorage` overrides only `read/write/delete`. Future tests calling `containsKey/readAll/deleteAll` will throw `MissingPluginException`; extend when needed.
+- `integration_test/app_test.dart` `dioProvider` override is dead code today — no widget consumes `dioProvider` until first network-call screen (Story 1.7). Re-validate when WelcomeScreen or LoginScreen actually triggers the path.
+- `SecurityService` corrupt stored AES-GCM key handling: Jidoka by AC9.4 WHY ("crashes visibly at launch"). Re-evaluate if real-world corrupt-state reports come in.
