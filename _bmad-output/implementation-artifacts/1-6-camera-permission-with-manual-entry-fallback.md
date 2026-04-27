@@ -1,6 +1,6 @@
 # Story 1.6: Camera Permission with Manual-Entry Fallback
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -528,3 +528,37 @@ claude-sonnet-4-6
 ### Change Log
 
 - 2026-04-27: Story 1.6 implemented — camera permission screen, PermissionService seam, CapturePreference persistence, l10n, router, tests, goldens. Branch: story-1-6-camera-permission.
+
+---
+
+## Review Findings
+
+Code review by parallel adversarial agents (Blind Hunter, Edge Case Hunter, Acceptance Auditor) — 2026-04-27.
+
+### Decision Needed
+
+- [x] [Review][Decision] **SharedPreferences Result contract** — `CapturePreferenceStore.save()` and `load()` are declared as `Future<void>` / `Future<CapturePreference>` (per AC2), but the project rule mandates all data-layer functions return `Result<T, Failure>`. `SharedPreferences.setString()` can throw (disk full, PlatformException) and is silently swallowed; user gets stuck on screen with no feedback and no navigation. Decision: add `Result` wrapping to `save()`/`load()`, or treat this store as a lightweight convenience layer exempt from the contract (safe fallback to `manualOnly` on failure is acceptable)?
+
+- [x] [Review][Decision] **permanentlyDenied path: no UI feedback, `openSettings()` dead code** — When camera is permanently denied, `Permission.camera.request()` returns immediately without showing an OS dialog. `requestCamera()` returns `false`, saves `manualOnly`, navigates. UX: user taps "Dopusti pristup", button responds instantly with no dialog, screen changes — looks broken. `isCameraPermanentlyDenied()` and `openSettings()` are defined in the AC3 interface but have zero call sites. Decision: does this story need to detect permanently-denied state and show an "Otvorite postavke" nudge (inline or via `openSettings()`), or is the silent-fallback-to-manualOnly path acceptable and the full handling deferred to Story 1.9?
+
+### Patches
+
+- [x] [Review][Patch] **No in-flight guard on `_onAllow`/`_onSkip` — double-tap race** — Both handlers are `async` with no `_isInFlight` flag. Double-tap during OS dialog or during `save()` fires concurrent executions: two `requestCamera()` calls and two `context.go()` calls. Fix: add `bool _isInFlight = false`, `setState` before each await, check at top of each handler, set `onPressed: _isInFlight ? null : _onAllow`. [`lib/features/onboarding/camera_permission_screen.dart`]
+
+- [x] [Review][Patch] **Allow-denied test missing `requestCameraCallCount` assertion** — The "tapping Allow when permission denied" test asserts `savedPreference` and navigation but not that `requestCamera()` was actually called. A refactor that skips `requestCamera()` entirely would pass. Fix: add `expect(fakePermission.requestCameraCallCount, 1)`. [`test/widget/features/onboarding/camera_permission_screen_test.dart`]
+
+- [x] [Review][Patch] **Semantics label on icon duplicates visible headline — double-announcement** — `Semantics(label: l10n.cameraPermissionHeadline, child: Icon(...))` followed immediately by `Text(l10n.cameraPermissionHeadline)` causes screen readers to announce the headline twice in succession. The icon is decorative; the text already communicates the label. Fix: replace with `ExcludeSemantics(child: Icon(...))` or add `excludeFromSemantics: true` to the `Semantics` wrapper. [`lib/features/onboarding/camera_permission_screen.dart`]
+
+- [x] [Review][Patch] **Hardcoded `'/onboarding/login'` string — use named navigation** — `context.go('/onboarding/login')` called in both `_onAllow` and `_onSkip`. The route already declares `name: 'login'`. Hardcoded path silently breaks at runtime if the route tree changes; `goNamed` would surface the regression as an assertion. Fix: `context.goNamed('login')`. [`lib/features/onboarding/camera_permission_screen.dart`]
+
+### Deferred
+
+- [x] [Review][Defer] **`CapturePreferenceStore` not behind abstract interface** [`lib/core/capture/capture_preference_store.dart`] — deferred, pre-existing design: `FakeCapturePreferenceStore` extends the concrete class rather than an interface. Any new method added to `CapturePreferenceStore` silently falls through to real SharedPreferences in tests. Contrast with `PermissionService` (abstract) + `PermissionServiceImpl`. Consider extracting `AbstractCapturePreferenceStore` in a future story if the class gains additional methods.
+
+- [x] [Review][Defer] **AutoDispose providers captured before long await** [`lib/features/onboarding/camera_permission_screen.dart`] — deferred, pre-existing design: `ref.read(capturePreferenceStoreProvider)` is captured before `await requestCamera()`. Safe today because both providers are stateless value types; becomes fragile if either is converted to a stateful `Notifier`. Document with a comment or migrate to a `Notifier`-hosted action method.
+
+- [x] [Review][Defer] **`restricted`/`limited` permission status → silent `manualOnly` with no OS dialog** [`lib/core/permissions/permission_service_impl.dart`] — deferred, edge case: on MDM-managed or OEM-restricted devices, `Permission.camera.request()` returns immediately without showing a dialog. User taps "Dopusti pristup" and the screen advances silently in manual-only mode with no explanation. Relevant for Story 1.9 or an explicit settings-screen remediation.
+
+- [x] [Review][Defer] **No test for SharedPreferences write failure** [`test/unit/core/capture/capture_preference_store_test.dart`] — deferred, pending Result contract decision: blocked on `decision-needed` item 1. If `Result` wrapping is added to `save()`, add a test for `PlatformException` propagation.
+
+- [x] [Review][Defer] **`openAppSettings()` return value discarded** [`lib/core/permissions/permission_service_impl.dart`] — deferred, not called in this story: `openSettings()` is defined but unused. `openAppSettings()` returns a `bool` (success/failure) that is currently discarded. When Story 1.9 wires the "open settings" action, change `openSettings()` return type to `Future<bool>` and update the interface and implementation.

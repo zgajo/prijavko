@@ -157,6 +157,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip — manual entry'**
   String get cameraPermissionSkipButton;
+
+  /// SnackBar message when camera permission is permanently denied; prompts user to open Settings
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access permanently denied. Open device Settings to allow it.'**
+  String get cameraPermissionPermanentlyDeniedMessage;
+
+  /// SnackBar action label to open device Settings when camera is permanently denied
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get cameraPermissionOpenSettingsButton;
 }
 
 class _AppLocalizationsDelegate

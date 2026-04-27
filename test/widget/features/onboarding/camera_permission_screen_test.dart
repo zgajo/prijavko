@@ -46,6 +46,7 @@ Widget _makeTestApp({
           ),
           GoRoute(
             path: 'login',
+            name: 'login',
             // i18n-ignore: test-only stub; not user-facing copy
             builder: (context, state) =>
                 const Scaffold(body: Center(child: Text(_loginStub))),
@@ -153,8 +154,35 @@ void main() {
         await tester.tap(find.text('Dopusti pristup'));
         await tester.pumpAndSettle();
 
+        expect(fakePermission.requestCameraCallCount, 1);
         expect(fakeStore.savedPreference, CapturePreference.manualOnly);
         expect(find.text(_loginStub), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'tapping Allow when permanently denied shows SnackBar and stays on screen',
+      (tester) async {
+        fakePermission = FakePermissionService(
+          grantCamera: false,
+          permanentlyDenied: true,
+        );
+        fakeStore = FakeCapturePreferenceStore();
+
+        await tester.pumpWidget(
+          _makeTestApp(fakePermission: fakePermission, fakeStore: fakeStore),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Dopusti pristup'));
+        await tester.pumpAndSettle();
+
+        expect(fakePermission.requestCameraCallCount, 1);
+        expect(find.byType(SnackBar), findsOneWidget);
+        // Must NOT navigate away — user acts on SnackBar or taps Skip.
+        expect(find.text(_loginStub), findsNothing);
+        // Preference must NOT be written yet — written when user taps Skip.
+        expect(fakeStore.savedPreference, isNull);
       },
     );
 

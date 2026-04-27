@@ -28,30 +28,80 @@ class CameraPermissionScreen extends ConsumerStatefulWidget {
 
 class _CameraPermissionScreenState
     extends ConsumerState<CameraPermissionScreen> {
+  // WHY: both handlers are async (OS dialog + disk write). Without this guard,
+  // a double-tap fires concurrent executions — two requestCamera() calls and
+  // two goNamed() calls on the same navigation stack.
+  bool _isInFlight = false;
+
   Future<void> _onAllow() async {
-    final permService = ref.read(permissionServiceProvider);
-    final prefStore = ref.read(capturePreferenceStoreProvider);
+    if (_isInFlight) return;
+    setState(() => _isInFlight = true);
 
-    final granted = await permService.requestCamera();
+    try {
+      final permService = ref.read(permissionServiceProvider);
+      final prefStore = ref.read(capturePreferenceStoreProvider);
 
-    // WHY mounted check: OS dialog is an async gap — user may navigate away
-    // or rotate during it. Calling context.go() on an unmounted widget
-    // would throw or silently corrupt the navigation stack.
-    if (!mounted) return;
+      final granted = await permService.requestCamera();
 
-    await prefStore.save(
-      granted ? CapturePreference.live : CapturePreference.manualOnly,
-    );
+      // WHY mounted check: OS dialog is an async gap — user may navigate away
+      // or rotate during it. Calling goNamed() on an unmounted widget would
+      // throw or silently corrupt the navigation stack.
+      if (!mounted) return;
 
-    if (!mounted) return;
-    context.go('/onboarding/login');
+      if (!granted) {
+        final permanentlyDenied = await permService.isCameraPermanentlyDenied();
+        if (!mounted) return;
+        if (permanentlyDenied) {
+          // WHY SnackBar + stay: when permanently denied, the OS returns false
+          // immediately with no dialog — looks like a broken button to the user.
+          // SnackBar explains and offers a direct path to Settings. The user
+          // proceeds via "Preskoči — ručni unos" which saves manualOnly.
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.cameraPermissionPermanentlyDeniedMessage),
+              action: SnackBarAction(
+                label: l10n.cameraPermissionOpenSettingsButton,
+                onPressed: () => permService.openSettings(),
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
+      try {
+        await prefStore.save(
+          granted ? CapturePreference.live : CapturePreference.manualOnly,
+        );
+      } catch (_) {
+        // Preference persistence failure is non-fatal — manualOnly is the safe
+        // default on next load. Log when AppLogger lands (Story 9.1).
+      }
+
+      if (!mounted) return;
+      context.goNamed('login');
+    } finally {
+      if (mounted) setState(() => _isInFlight = false);
+    }
   }
 
   Future<void> _onSkip() async {
-    final prefStore = ref.read(capturePreferenceStoreProvider);
-    await prefStore.save(CapturePreference.manualOnly);
-    if (!mounted) return;
-    context.go('/onboarding/login');
+    if (_isInFlight) return;
+    setState(() => _isInFlight = true);
+
+    try {
+      final prefStore = ref.read(capturePreferenceStoreProvider);
+      try {
+        await prefStore.save(CapturePreference.manualOnly);
+      } catch (_) {
+        // Non-fatal — manualOnly is the safe default on next load. Log Story 9.1.
+      }
+      if (!mounted) return;
+      context.goNamed('login');
+    } finally {
+      if (mounted) setState(() => _isInFlight = false);
+    }
   }
 
   @override
@@ -76,8 +126,11 @@ class _CameraPermissionScreenState
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: TokensSpace.s64),
-                      Semantics(
-                        label: l10n.cameraPermissionHeadline,
+                      // WHY ExcludeSemantics: the icon is decorative — the
+                      // headline Text immediately below announces the same
+                      // label. Including a Semantics label here causes screen
+                      // readers to announce the heading twice in succession.
+                      ExcludeSemantics(
                         child: Icon(
                           Symbols.photo_camera_rounded,
                           size: 64,
@@ -115,12 +168,12 @@ class _CameraPermissionScreenState
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   FilledButton(
-                    onPressed: _onAllow,
+                    onPressed: _isInFlight ? null : _onAllow,
                     child: Text(l10n.cameraPermissionAllowButton),
                   ),
                   const SizedBox(height: TokensSpace.s12),
                   OutlinedButton(
-                    onPressed: _onSkip,
+                    onPressed: _isInFlight ? null : _onSkip,
                     child: Text(l10n.cameraPermissionSkipButton),
                   ),
                 ],

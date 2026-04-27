@@ -39,4 +39,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cameraPermissionSkipButton => 'Skip — manual entry';
+
+  @override
+  String get cameraPermissionPermanentlyDeniedMessage =>
+      'Camera access permanently denied. Open device Settings to allow it.';
+
+  @override
+  String get cameraPermissionOpenSettingsButton => 'Settings';
 }

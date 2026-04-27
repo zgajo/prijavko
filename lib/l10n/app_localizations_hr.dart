@@ -39,4 +39,11 @@ class AppLocalizationsHr extends AppLocalizations {
 
   @override
   String get cameraPermissionSkipButton => 'Preskoči — ručni unos';
+
+  @override
+  String get cameraPermissionPermanentlyDeniedMessage =>
+      'Pristup kameri trajno odbijen. Otvorite postavke uređaja za dopuštenje.';
+
+  @override
+  String get cameraPermissionOpenSettingsButton => 'Postavke';
 }

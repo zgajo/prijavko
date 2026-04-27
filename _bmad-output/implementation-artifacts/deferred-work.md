@@ -52,3 +52,11 @@ Tracks items flagged during reviews that are real but not actionable in the stor
 ## Deferred from: code review of story-1-5-welcome-and-sensitive-data-disclosure (2026-04-27)
 
 - Generated `app_localizations*.dart` committed to `lib/l10n/` — spec AC2.5 intended generated l10n files NOT committed, but modern Flutter with `generate: true` outputs to `lib/l10n/` not `.dart_tool/flutter_gen/`. Pragmatically correct to commit since they're in `lib/` and the import path is `package:prijavko/l10n/app_localizations.dart`. Revisit if Flutter changes output location back to `.dart_tool/`.
+
+## Deferred from: code review of 1-6-camera-permission-with-manual-entry-fallback (2026-04-27)
+
+- `CapturePreferenceStore` not behind abstract interface — `FakeCapturePreferenceStore extends CapturePreferenceStore` (concrete). Any new method added silently falls through to real SharedPreferences in tests. Contrast with `PermissionService` (abstract) seam. Consider extracting interface if class gains additional methods.
+- AutoDispose providers (`capturePreferenceStoreProvider`, `permissionServiceProvider`) captured via `ref.read` before a long `await requestCamera()` gap. Safe while both providers are stateless value types; becomes fragile if either is converted to a stateful `Notifier`. Document or migrate to a `Notifier`-hosted action method.
+- `restricted`/`limited` Android permission status → `requestCamera()` returns `false` immediately with no OS dialog shown. User taps Allow, nothing appears, screen advances in manual-only mode with no explanation. Address in Story 1.9 or a dedicated settings-screen remediation.
+- No test for `SharedPreferences.setString` write failure in `CapturePreferenceStore` — blocked on Result contract decision (see decision-needed finding in story 1.6). Add when Result wrapping is resolved.
+- `openAppSettings()` return value discarded in `PermissionServiceImpl.openSettings()`. `openAppSettings()` returns `bool` (success on device). When Story 1.9 wires the "open settings" action, change `openSettings()` return type to `Future<bool>` and update the interface.

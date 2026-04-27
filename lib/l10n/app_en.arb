@@ -19,5 +19,9 @@
   "cameraPermissionAllowButton": "Allow access",
   "@cameraPermissionAllowButton": { "description": "Primary CTA requesting camera permission from the OS" },
   "cameraPermissionSkipButton": "Skip — manual entry",
-  "@cameraPermissionSkipButton": { "description": "Secondary CTA skipping camera permission and using manual entry path" }
+  "@cameraPermissionSkipButton": { "description": "Secondary CTA skipping camera permission and using manual entry path" },
+  "cameraPermissionPermanentlyDeniedMessage": "Camera access permanently denied. Open device Settings to allow it.",
+  "@cameraPermissionPermanentlyDeniedMessage": { "description": "SnackBar message when camera permission is permanently denied; prompts user to open Settings" },
+  "cameraPermissionOpenSettingsButton": "Settings",
+  "@cameraPermissionOpenSettingsButton": { "description": "SnackBar action label to open device Settings when camera is permanently denied" }
 }
