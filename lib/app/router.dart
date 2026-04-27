@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:prijavko/features/onboarding/camera_permission_screen.dart';
 import 'package:prijavko/features/onboarding/welcome_screen.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,10 +27,15 @@ GoRouter router(Ref ref) {
           GoRoute(
             path: 'camera-permission',
             name: 'camera-permission',
-            // TODO(story-1.6): replace placeholder with CameraPermissionScreen
-            // i18n-ignore: placeholder scaffold; replaced in Story 1.6
+            builder: (context, state) => const CameraPermissionScreen(),
+          ),
+          GoRoute(
+            path: 'login',
+            name: 'login',
+            // TODO(story-1.7): replace placeholder with LoginScreen
+            // i18n-ignore: placeholder scaffold; replaced in Story 1.7
             builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Camera permission — Story 1.6')),
+              body: Center(child: Text('Login — Story 1.7')),
             ),
           ),
         ],
