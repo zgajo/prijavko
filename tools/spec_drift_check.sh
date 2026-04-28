@@ -59,6 +59,27 @@ for path in "${REQUIRED_FILES[@]}"; do
   [[ -f "$path" ]] || fail "missing required file: $path"
 done
 
+# ---------- Required symbols/contracts (story acceptance artifacts) ----------
+# Story 1.2: token namespace is a hard contract for all UI layers.
+grep -qE '^\s*abstract final class Tokens\b' "lib/design/tokens.dart" \
+  || fail "lib/design/tokens.dart must declare 'abstract final class Tokens' (Story 1.2 AC1)"
+grep -qE '^\s*static const List<double> values\s*=' "lib/design/tokens.dart" \
+  || fail "lib/design/tokens.dart must expose TokensSpace.values for grid invariant checks (Story 1.2 AC6.3)"
+
+# Story 1.3: certificate pin boundary type + verifier API.
+grep -qE '^\s*abstract final class CertPins\b' "lib/core/security/cert_pins.dart" \
+  || fail "lib/core/security/cert_pins.dart must declare 'abstract final class CertPins' (Story 1.3 AC1)"
+grep -qE '^\s*static bool isTrustedCertificate\(' "lib/core/security/cert_pins.dart" \
+  || fail "lib/core/security/cert_pins.dart must expose isTrustedCertificate(...) (Story 1.3 AC1)"
+
+# Env routing contract from bootstrap stories/docs.
+grep -qE '^\s*enum EvisitorEnv\s*\{' "lib/core/env/evisitor_env.dart" \
+  || fail "lib/core/env/evisitor_env.dart must declare enum EvisitorEnv"
+grep -qE '^\s*final EvisitorEnv evisitorEnv\s*=' "lib/core/env/evisitor_env.dart" \
+  || fail "lib/core/env/evisitor_env.dart must expose ambient evisitorEnv"
+grep -qE '^\s*EvisitorEnv envFromDefine\(' "lib/core/env/evisitor_env.dart" \
+  || fail "lib/core/env/evisitor_env.dart must expose envFromDefine(...)"
+
 # ---------- AndroidManifest hardening (Story 1.1, NFR-S6) ----------
 manifest="android/app/src/main/AndroidManifest.xml"
 grep -q 'android:allowBackup="false"' "$manifest" \
