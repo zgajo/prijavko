@@ -34,6 +34,23 @@ for the trigger/scope/failure-signal matrix: `analyze`, `pii_guard`,
 `spec_drift`, `test`, `integration_fake`, `testapi_canary` (nightly cron),
 `build_aab` (`v*` tag).
 
+## Architecture (at a glance)
+
+Feature-based, Drift-as-truth, `Result<T, Failure>` over thrown exceptions.
+Full document: [_bmad-output/planning-artifacts/architecture.md](_bmad-output/planning-artifacts/architecture.md).
+
+| Layer | Path | Role |
+| --- | --- | --- |
+| App shell | [lib/app/](lib/app/) | Root `MaterialApp.router`, `go_router` config, `ProviderScope` boot |
+| Core infra | [lib/core/](lib/core/) | Env switch, secure storage, Dio + cert pinning, cookie jar, logging, Drift DB |
+| Design system | [lib/design/](lib/design/) | Material 3 tokens + theme builders (light/dark, dark-first) |
+| Features | [lib/features/](lib/features/) | One folder per feature with `data/ domain/ presentation/`; no cross-feature imports |
+| Shared widgets | [lib/widgets/](lib/widgets/) | Custom widgets that wrap Material 3 primitives where a primitive is insufficient |
+| Localization | [lib/l10n/](lib/l10n/) | ARB files; Croatian primary, English fallback |
+
+State flows: Drift writes → Riverpod stream providers → UI rebuilds. Side
+effects live on Notifiers; widgets never mutate persisted state directly.
+
 ## Planning artifacts
 
 Architecture, PRD, epics, stories, and retrospectives live in
