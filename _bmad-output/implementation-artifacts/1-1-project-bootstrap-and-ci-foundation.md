@@ -2,6 +2,8 @@
 
 Status: done
 
+Satisfies: NFR-S1, NFR-S6, NFR-S7, NFR-C1, NFR-C2, NFR-I4, NFR-I5, NFR-M1 — see [PRD §Non-Functional Requirements](../planning-artifacts/prd.md#non-functional-requirements)
+
 ## Story
 
 As a solo developer,

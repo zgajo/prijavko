@@ -2,6 +2,8 @@
 
 Status: done
 
+Satisfies: FR8 — see [PRD §Functional Requirements](../planning-artifacts/prd.md#functional-requirements)
+
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
 ## Story

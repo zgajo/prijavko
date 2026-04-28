@@ -2,6 +2,8 @@
 
 Status: done
 
+Satisfies: NFR-S2, NFR-S3, NFR-S4 — see [PRD §Non-Functional Requirements](../planning-artifacts/prd.md#non-functional-requirements)
+
 ## Story
 
 As a host,

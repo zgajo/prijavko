@@ -2,6 +2,8 @@
 
 Status: done
 
+Satisfies: NFR-A1, NFR-A2, NFR-A4, NFR-L1 — see [PRD §Non-Functional Requirements](../planning-artifacts/prd.md#non-functional-requirements)
+
 ## Story
 
 As a developer implementing any screen,
