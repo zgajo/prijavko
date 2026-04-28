@@ -29,9 +29,10 @@ flutter build appbundle --release \
 
 ## CI
 
-Six GitHub Actions workflows — see [docs/ci/README.md](docs/ci/README.md) for
-the trigger/scope/failure-signal matrix: `analyze`, `pii_guard`, `test`,
-`integration_fake`, `testapi_canary` (nightly cron), `build_aab` (`v*` tag).
+Seven GitHub Actions workflows — see [docs/ci/README.md](docs/ci/README.md)
+for the trigger/scope/failure-signal matrix: `analyze`, `pii_guard`,
+`spec_drift`, `test`, `integration_fake`, `testapi_canary` (nightly cron),
+`build_aab` (`v*` tag).
 
 ## Planning artifacts
 

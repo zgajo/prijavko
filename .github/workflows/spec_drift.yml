@@ -1,0 +1,32 @@
+# Spec-drift guard — asserts that load-bearing code values still match
+# the values declared in PRD/architecture/stories.
+#
+# Why: implementation stories cite specific minSdk/targetSdk values and
+# require concrete files (tokens, cert pins, security config). When code
+# silently diverges from spec, agents and contributors lose traceability.
+# This workflow blocks the merge — fail loud, fail early.
+#
+# Extends: edit tools/spec_drift_check.sh and add the new assertion
+# alongside a one-line "why" comment pointing at the story or NFR.
+#
+# No untrusted GitHub event inputs are used in this workflow — all
+# assertions are file/value checks against the checked-out tree.
+
+name: spec_drift
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ['**']
+
+jobs:
+  spec_drift:
+    name: assert spec ↔ code constants/files match
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run spec-drift checks
+        run: ./tools/spec_drift_check.sh
