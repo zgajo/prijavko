@@ -42,7 +42,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Technical Constraints & Dependencies
 
 **Stack committed (PRD §22, distillate §22):**
-Flutter 3.x / Dart 3.x, Dio 5.x + `dio_cookie_manager` + PersistCookieJar, `flutter_secure_storage` (Keystore), Drift/SQLite, Riverpod 3, Freezed + `build_runner`, Firebase Crashlytics, AdMob + UMP/CMP SDK, in-repo Dio fake as permanent first-class artifact, Google Play Console Closed Beta track.
+Flutter 3.x / Dart 3.x, Dio 5.x + `dio_cookie_manager` + PersistCookieJar, `flutter_secure_storage` (Keystore), Drift/SQLite, Riverpod 3, Freezed + `build_runner`, Firebase Crashlytics, AdMob via `google_mobile_ads` (UMP/CMP API bundled — no separate `google_user_messaging_platform` Flutter plugin), in-repo Dio fake as permanent first-class artifact, Google Play Console Closed Beta track.
 
 **Rejected (distillate §12 — do not re-propose):** backend/PWA host surface, Sentry, FCM, WorkManager, background auto-retry, geolocation, home-screen widget (v1.0), remote config, iCal import, tax calculator, iOS (v1.0), configurable retention window, single-OIB-per-install.
 
@@ -157,7 +157,7 @@ Hot reload via `flutter run`. `dart format` + `dart analyze` out of the box; `--
 ### What the Starter Does NOT Provide (added in later stories)
 
 - `analysis_options.yaml` tightened with strict rules + `--fatal-infos` CI gate.
-- Dependency set: Riverpod 3, Freezed, Drift, Dio 5.x, `dio_cookie_manager`, PersistCookieJar, `flutter_secure_storage`, `firebase_crashlytics`, `google_mobile_ads`, UMP/CMP SDK.
+- Dependency set: Riverpod 3, Freezed, Drift, Dio 5.x, `dio_cookie_manager`, PersistCookieJar, `flutter_secure_storage`, `firebase_crashlytics`, `google_mobile_ads` (UMP/CMP API bundled — `ConsentInformation`/`ConsentForm`).
 - GitHub Actions workflows: CI grep guard, `dart analyze --fatal-infos`, `flutter test`, integration test against Dio fake, nightly testApi canary, forbidden-log-pattern check.
 - `network_security_config.xml` with cert-pinning declaration and `cleartextTrafficPermitted="false"`.
 - `AndroidManifest.xml` edits: `allowBackup="false"`, `fullBackupContent="false"`, camera permission with Play Store justification string, target SDK per Play policy at submission date.

@@ -429,7 +429,7 @@ FR42: Epic 9 — Forced-update banner blocking Send All on contract break
 
 **FRs covered:** none (completes NFR-S9, NFR-I6 verification, and all Play Store compliance surfaces needed for launch)
 
-**Implementation notes:** `AdBanner` custom widget (AdMob anchored adaptive 50–100dp, `google_mobile_ads` + `google_user_messaging_platform`, Home-only build-time assertion, never renders simultaneously with `CredentialBanner`, no interstitials in v1.0), OWASP MASVS L1 self-audit checklist, Privacy Policy + ToS static HTML pages, `prijavko.hr/min-version.json` published, Play Store Data Safety declaration draft, 6 Croatian-language screenshots, Play Store listing copy in Croatian primary, Google Play Console track progression (Internal → Closed 2026-05-13 → Production 2026-05-27 staged 20/50/100% over 7 days), NFR-S11 staging acceptance test (intentional crash + Firebase Console manual inspection).
+**Implementation notes:** `AdBanner` custom widget (AdMob anchored adaptive 50–100dp, `google_mobile_ads` with bundled UMP/CMP API — no separate `google_user_messaging_platform` Flutter plugin, Home-only build-time assertion, never renders simultaneously with `CredentialBanner`, no interstitials in v1.0), OWASP MASVS L1 self-audit checklist, Privacy Policy + ToS static HTML pages, `prijavko.hr/min-version.json` published, Play Store Data Safety declaration draft, 6 Croatian-language screenshots, Play Store listing copy in Croatian primary, Google Play Console track progression (Internal → Closed 2026-05-13 → Production 2026-05-27 staged 20/50/100% over 7 days), NFR-S11 staging acceptance test (intentional crash + Firebase Console manual inspection).
 
 ---
 
@@ -562,7 +562,7 @@ So that the app complies with GDPR/EU consent requirements and I control whether
 **Given** the app is launching for the first time and the user is in an EEA locale
 **When** the app cold-starts
 **Then** the UMP/CMP consent form renders before any other screen (including Welcome)
-**And** the UMP form is driven by the `google_user_messaging_platform` SDK with the AdMob App ID configured in `AndroidManifest.xml`
+**And** the UMP form is driven by the UMP API bundled in `google_mobile_ads` (`ConsentInformation`/`ConsentForm`) with the AdMob App ID configured in `AndroidManifest.xml`
 **And** no ad request is initiated until `ConsentInformation.consentStatus` is either `obtained` or `notRequired`
 
 **Given** the user has completed the UMP form

@@ -1084,7 +1084,7 @@ wrong-facility regulatory risk. Zero wrong-facility submissions across 4 facilit
 **Not built — native APIs/plugins:**
 - Camera: `camera` + `google_mlkit_text_recognition` (on-device MRZ)
 - Haptics: `HapticFeedback.mediumImpact()` (Flutter built-in)
-- Ads: `google_mobile_ads` + `google_user_messaging_platform` (UMP)
+- Ads: `google_mobile_ads` (UMP/CMP API bundled — `ConsentInformation`/`ConsentForm`; no separate `google_user_messaging_platform` Flutter plugin)
 
 ### Custom Components
 
